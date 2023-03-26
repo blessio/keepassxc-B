@@ -1,7 +1,7 @@
 name: keepassxc
 adopt-info: keepassxc
 grade: stable
-base: core20
+base: core22
 confinement: strict
 compression: lzo
 
@@ -23,7 +23,7 @@ apps:
 slots:
   session-dbus-interface:
     interface: dbus
-    name: org.keepassxc.KeePassXC.MainWindow
+    name: [org.keepassxc.KeePassXC.MainWindow, org.freedesktop.secrets]
     bus: session
 
 parts:
@@ -54,7 +54,7 @@ parts:
       - asciidoctor
     stage-packages:
       - dbus
-      - libbotan-2-12
+      - libbotan-2-19
       - libqrencode4
       - libusb-1.0-0
       - libreadline8
