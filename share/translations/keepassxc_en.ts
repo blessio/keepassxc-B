@@ -820,6 +820,10 @@ Ctrl+4 - Use Virtual Keyboard (Windows Only)&lt;/p&gt;</source>
         <source>Disable for this site</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Undo</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>BrowserEntrySaveDialog</name>
@@ -1578,10 +1582,6 @@ If you do not have a key file, please leave the field empty.</source>
 <context>
     <name>DatabaseSettingsDialog</name>
     <message>
-        <source>Advanced Settings</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>General</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1775,14 +1775,6 @@ Are you sure you want to continue without a password?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Change existing decryption time</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Change</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Decryption time in seconds</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1863,11 +1855,6 @@ Are you sure you want to continue without a password?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>unchanged</source>
-        <comment>Database decryption time is unchanged</comment>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Number of rounds too high</source>
         <comment>Key transformation rounds</comment>
         <translation type="unfinished"></translation>
@@ -1920,6 +1907,18 @@ If you keep this number, your database will not be protected from brute force at
             <numerusform></numerusform>
             <numerusform></numerusform>
         </translation>
+    </message>
+    <message>
+        <source>Encryption Settings:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Basic</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Advanced</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -2039,6 +2038,26 @@ add up to the specified amount at most.</source>
 instead of deleting them from the database.
 Entries deleted from the recycle bin are
 removed from the database.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Autosave delay since last change</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Autosave delay</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Autosave delay since last change in minutes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source> min</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Autosave delay since last change checkbox</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -3919,6 +3938,10 @@ Error: %1</source>
         <source>Invalid URL</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Duplicate URL</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>EntryView</name>
@@ -5566,14 +5589,6 @@ We recommend you use the AppImage available on our downloads page.</source>
     </message>
     <message>
         <source>Here you can adjust the database encryption settings. Don&apos;t worry, you can change them later in the database settings.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Advanced Settings</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Simple Settings</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -7876,10 +7891,6 @@ Kernel: %3 %4</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>allow app screen recordering and screenshots</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Locked databases.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -7939,6 +7950,10 @@ Kernel: %3 %4</source>
     </message>
     <message>
         <source>Access to all entries is denied</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>allow screenshots and app recording (Windows/macOS)</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
