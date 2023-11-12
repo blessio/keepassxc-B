@@ -50,6 +50,7 @@ class QLabel;
 class MessageWidget;
 class EntryPreviewWidget;
 class TagView;
+class ElidedLabel;
 
 namespace Ui
 {
@@ -128,6 +129,7 @@ signals:
     // relayed Database signals
     void databaseFilePathChanged(const QString& oldPath, const QString& newPath);
     void databaseModified();
+    void databaseNonDataChanged();
     void databaseSaved();
     void databaseUnlocked();
     void databaseLockRequested();
@@ -210,6 +212,10 @@ public slots:
     void switchToDatabaseSecurity();
     void switchToDatabaseReports();
     void switchToDatabaseSettings();
+#ifdef WITH_XC_BROWSER_PASSKEYS
+    void switchToPasskeys();
+    void switchToImportPasskey();
+#endif
     void switchToOpenDatabase();
     void switchToOpenDatabase(const QString& filePath);
     void switchToOpenDatabase(const QString& filePath, const QString& password, const QString& keyFile);
@@ -253,6 +259,7 @@ private slots:
     void onEntryChanged(Entry* entry);
     void onGroupChanged();
     void onDatabaseModified();
+    void onDatabaseNonDataChanged();
     void onAutosaveDelayTimeout();
     void connectDatabaseSignals();
     void loadDatabase(bool accepted);
@@ -280,7 +287,7 @@ private:
     QPointer<EntryPreviewWidget> m_previewView;
     QPointer<QSplitter> m_previewSplitter;
     QPointer<QLabel> m_searchingLabel;
-    QPointer<QLabel> m_shareLabel;
+    QPointer<ElidedLabel> m_shareLabel;
     QPointer<CsvImportWizard> m_csvImportWizard;
     QPointer<EditEntryWidget> m_editEntryWidget;
     QPointer<EditGroupWidget> m_editGroupWidget;

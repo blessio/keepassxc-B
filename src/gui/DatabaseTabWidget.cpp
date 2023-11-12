@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2021 KeePassXC Team <team@keepassxc.org>
+ *  Copyright (C) 2023 KeePassXC Team <team@keepassxc.org>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -41,6 +41,7 @@ DatabaseTabWidget::DatabaseTabWidget(QWidget* parent)
     , m_dbWidgetStateSync(new DatabaseWidgetStateSync(this))
     , m_dbWidgetPendingLock(nullptr)
     , m_databaseOpenDialog(new DatabaseOpenDialog(this))
+    , m_databaseOpenInProgress(false)
 {
     auto* tabBar = new QTabBar(this);
     tabBar->setAcceptDrops(true);
@@ -555,6 +556,18 @@ void DatabaseTabWidget::showDatabaseSettings()
     currentDatabaseWidget()->switchToDatabaseSettings();
 }
 
+#ifdef WITH_XC_BROWSER_PASSKEYS
+void DatabaseTabWidget::showPasskeys()
+{
+    currentDatabaseWidget()->switchToPasskeys();
+}
+
+void DatabaseTabWidget::importPasskey()
+{
+    currentDatabaseWidget()->switchToImportPasskey();
+}
+#endif
+
 bool DatabaseTabWidget::isModified(int index) const
 {
     if (count() == 0) {
@@ -857,6 +870,7 @@ void DatabaseTabWidget::emitDatabaseLockChanged()
         emit databaseLocked(dbWidget);
     } else {
         emit databaseUnlocked(dbWidget);
+        m_databaseOpenInProgress = false;
     }
 }
 
@@ -889,6 +903,11 @@ void DatabaseTabWidget::performGlobalAutoType(const QString& search)
 
 void DatabaseTabWidget::performBrowserUnlock()
 {
+    if (m_databaseOpenInProgress) {
+        return;
+    }
+
+    m_databaseOpenInProgress = true;
     auto dbWidget = currentDatabaseWidget();
     if (dbWidget && dbWidget->isLocked()) {
         unlockAnyDatabaseInDialog(DatabaseOpenDialog::Intent::Browser);

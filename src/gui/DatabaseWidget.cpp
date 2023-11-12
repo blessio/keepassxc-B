@@ -53,6 +53,7 @@
 #include "gui/group/GroupView.h"
 #include "gui/reports/ReportsDialog.h"
 #include "gui/tag/TagView.h"
+#include "gui/widgets/ElidedLabel.h"
 #include "keeshare/KeeShare.h"
 
 #ifdef WITH_XC_NETWORKING
@@ -61,6 +62,10 @@
 
 #ifdef WITH_XC_SSHAGENT
 #include "sshagent/SSHAgent.h"
+#endif
+
+#ifdef WITH_XC_BROWSER_PASSKEYS
+#include "gui/passkeys/PasskeyImporter.h"
 #endif
 
 DatabaseWidget::DatabaseWidget(QSharedPointer<Database> db, QWidget* parent)
@@ -73,7 +78,7 @@ DatabaseWidget::DatabaseWidget(QSharedPointer<Database> db, QWidget* parent)
     , m_previewView(new EntryPreviewWidget(this))
     , m_previewSplitter(new QSplitter(m_mainWidget))
     , m_searchingLabel(new QLabel(this))
-    , m_shareLabel(new QLabel(this))
+    , m_shareLabel(new ElidedLabel(this))
     , m_csvImportWizard(new CsvImportWizard(this))
     , m_editEntryWidget(new EditEntryWidget(this))
     , m_editGroupWidget(new EditGroupWidget(this))
@@ -159,7 +164,7 @@ DatabaseWidget::DatabaseWidget(QSharedPointer<Database> db, QWidget* parent)
 
 #ifdef WITH_XC_KEESHARE
     m_shareLabel->setObjectName("KeeShareBanner");
-    m_shareLabel->setText(tr("Shared group…"));
+    m_shareLabel->setRawText(tr("Shared group…"));
     m_shareLabel->setAlignment(Qt::AlignCenter);
     m_shareLabel->setVisible(false);
 #endif
@@ -1111,6 +1116,8 @@ void DatabaseWidget::connectDatabaseSignals()
     connect(m_db.data(), &Database::modified, this, &DatabaseWidget::onDatabaseModified);
     connect(m_db.data(), &Database::databaseSaved, this, &DatabaseWidget::databaseSaved);
     connect(m_db.data(), &Database::databaseFileChanged, this, &DatabaseWidget::reloadDatabaseFile);
+    connect(m_db.data(), &Database::databaseNonDataChanged, this, &DatabaseWidget::databaseNonDataChanged);
+    connect(m_db.data(), &Database::databaseNonDataChanged, this, &DatabaseWidget::onDatabaseNonDataChanged);
 }
 
 void DatabaseWidget::loadDatabase(bool accepted)
@@ -1393,6 +1400,20 @@ void DatabaseWidget::switchToDatabaseSecurity()
     m_databaseSettingDialog->showDatabaseKeySettings();
 }
 
+#ifdef WITH_XC_BROWSER_PASSKEYS
+void DatabaseWidget::switchToPasskeys()
+{
+    switchToDatabaseReports();
+    m_reportsDialog->activatePasskeysPage();
+}
+
+void DatabaseWidget::switchToImportPasskey()
+{
+    PasskeyImporter passkeyImporter;
+    passkeyImporter.importPasskey(m_db);
+}
+#endif
+
 void DatabaseWidget::performUnlockDatabase(const QString& password, const QString& keyfile)
 {
     if (password.isEmpty() && keyfile.isEmpty()) {
@@ -1520,7 +1541,7 @@ void DatabaseWidget::onGroupChanged()
 #ifdef WITH_XC_KEESHARE
     auto shareLabel = KeeShare::sharingLabel(group);
     if (!shareLabel.isEmpty()) {
-        m_shareLabel->setText(shareLabel);
+        m_shareLabel->setRawText(shareLabel);
         m_shareLabel->setVisible(true);
     } else {
         m_shareLabel->setVisible(false);
@@ -1568,6 +1589,14 @@ void DatabaseWidget::triggerAutosaveTimer()
 {
     m_autosaveTimer->stop();
     QMetaObject::invokeMethod(m_autosaveTimer, "timeout");
+}
+
+void DatabaseWidget::onDatabaseNonDataChanged()
+{
+    // Force mark the database modified if we are not auto-saving non-data changes
+    if (!config()->get(Config::AutoSaveNonDataChanges).toBool()) {
+        m_db->markAsModified();
+    }
 }
 
 QString DatabaseWidget::getCurrentSearch()

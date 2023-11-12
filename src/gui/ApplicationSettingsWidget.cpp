@@ -29,15 +29,10 @@
 #include "gui/Icons.h"
 #include "gui/MainWindow.h"
 #include "gui/osutils/OSUtils.h"
+#include "quickunlock/QuickUnlockInterface.h"
 
 #include "FileDialog.h"
 #include "MessageBox.h"
-#ifdef Q_OS_MACOS
-#include "touchid/TouchID.h"
-#endif
-#ifdef Q_CC_MSVC
-#include "winhello/WindowsHello.h"
-#endif
 
 class ApplicationSettingsWidget::ExtraPage
 {
@@ -164,15 +159,6 @@ ApplicationSettingsWidget::ApplicationSettingsWidget(QWidget* parent)
     m_generalUi->faviconTimeoutLabel->setVisible(false);
     m_generalUi->faviconTimeoutSpinBox->setVisible(false);
 #endif
-
-    bool showQuickUnlock = false;
-#if defined(Q_OS_MACOS)
-    showQuickUnlock = TouchID::getInstance().isAvailable();
-#elif defined(Q_CC_MSVC)
-    showQuickUnlock = getWindowsHello()->isAvailable();
-    connect(getWindowsHello(), &WindowsHello::availableChanged, m_secUi->quickUnlockCheckBox, &QCheckBox::setVisible);
-#endif
-    m_secUi->quickUnlockCheckBox->setVisible(showQuickUnlock);
 }
 
 ApplicationSettingsWidget::~ApplicationSettingsWidget() = default;
@@ -323,6 +309,7 @@ void ApplicationSettingsWidget::loadSettings()
     m_secUi->EnableCopyOnDoubleClickCheckBox->setChecked(
         config()->get(Config::Security_EnableCopyOnDoubleClick).toBool());
 
+    m_secUi->quickUnlockCheckBox->setEnabled(getQuickUnlock()->isAvailable());
     m_secUi->quickUnlockCheckBox->setChecked(config()->get(Config::Security_QuickUnlock).toBool());
 
     for (const ExtraPage& page : asConst(m_extraPages)) {
@@ -435,7 +422,9 @@ void ApplicationSettingsWidget::saveSettings()
                   m_secUi->NoConfirmMoveEntryToRecycleBinCheckBox->isChecked());
     config()->set(Config::Security_EnableCopyOnDoubleClick, m_secUi->EnableCopyOnDoubleClickCheckBox->isChecked());
 
-    config()->set(Config::Security_QuickUnlock, m_secUi->quickUnlockCheckBox->isChecked());
+    if (m_secUi->quickUnlockCheckBox->isEnabled()) {
+        config()->set(Config::Security_QuickUnlock, m_secUi->quickUnlockCheckBox->isChecked());
+    }
 
     // Security: clear storage if related settings are disabled
     if (!config()->get(Config::RememberLastDatabases).toBool()) {
