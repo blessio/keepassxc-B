@@ -30,6 +30,9 @@ jobs:
           - os: windows-latest
             c_compiler: cl
             cpp_compiler: cl
+            vcpkg_triplet: x64-windows-release
+          #  - os: macos-11
+          #  vcpkg_triplet: x64-osx-release
           #- os: ubuntu-latest
           #  c_compiler: gcc
           #  cpp_compiler: g++
@@ -59,6 +62,17 @@ jobs:
         cd _vcp
         .\bootstrap-vcpkg.bat -disableMetrics
         cd ..
+
+    
+    - name: vcpkg build
+      # https://github.com/marketplace/actions/vcpkg-action
+      id: vcpkg
+      uses: johnwason/vcpkg-action@v6
+      with:
+        manifest-dir: ${{ github.workspace }} # Set to directory containing vcpkg.json
+        triplet:  ${{ matrix.config.vcpkg_triplet }} # x64-windows-release
+        token: ${{ github.token }}
+        github-binarycache: true
 
 
     - name: Set reusable strings
