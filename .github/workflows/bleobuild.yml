@@ -1,12 +1,12 @@
 # This starter workflow is for a CMake project running on multiple platforms. There is a different starter workflow if you just want a single platform.
 # See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-single-platform.yml
-name: CMake on multiple platforms
+name: stopped CMake on multiple platforms
 
 on:
   push:
-    branches: [ "develop", "devbleo" ]
+    branches: [ "develop-n", "devbleo-n" ]
   pull_request:
-    branches: [ "devbleo" ]
+    branches: [ "devbleo-n" ]
 
 jobs:
   build:
