@@ -55,8 +55,8 @@ jobs:
 
     - name: Setup vcpkg
       run: | 
-        git clone https://github.com/microsoft/vcpkg.git
-        cd vcpkg
+        git clone https://github.com/microsoft/vcpkg.git _vcp
+        cd _vcp
         .\bootstrap-vcpkg.bat 
         cd ..
 
