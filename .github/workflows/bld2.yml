@@ -57,7 +57,7 @@ jobs:
       run: | 
         git clone https://github.com/microsoft/vcpkg.git _vcp
         cd _vcp
-        .\bootstrap-vcpkg.bat 
+        .\bootstrap-vcpkg.bat -disableMetrics
         cd ..
 
 
@@ -74,10 +74,11 @@ jobs:
       # -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
       # -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
       # -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+      # "$ENV:VCPKG_ROOT"\scripts\buildsystems\vcpkg.cmake
       run: >
         cmake -B ${{ steps.strings.outputs.build-output-dir }}
         -DWITH_XC_ALL=ON
-        -DCMAKE_TOOLCHAIN_FILE="$ENV:VCPKG_ROOT"\scripts\buildsystems\vcpkg.cmake
+        -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}\_vcp\scripts\buildsystems\vcpkg.cmake  
         -S ${{ github.workspace }}
 
     - name: Build
