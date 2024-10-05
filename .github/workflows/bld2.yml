@@ -47,6 +47,9 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Install Winget
+      uses: Cyberboss/install-winget@v1
+
     - name: Set Up windows SDK 
       run: winget install --source winget --exact --id Microsoft.WindowsSDK.10.0.26100 
 
