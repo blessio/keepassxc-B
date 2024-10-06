@@ -47,9 +47,10 @@ jobs:
 
     - name: Set Up windows SDK and Ruby and the needed gem of asciidoctor 
       run: | 
-        winget install --id Microsoft.WindowsSDK --source winget
+        winget install --source winget --exact --id Microsoft.WindowsSDK.10.0.22000  --silent
         winget install RubyInstallerTeam.Ruby.3.2 --accept-package-agreements --accept-source-agreements
         gem install asciidoctor
+      # winget install --id Microsoft.WindowsSDK --source winget
       
     - name: vcpkg build
       id: vcpkg
