@@ -10,8 +10,7 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
-
+    runs-on: ${{ matrix.config.os }}
     strategy:
       # Set fail-fast to false to ensure that feedback is delivered for all matrix combinations. Consider changing this to true when your workflow is stable.
       fail-fast: false
@@ -23,39 +22,17 @@ jobs:
       #
       # To add more build types (Release, Debug, RelWithDebInfo, etc.) customize the build_type list.
       matrix:
-        os: [windows-latest] # [ubuntu-latest, windows-latest]
-        build_type: [Release]
-        c_compiler: [gcc, clang, cl]
-        include:
-          - os: windows-latest
-            c_compiler: cl
-            cpp_compiler: cl
-            vcpkg_triplet: x64-windows-release
-          #  - os: macos-11
-          #  vcpkg_triplet: x64-osx-release
-          #- os: ubuntu-latest
-          #  c_compiler: gcc
-          #  cpp_compiler: g++
-          #- os: ubuntu-latest
-          #  c_compiler: clang
-          #  cpp_compiler: clang++
-        exclude:
-          - os: windows-latest
-            c_compiler: gcc
-          - os: windows-latest
-            c_compiler: clang
-          #- os: ubuntu-latest
-          #  c_compiler: cl
+        config:
+        - os: [windows-latest] # [ubuntu-latest, windows-latest]
+          build_type: [Release]
+          vcpkg_triplet: x64-windows-release
+          github-binarycache: true
+        
 
     steps:
-    - uses: actions/checkout@v4
+    - name: get from Git
+      uses: actions/checkout@v4
 
-    - name: Install Winget
-      uses: Cyberboss/install-winget@v1
-
-    - name: Set Up windows SDK 
-      run: winget install --source winget --exact --id Microsoft.WindowsSDK.10.0.26100 
-    
     - name: Set reusable strings
     # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
       id: strings
@@ -63,13 +40,20 @@ jobs:
       run: |
         echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
         echo "build-root-vcpkg-dir=_vpkg"  >> "$GITHUB_OUTPUT"
+        echo " TRIPLET IS ${{ matrix.config.vcpkg_triplet }}"
 
+    - name: Install Winget
+      uses: Cyberboss/install-winget@v1
+
+    - name: Set Up windows SDK 
+      run: winget install --source winget --exact --id Microsoft.WindowsSDK.10.0.26100  --silent
+    
     - name: vcpkg build
       id: vcpkg
       uses: blessio/vcpkg-actionB@v7.Tested
       with:
         manifest-dir: ${{ github.workspace }} # Set to directory containing vcpkg.json
-        triplet:  ${{ matrix.os.vcpkg_triplet }} # x64-windows-release
+        triplet:  ${{ matrix.config.vcpkg_triplet }} # x64-windows-release
         token: ${{ github.token }}
         github-binarycache: true
         vcpkg-subdir: ${{ steps.strings.outputs.build-root-vcpkg-dir}}
