@@ -69,7 +69,7 @@ jobs:
       uses: blessio/vcpkg-actionB@v7.Tested
       with:
         manifest-dir: ${{ github.workspace }} # Set to directory containing vcpkg.json
-        triplet:  ${{ matrix.config.vcpkg_triplet }} # x64-windows-release
+        triplet:  ${{ matrix.os.vcpkg_triplet }} # x64-windows-release
         token: ${{ github.token }}
         github-binarycache: true
         vcpkg-subdir: ${{ steps.strings.outputs.build-root-vcpkg-dir}}
