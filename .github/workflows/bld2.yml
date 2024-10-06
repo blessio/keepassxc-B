@@ -57,7 +57,8 @@ jobs:
         token: ${{ github.token }}
         github-binarycache: true
         vcpkg-subdir: ${{ steps.strings.outputs.build-root-vcpkg-dir}}
-        cache-key: kpxcbleo 
+        cache-key: kpxcbleo2
+        fetch-depth: "0"
 
     - name: Configure CMake
     # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
