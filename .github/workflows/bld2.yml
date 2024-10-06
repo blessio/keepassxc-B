@@ -45,9 +45,9 @@ jobs:
     - name: Install Winget
       uses: Cyberboss/install-winget@v1
 
-    - name: Set Up windows SDK and Ruby and the needed gem of asciidoctor
+    - name: Set Up windows SDK and Ruby and the needed gem of asciidoctor 
       run: | 
-        winget install --source winget --exact --id Microsoft.WindowsSDK.10.0.26100  --silent
+        winget install --id Microsoft.WindowsSDK --source winget
         winget install RubyInstallerTeam.Ruby.3.2 --accept-package-agreements --accept-source-agreements
         gem install asciidoctor
       
