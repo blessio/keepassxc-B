@@ -81,11 +81,11 @@ jobs:
         cmake -B ${{ steps.strings.outputs.build-output-dir }} 
         -DWITH_XC_ALL=ON 
         ${{ steps.vcpkg.outputs.vcpkg-cmake-config }}
+        -S ${{ github.workspace }}
 
 
       # -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}\${{ steps.strings.outputs.build-root-vcpkg-dir}}\scripts\buildsystems\vcpkg.cmake  
-      # -S ${{ github.workspace }}
-
+      
     - name: Check DiskSpace 
       run: > 
         Get-PSDrive -PSProvider FileSystem | Select-Object Name, @{Name="Used (GB)";Expression={[math]::round($_.Used/1GB,2)}},
