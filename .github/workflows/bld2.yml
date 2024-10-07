@@ -54,7 +54,7 @@ jobs:
       
     - name: vcpkg build
       id: vcpkg
-      uses: blessio/vcpkg-actionB@v7.Tested2
+      uses: blessio/vcpkg-actionB@master #v7.Tested2
       with:
         manifest-dir: ${{ github.workspace }} # Set to directory containing vcpkg.json
         triplet:  ${{ matrix.config.vcpkg_triplet }} # x64-windows-release
