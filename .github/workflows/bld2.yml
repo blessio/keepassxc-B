@@ -61,7 +61,7 @@ jobs:
         token: ${{ github.token }}
         github-binarycache: true
         vcpkg-subdir: ${{ steps.strings.outputs.build-root-vcpkg-dir}}
-        cache-key: kpxcbleo2
+        cache-key: "kpxcbleo3${{ matrix.config.vcpkg_triplet }}"
         fetch-depth: "0"
 
     - name: Print some results 
