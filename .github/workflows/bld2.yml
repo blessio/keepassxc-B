@@ -61,7 +61,7 @@ jobs:
         token: ${{ github.token }}
         github-binarycache: true
         vcpkg-subdir: ${{ steps.strings.outputs.build-root-vcpkg-dir}}
-        cache-key: "kpxcbleo3${{ matrix.config.vcpkg_triplet }}"
+        cache-key: "kpxcbleo3-${{ matrix.config.vcpkg_triplet }}"
         fetch-depth: "0"
 
     - name: Print some results 
@@ -80,11 +80,12 @@ jobs:
       run: >
         cmake -B ${{ steps.strings.outputs.build-output-dir }} 
         -DWITH_XC_ALL=ON 
-        ${{ steps.vcpkg.outputs.vcpkg-cmake-config }}
+        -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}\${{ steps.strings.outputs.build-root-vcpkg-dir}}\scripts\buildsystems\vcpkg.cmake 
         -S ${{ github.workspace }}
 
 
-      # -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}\${{ steps.strings.outputs.build-root-vcpkg-dir}}\scripts\buildsystems\vcpkg.cmake  
+      # -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}\${{ steps.strings.outputs.build-root-vcpkg-dir}}\scripts\buildsystems\vcpkg.cmake 
+      # ${{ steps.vcpkg.outputs.vcpkg-cmake-config }} 
       
     - name: Check DiskSpace 
       run: > 
