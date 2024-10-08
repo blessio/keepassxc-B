@@ -92,6 +92,10 @@ jobs:
         Get-PSDrive -PSProvider FileSystem | Select-Object Name, @{Name="Used (GB)";Expression={[math]::round($_.Used/1GB,2)}},
         @{Name="Free (GB)";Expression={[math]::round($_.Free/1GB,2)}}
     
+    - name: Print all environement Variables
+      run: >
+        Get-ChildItem Env: | Sort-Object Name
+
 
     - name: Build
       # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
