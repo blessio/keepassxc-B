@@ -64,6 +64,11 @@ jobs:
         cache-key: "kpxcbleo3-${{ matrix.config.vcpkg_triplet }}"
         fetch-depth: "0"
 
+    - name: Set environment variable VCPKG_ROOT
+      run: |
+        $env:VCPKG_ROOT = "${{ steps.strings.outputs.build-root-vcpkg-dir}}"
+        echo "VCPKG_ROOT=$env:VCPKG_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
     - name: Print some results 
       shell: bash
       run: |   
