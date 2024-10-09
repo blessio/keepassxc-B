@@ -52,17 +52,17 @@ jobs:
         gem install asciidoctor
       # winget install --id Microsoft.WindowsSDK --source winget
       
-    - name: vcpkg build
-      id: vcpkg
-      uses: blessio/vcpkg-actionB@master #v7.Tested2
-      with:
-        manifest-dir: ${{ github.workspace }} # Set to directory containing vcpkg.json
-        triplet:  ${{ matrix.config.vcpkg_triplet }} # x64-windows-release
-        token: ${{ github.token }}
-        github-binarycache: true
-        vcpkg-subdir: ${{ steps.strings.outputs.build-root-vcpkg-dir}}
-        cache-key: "kpxcbleo5-${{ matrix.config.vcpkg_triplet }}"
-        fetch-depth: "0"
+    #- name: vcpkg build
+    #  id: vcpkg
+    #  uses: blessio/vcpkg-actionB@master #v7.Tested2
+    #  with:
+    #    manifest-dir: ${{ github.workspace }} # Set to directory containing vcpkg.json
+    #    triplet:  ${{ matrix.config.vcpkg_triplet }} # x64-windows-release
+    #    token: ${{ github.token }}
+    #    github-binarycache: true
+    #    vcpkg-subdir: ${{ steps.strings.outputs.build-root-vcpkg-dir}}
+    #    cache-key: "kpxcbleo5-${{ matrix.config.vcpkg_triplet }}"
+    #    fetch-depth: "0"
 
     #- name: Set environment variable VCPKG_ROOT
     #  run: |
