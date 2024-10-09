@@ -23,7 +23,7 @@ jobs:
       # To add more build types (Release, Debug, RelWithDebInfo, etc.) customize the build_type list.
       matrix:
         config:
-        - os: [windows-latest] # [ubuntu-latest, windows-latest]
+        - os: [windows-2019] #[windows-latest] # [ubuntu-latest, windows-latest]
           build_type: Release
           vcpkg_triplet: x64-windows-release
           github-binarycache: true
