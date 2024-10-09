@@ -28,7 +28,6 @@ jobs:
           vcpkg_triplet: x64-windows-release
           github-binarycache: true
         
-
     steps:
     - name: get from Git
       uses: actions/checkout@v4
@@ -69,11 +68,11 @@ jobs:
     #    $env:VCPKG_ROOT = " ${{ github.workspace }}\${{ steps.strings.outputs.build-root-vcpkg-dir }}"
     #    echo "VCPKG_ROOT=$env:VCPKG_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
-    - name: Print some results 
-      shell: bash
-      run: |   
-        echo  " *** RECOMENDED CMAKE CONFIG is ${{ steps.vcpkg.outputs.vcpkg-cmake-config }}"  # description: Configure options for cmake to use vcpkg 
-        echo  " *** HASH IS ${{ steps.vcpkg.outputs.vcpkg-cache-hash }}"                       # description: Hash of the vcpkg cache key
+    #- name: Print some results 
+    #  shell: bash
+    #  run: |   
+    #    echo  " *** RECOMENDED CMAKE CONFIG is ${{ steps.vcpkg.outputs.vcpkg-cmake-config }}"  # description: Configure options for cmake to use vcpkg 
+    #    echo  " *** HASH IS ${{ steps.vcpkg.outputs.vcpkg-cache-hash }}"                       # description: Hash of the vcpkg cache key
     
     - name: Configure CMake
     # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
@@ -82,11 +81,9 @@ jobs:
     # -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
     # -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
     # "$ENV:VCPKG_ROOT"\scripts\buildsystems\vcpkg.cmake
-      run: >
-        cmake -B ${{ steps.strings.outputs.build-output-dir }} 
-        -DWITH_XC_ALL=ON 
-        -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}\${{ steps.strings.outputs.build-root-vcpkg-dir}}\scripts\buildsystems\vcpkg.cmake 
-        -S ${{ github.workspace }}
+      run: |
+        cd ${{ steps.strings.outputs.build-output-dir }}
+        cmake -DWITH_XC_ALL=ON  -DCMAKE_TOOLCHAIN_FILE="$ENV:VCPKG_ROOT"\scripts\buildsystems\vcpkg.cmake ..
 
 
       # -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}\${{ steps.strings.outputs.build-root-vcpkg-dir}}\scripts\buildsystems\vcpkg.cmake 
