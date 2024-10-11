@@ -1,10 +1,11 @@
-# This starter workflow is for a CMake project running on multiple platforms. There is a different starter workflow if you just want a single platform.
+# Used the starter here:
 # See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-single-platform.yml
+# BUILDS KeepasXC 
 name: Windows-Only-MatrixBased
 
 on:
   push:
-    branches: [ "develop", "devbleo" ]
+    branches: [ "develop", "devbleo2", "bleo7" ]
   pull_request:
     branches: [ "devbleo" ]
 
@@ -23,59 +24,80 @@ jobs:
       # To add more build types (Release, Debug, RelWithDebInfo, etc.) customize the build_type list.
       matrix:
         config:
-        - os: [windows-latest] # [ubuntu-latest, windows-latest]
-          build_type: [Release]
-          vcpkg_triplet: x64-windows-release
-          github-binarycache: true
-        
+        - os: [windows-2022] #[windows-latest] # [ubuntu-latest, windows-latest]
+          build_type: Release
+          vcpkg_triplet: x64-windows
+          github-binarycache: true   
 
     steps:
-    - name: get from Git
-      uses: actions/checkout@v4
 
-    - name: Set reusable strings
-    # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
+    - name: Set reusable strings and Environment for actions
+     # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
       id: strings
       shell: bash
       run: |
         echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
         echo "build-root-vcpkg-dir=_vpkg"  >> "$GITHUB_OUTPUT"
+        echo "build-winsdk=10.0.26100" >> "$GITHUB_OUTPUT"
+        echo "FORCE_JAVASCRIPT_ACTIONS_TO_NODE20=true"  >> "$GITHUB_OUTPUT"
         echo " TRIPLET IS ${{ matrix.config.vcpkg_triplet }}"
+  
+    - name: get from Git
+      uses: actions/checkout@v4
 
     - name: Install Winget
       uses: Cyberboss/install-winget@v1
 
-    - name: Set Up windows SDK 
-      run: winget install --source winget --exact --id Microsoft.WindowsSDK.10.0.26100  --silent
-    
+    - name: Set Up windows SDK and Ruby and the needed gem of asciidoctor 
+      run: | 
+        winget install --source winget --exact --id Microsoft.WindowsSDK.${{ steps.strings.outputs.build-winsdk }} --silent
+        winget install RubyInstallerTeam.Ruby.3.2 --accept-package-agreements --accept-source-agreements
+        gem install asciidoctor
+
+    - name: Set environment variable VCPKG_ROOT
+      run: |
+        $env:VCPKG_ROOT = "$env:VCPKG_INSTALLATION_ROOT"
+        echo "VCPKG_ROOT=$env:VCPKG_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      
     - name: vcpkg build
       id: vcpkg
-      uses: blessio/vcpkg-actionB@v7.Tested2
+      uses: blessio/vcpkg-actionB@vbleo7.0
       with:
-        manifest-dir: ${{ github.workspace }} # Set to directory containing vcpkg.json
+        manifest-dir: ${{ github.workspace }}        # Set to directory containing vcpkg.json
         triplet:  ${{ matrix.config.vcpkg_triplet }} # x64-windows-release
         token: ${{ github.token }}
         github-binarycache: true
         vcpkg-subdir: ${{ steps.strings.outputs.build-root-vcpkg-dir}}
-        cache-key: kpxcbleo2
+        cache-key: "kpxco5-${{ matrix.config.vcpkg_triplet }}"
         fetch-depth: "0"
-
+    
+    - name: Print intermediate environment results 
+      shell: bash
+      run: |   
+        echo  " *** RECOMENDED CMAKE CONFIG is ${{ steps.vcpkg.outputs.vcpkg-cmake-config }}"  
+        echo  " *** HASH IS ${{ steps.vcpkg.outputs.vcpkg-cache-hash }}"                       
+    
     - name: Configure CMake
-    # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-    # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-    # -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
-    # -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
-    # -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-    # "$ENV:VCPKG_ROOT"\scripts\buildsystems\vcpkg.cmake
       run: >
-        cmake -B ${{ steps.strings.outputs.build-output-dir }}
-        -DWITH_XC_ALL=ON
-        -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}\${{ steps.strings.outputs.build-root-vcpkg-dir}}\scripts\buildsystems\vcpkg.cmake  
+        cmake -B ${{ steps.strings.outputs.build-output-dir }} 
+        -DWITH_XC_ALL=ON -DCMAKE_SYSTEM_VERSION=${{ steps.strings.outputs.build-winsdk }} 
+        -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}\${{ steps.strings.outputs.build-root-vcpkg-dir}}\scripts\buildsystems\vcpkg.cmake 
         -S ${{ github.workspace }}
+     
+    - name: Check DiskSpace 
+      run: > 
+        Get-PSDrive -PSProvider FileSystem | Select-Object Name, @{Name="Used (GB)";Expression={[math]::round($_.Used/1GB,2)}},
+        @{Name="Free (GB)";Expression={[math]::round($_.Free/1GB,2)}}
+    
+    - name: Print all environement Variables
+      run: >
+        Get-ChildItem Env: | Sort-Object Name
 
     - name: Build
       # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
-      run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.config.build_type }}
+      run: |
+        cd ${{ steps.strings.outputs.build-output-dir }}
+        cmake --build . --config ${{ matrix.config.build_type }}  
 
     - name: Test
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
