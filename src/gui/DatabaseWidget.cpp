@@ -265,15 +265,26 @@ QSharedPointer<Database> DatabaseWidget::database() const
 
 DatabaseWidget::Mode DatabaseWidget::currentMode() const
 {
-    if (currentWidget() == nullptr) {
-        return Mode::None;
-    } else if (currentWidget() == m_mainWidget) {
-        return Mode::ViewMode;
-    } else if (currentWidget() == m_databaseOpenWidget) {
-        return Mode::LockedMode;
+    auto mode = Mode::None;
+    auto widget = currentWidget();
+    if (widget == m_mainWidget) {
+        mode = Mode::ViewMode;
+    } else if (widget == m_databaseOpenWidget) {
+        mode = Mode::LockedMode;
+    } else if (widget == m_reportsDialog) {
+        mode = Mode::ReportsMode;
+    } else if (widget == m_databaseSettingDialog) {
+        mode = Mode::DatabaseSettingsMode;
+    } else if (widget == m_editEntryWidget) {
+        mode = Mode::EditEntryMode;
+    } else if (widget == m_editGroupWidget) {
+        mode = Mode::EditGroupMode;
     } else {
-        return Mode::EditMode;
+        // We are missing a condition if we reach here
+        Q_ASSERT(false);
     }
+
+    return mode;
 }
 
 bool DatabaseWidget::isLocked() const
@@ -1014,7 +1025,7 @@ void DatabaseWidget::openUrlForEntry(Entry* entry)
     }
 }
 
-Entry* DatabaseWidget::currentSelectedEntry()
+Entry* DatabaseWidget::currentSelectedEntry() const
 {
     if (currentWidget() == m_editEntryWidget) {
         return m_editEntryWidget->currentEntry();
@@ -1484,11 +1495,6 @@ void DatabaseWidget::entryActivationSignalReceived(Entry* entry, EntryModel::Mod
             switchToEntryEdit(entry);
         }
         break;
-    case EntryModel::Url:
-        if (!entry->url().isEmpty()) {
-            openUrlForEntry(entry);
-        }
-        break;
     case EntryModel::Totp:
         if (entry->hasTotp()) {
             setClipboardTextAndMinimize(entry->totp());
@@ -1509,6 +1515,13 @@ void DatabaseWidget::entryActivationSignalReceived(Entry* entry, EntryModel::Mod
     // TODO: switch to 'Attachments' tab in details view/pane
     // case EntryModel::Attachments:
     //    break;
+    case EntryModel::Url:
+        if (!entry->url().isEmpty() && config()->get(Config::OpenURLOnDoubleClick).toBool()) {
+            openUrlForEntry(entry);
+            break;
+        }
+        // Note, order matters here. We want to fall into the default case.
+        [[fallthrough]];
     default:
         switchToEntryEdit(entry);
     }
@@ -1516,14 +1529,18 @@ void DatabaseWidget::entryActivationSignalReceived(Entry* entry, EntryModel::Mod
 
 void DatabaseWidget::switchToDatabaseReports()
 {
-    m_reportsDialog->load(m_db);
-    setCurrentWidget(m_reportsDialog);
+    if (currentMode() != Mode::ReportsMode) {
+        m_reportsDialog->load(m_db);
+        setCurrentWidget(m_reportsDialog);
+    }
 }
 
 void DatabaseWidget::switchToDatabaseSettings()
 {
-    m_databaseSettingDialog->load(m_db);
-    setCurrentWidget(m_databaseSettingDialog);
+    if (currentMode() != Mode::DatabaseSettingsMode) {
+        m_databaseSettingDialog->load(m_db);
+        setCurrentWidget(m_databaseSettingDialog);
+    }
 }
 
 void DatabaseWidget::switchToOpenDatabase()
@@ -1865,16 +1882,13 @@ void DatabaseWidget::onEntryChanged(Entry* entry)
 
 bool DatabaseWidget::canCloneCurrentGroup() const
 {
-    bool isRootGroup = m_db->rootGroup() == m_groupView->currentGroup();
-    // bool isRecycleBin = isRecycleBinSelected();
-
-    return !isRootGroup;
+    auto currentGroup = m_groupView->currentGroup();
+    return currentGroup != m_db->rootGroup() && currentGroup != m_db->metadata()->recycleBin();
 }
 
 bool DatabaseWidget::canDeleteCurrentGroup() const
 {
-    bool isRootGroup = m_db->rootGroup() == m_groupView->currentGroup();
-    return !isRootGroup;
+    return currentGroup() != m_db->rootGroup();
 }
 
 Group* DatabaseWidget::currentGroup() const
@@ -1941,8 +1955,8 @@ bool DatabaseWidget::focusNextPrevChild(bool next)
 
 bool DatabaseWidget::lock()
 {
-    if (isLocked()) {
-        return true;
+    if (isLocked() || m_attemptingLock) {
+        return isLocked();
     }
 
     // Don't try to lock the database while saving, this will cause a deadlock
@@ -1950,6 +1964,8 @@ bool DatabaseWidget::lock()
         QTimer::singleShot(200, this, SLOT(lock()));
         return false;
     }
+
+    m_attemptingLock = true;
 
     emit databaseLockRequested();
 
@@ -1975,6 +1991,7 @@ bool DatabaseWidget::lock()
                                            MessageBox::Discard | MessageBox::Cancel,
                                            MessageBox::Cancel);
         if (result == MessageBox::Cancel) {
+            m_attemptingLock = false;
             return false;
         }
     }
@@ -2001,9 +2018,11 @@ bool DatabaseWidget::lock()
                                                MessageBox::Save);
             if (result == MessageBox::Save) {
                 if (!save()) {
+                    m_attemptingLock = false;
                     return false;
                 }
             } else if (result == MessageBox::Cancel) {
+                m_attemptingLock = false;
                 return false;
             }
         }
@@ -2035,6 +2054,7 @@ bool DatabaseWidget::lock()
     auto newDb = QSharedPointer<Database>::create(m_db->filePath());
     replaceDatabase(newDb);
 
+    m_attemptingLock = false;
     emit databaseLocked();
 
     return true;
@@ -2483,7 +2503,9 @@ void DatabaseWidget::hideMessage()
 
 bool DatabaseWidget::isRecycleBinSelected() const
 {
-    return m_groupView->currentGroup() && m_groupView->currentGroup() == m_db->metadata()->recycleBin();
+    auto group = currentGroup();
+    auto entry = currentSelectedEntry();
+    return (group && group->isRecycled()) || (entry && entry->isRecycled());
 }
 
 void DatabaseWidget::emptyRecycleBin()

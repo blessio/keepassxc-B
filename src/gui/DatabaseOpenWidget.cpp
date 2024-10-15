@@ -72,7 +72,6 @@ DatabaseOpenWidget::DatabaseOpenWidget(QWidget* parent)
     font.setPointSize(font.pointSize() + 4);
     font.setBold(true);
     m_ui->labelHeadline->setFont(font);
-    m_ui->labelHeadline->setText(tr("Unlock KeePassXC Database"));
 
     m_ui->quickUnlockButton->setFont(font);
     m_ui->quickUnlockButton->setIcon(
@@ -229,6 +228,31 @@ void DatabaseOpenWidget::load(const QString& filename)
 
     m_ui->fileNameLabel->setRawText(m_filename);
 
+    // Set the public name if defined
+    auto label = tr("Unlock KeePassXC Database");
+    if (!m_db->publicName().isEmpty()) {
+        label.append(QString(": %1").arg(m_db->publicName()));
+    }
+    m_ui->labelHeadline->setText(label);
+
+    // Apply the public color to the central unlock stack if defined
+    auto color = m_db->publicColor();
+    if (!color.isEmpty()) {
+        m_ui->centralStack->setStyleSheet(QString("QStackedWidget {border: 4px solid %1}").arg(color));
+    } else {
+        m_ui->centralStack->setStyleSheet("");
+    }
+
+    // Show the database icon if defined
+    auto iconIndex = m_db->publicIcon();
+    if (iconIndex >= 0 && iconIndex < databaseIcons()->count()) {
+        m_ui->dbIconLabel->setPixmap(databaseIcons()->icon(iconIndex, IconSize::Large));
+        m_ui->dbIconLabel->setVisible(true);
+    } else {
+        m_ui->dbIconLabel->setPixmap({});
+        m_ui->dbIconLabel->setVisible(false);
+    }
+
     if (config()->get(Config::RememberLastKeyFiles).toBool()) {
         auto lastKeyFiles = config()->get(Config::LastKeyFiles).toHash();
         if (lastKeyFiles.contains(m_filename)) {
@@ -253,6 +277,7 @@ void DatabaseOpenWidget::clearForms()
     m_ui->keyFileLineEdit->setShowPassword(false);
     m_ui->keyFileLineEdit->setClearButtonEnabled(true);
     m_ui->hardwareKeyCombo->clear();
+    toggleHardwareKeyComponent(false);
     toggleQuickUnlockScreen();
 
     m_db.reset(new Database(m_filename));
@@ -497,6 +522,7 @@ void DatabaseOpenWidget::pollHardwareKey(bool manualTrigger)
     }
 
     m_ui->hardwareKeyCombo->setEnabled(false);
+    m_ui->useHardwareKeyCheckBox->setEnabled(false);
     m_ui->hardwareKeyProgress->setVisible(true);
     m_ui->refreshHardwareKeys->setEnabled(false);
     m_ui->noHardwareKeysFoundLabel->setVisible(false);
@@ -511,6 +537,7 @@ void DatabaseOpenWidget::pollHardwareKey(bool manualTrigger)
 
 void DatabaseOpenWidget::hardwareKeyResponse(bool found)
 {
+    m_ui->useHardwareKeyCheckBox->setEnabled(true);
     m_ui->hardwareKeyProgress->setVisible(false);
     m_ui->refreshHardwareKeys->setEnabled(true);
     m_ui->hardwareKeyCombo->clear();

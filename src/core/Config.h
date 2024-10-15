@@ -49,6 +49,7 @@ public:
         UseDirectWriteSaves,
         SearchLimitGroup,
         MinimizeOnOpenUrl,
+        OpenURLOnDoubleClick,
         HideWindowOnCopy,
         MinimizeOnCopy,
         MinimizeAfterUnlock,
@@ -216,6 +217,9 @@ public:
     bool hasAccessError();
     void sync();
     void resetToDefaults();
+
+    bool importSettings(const QString& fileName);
+    void exportSettings(const QString& fileName) const;
 
     QList<ShortcutEntry> getShortcuts() const;
     void setShortcuts(const QList<ShortcutEntry>& shortcuts);

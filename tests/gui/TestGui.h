@@ -42,6 +42,7 @@ private slots:
     void testMergeDatabase();
     void testRemoteSyncDatabaseSameKey();
     void testRemoteSyncDatabaseRequiresPassword();
+    void testOpenRemoteDatabase();
     void testAutoreloadDatabase();
     void testTabs();
     void testEditEntry();
@@ -69,6 +70,7 @@ private slots:
     void testAutoType();
     void testTrayRestoreHide();
     void testShortcutConfig();
+    void testMenuActionStates();
 
 private:
     void addCannedEntries();
