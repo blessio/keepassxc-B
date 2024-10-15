@@ -5,7 +5,7 @@ name: BLD AND TEST MatrixBased-WIN64-UBUNTU-NotyetMacOS
 
 on:
   push:
-    branches: [ "develop", "devbleo2", bleo8, bleo5_01 ]
+    branches: [ "develop", "devbleo2", bleo8, bleo5_01, bleo5_01.1 ]
   pull_request:
     branches: [ "devbleo" , bleo5_01 ]
 
