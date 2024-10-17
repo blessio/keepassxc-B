@@ -1,3 +1,7 @@
+# File: .github/workflows/bld-test-upload.yml
+# Copyright: 2024, Owner of blessio.com
+# License: MIT
+############################################
 # Used the starter here:
 # See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-single-platform.yml
 # BUILDS KeepasXC 
