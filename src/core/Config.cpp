@@ -66,6 +66,7 @@ static const QHash<Config::ConfigKey, ConfigDirective> configStrings = {
     {Config::UseDirectWriteSaves,{QS("UseDirectWriteSaves"), Local, false}},
     {Config::SearchLimitGroup,{QS("SearchLimitGroup"), Roaming, false}},
     {Config::MinimizeOnOpenUrl,{QS("MinimizeOnOpenUrl"), Roaming, false}},
+    {Config::OpenURLOnDoubleClick, {QS("OpenURLOnDoubleClick"), Roaming, true}},
     {Config::HideWindowOnCopy,{QS("HideWindowOnCopy"), Roaming, false}},
     {Config::MinimizeOnCopy,{QS("MinimizeOnCopy"), Roaming, true}},
     {Config::MinimizeAfterUnlock,{QS("MinimizeAfterUnlock"), Roaming, false}},
@@ -299,6 +300,45 @@ void Config::resetToDefaults()
     m_settings->clear();
     if (m_localSettings) {
         m_localSettings->clear();
+    }
+}
+
+bool Config::importSettings(const QString& fileName)
+{
+    // Ensure file is valid ini with values
+    QSettings settings(fileName, QSettings::IniFormat);
+    if (settings.status() != QSettings::NoError || settings.allKeys().isEmpty()) {
+        return false;
+    }
+
+    // Only import valid roaming settings
+    auto isValidSetting = [](const QString& key) {
+        for (const auto& value : configStrings.values()) {
+            if (value.type == ConfigType::Roaming && value.name == key) {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    // Clear existing settings and set valid items
+    m_settings->clear();
+    for (const auto& key : settings.allKeys()) {
+        if (isValidSetting(key)) {
+            m_settings->setValue(key, settings.value(key));
+        }
+    }
+
+    sync();
+
+    return true;
+}
+
+void Config::exportSettings(const QString& fileName) const
+{
+    QSettings settings(fileName, QSettings::IniFormat);
+    for (const auto& key : m_settings->allKeys()) {
+        settings.setValue(key, m_settings->value(key));
     }
 }
 

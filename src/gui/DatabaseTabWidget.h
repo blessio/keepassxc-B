@@ -21,6 +21,7 @@
 #include "DatabaseOpenDialog.h"
 #include "config-keepassx.h"
 #include "gui/MessageWidget.h"
+#include "wizard/ImportWizard.h"
 
 #include <QTabWidget>
 #include <QTimer>
@@ -64,7 +65,7 @@ public slots:
     DatabaseWidget* newDatabase();
     void openDatabase();
     void mergeDatabase();
-    DatabaseWidget* importFile();
+    void importFile();
     bool saveDatabase(int index = -1);
     bool saveDatabaseAs(int index = -1);
     bool saveDatabaseBackup(int index = -1);
@@ -82,9 +83,9 @@ public slots:
     void unlockAnyDatabaseInDialog(DatabaseOpenDialog::Intent intent);
     void relockPendingDatabase();
 
+    void showDatabaseReports(bool state);
+    void showDatabaseSettings(bool state);
     void showDatabaseSecurity();
-    void showDatabaseReports();
-    void showDatabaseSettings();
 #ifdef WITH_XC_BROWSER_PASSKEYS
     void showPasskeys();
     void importPasskey();
@@ -123,6 +124,7 @@ private:
     QPointer<DatabaseWidgetStateSync> m_dbWidgetStateSync;
     QPointer<DatabaseWidget> m_dbWidgetPendingLock;
     QPointer<DatabaseOpenDialog> m_databaseOpenDialog;
+    QPointer<ImportWizard> m_importWizard;
     QTimer m_lockDelayTimer;
     bool m_databaseOpenInProgress;
 };
