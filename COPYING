@@ -281,3 +281,7 @@ Files: src/thirdparty/ykcore/yk*
 Copyright: 2006-2015, Yubico AB
 License: BSD-2-Clause
 Comment: from the yubikey-personalization repo (https://github.com/Yubico/yubikey-personalization)
+
+Files: .github/workflows/bld-test-upload.yml
+Copyright: 2024, Owner of blessio.com
+License: MIT
