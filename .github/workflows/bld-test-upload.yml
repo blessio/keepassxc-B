@@ -5,11 +5,11 @@
 # Used the starter here:
 # See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-single-platform.yml
 # BUILDS KeepasXC 
-name: BLD AND TEST MatrixBased-WIN64-UBUNTU-NotyetMacOS
+name: BLD AND TEST MatrixBased-WIN64-UBUNTU-MacOS
 
 on:
   push:
-    branches: [ "develop", "devbleo2", bleo8, bleo5_01, bleo5_01.1 ]
+    branches: [ "develop", "devbleo3", bleo8, bleo5_01, bleo5_01.1 ]
   pull_request:
     branches: [ "devbleo" , bleo5_01 ]
 
@@ -30,9 +30,12 @@ jobs:
         - os: ubuntu-22.04 # , ubuntu-latest] #[windows-latest] # [ubuntu-latest, windows-latest]
           vcpkg_triplet: x64-linux
           github-binarycache: true   
+        - os: macos-latest
+          vcpkg_triplet: x64-osx-dynamic-release
+          github-binarycache: true
 
     steps:
-
+    ###################################
 
     - name: Generate UUID
       id: generate-uuid
@@ -79,12 +82,21 @@ jobs:
         libkeyutils-dev zlib1g-dev libreadline-dev libpcsclite-dev libusb-1.0-0-dev 
         libxi-dev libxtst-dev  libqt5x11extras5-dev                                          
       
+    - name: MACOS Only // Prepare Linux packages that are needed
+      if: ${{ startsWith( matrix.config.os , 'macos' ) }}
+      run: | 
+        xcode-select --install
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        brew install cmake asciidoctor
+        brew install pkg-config vcpkg
+        
+
     - name: get from Git
       uses: actions/checkout@v4
 
-    - name: Windows Only // VCPKG build
+    - name: Windows AND MacOS  // VCPKG install build
       id: vcpkg
-      if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
+      if: ${{ startsWith( matrix.config.os  , 'windows' ) }} || ${{ startsWith( matrix.config.os  , 'macos' ) }}
       uses: blessio/vcpkg-actionB@vbleo7.0
       with:
         manifest-dir: ${{ github.workspace }}            # Set to directory containing vcpkg.json
@@ -109,6 +121,8 @@ jobs:
         cmake -DWITH_XC_ALL=ON 
         -DCMAKE_SYSTEM_VERSION=${{ steps.strings.outputs.build-winsdk }} 
         -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}\${{ steps.strings.outputs.build-root-vcpkg-dir}}\scripts\buildsystems\vcpkg.cmake 
+        -DVCPKG_TARGET_TRIPLET= ${{ matrix.config.vcpkg_triplet }}
+        -DCMAKE_BUILD_TYPE= ${{ matrix.build_type }}
         -DWITH_GUI_TESTS=ON 
         ..
     
@@ -117,7 +131,7 @@ jobs:
       run: >
         mkdir  ${{ steps.strings.outputs.build-sub-dir }}  && 
         cd     ${{ steps.strings.outputs.build-sub-dir }}  &&
-        cmake -DWITH_XC_ALL=ON   
+        cmake -DWITH_XC_ALL=ON 
         -DWITH_GUI_TESTS=ON 
         ..
     
