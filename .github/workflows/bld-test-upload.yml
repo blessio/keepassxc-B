@@ -85,28 +85,28 @@ jobs:
         libkeyutils-dev zlib1g-dev libreadline-dev libpcsclite-dev libusb-1.0-0-dev 
         libxi-dev libxtst-dev  libqt5x11extras5-dev                                          
       
-    - name: 170. MACOS Only // Prepare Linux packages that are needed
+    - name: 170. MACOS Only // commandline extension
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
       run: xcode-select --install
-    - name: 171. MACOS Only // Prepare Linux packages that are needed
+    - name: 171. MACOS Only // Homebrew
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
       run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    - name: 172. MACOS Only // Prepare Linux packages that are needed
+    - name: 172. MACOS Only cmake and asciidoctor
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
       run: brew install cmake asciidoctor
-    - name: 173. MACOS Only // Prepare Linux packages that are needed
+    - name: 173. MACOS Only PKGs
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
       run: brew install pkg-config vcpkg
       
-    - name: get from Git
+    - name: 180. get the Source from Git from Git
       uses: actions/checkout@v4
 
     - name: 300. Windows AND MacOS  // VCPKG install build
-      id: vcpkg
+      id: vcpkg1
       if: startsWith( "${{ matrix.config.os }}" , 'windows' ) || startsWith( "${{ matrix.config.os }}" , 'macos' ) 
       uses: blessio/vcpkg-actionB@vbleo7.0
       with:
@@ -115,7 +115,7 @@ jobs:
         token:        ${{ github.token }}
         github-binarycache: true
         vcpkg-subdir: ${{steps.strings.outputs.build-root-vcpkg-dir}}
-        cache-key: "kpxco5-${{ matrix.config.vcpkg_triplet }}"
+        cache-key: "kpxco7-1-${{ matrix.config.vcpkg_triplet }}"
         fetch-depth: "0"
     
     - name: 500. Print intermediate environment results 
