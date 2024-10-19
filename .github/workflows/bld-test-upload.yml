@@ -24,16 +24,16 @@ jobs:
       matrix:
         build_type: [RelWithDebInfo,Debug] #Release with no debug info is useless I believe
         config:
-        - os: windows-2022 
+        - os: windows-latest 
           vcpkg_triplet: x64-windows
           github-binarycache: true   
-        - os: ubuntu-22.04 
+        - os: ubuntu-latest
           vcpkg_triplet: x64-linux
           github-binarycache: true   
         - os: macos-latest
           vcpkg_triplet: arm64-osx-dynamic-release
           github-binarycache: true
-        - os: macos-15
+        - os: macos-12
           vcpkg_triplet: x64-osx-dynamic-release
           github-binarycache: true
 
