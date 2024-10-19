@@ -84,6 +84,7 @@ jobs:
       
     - name: MACOS Only // Prepare Linux packages that are needed
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
+      continue-on-error: true
       run: | 
         xcode-select --install
         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
