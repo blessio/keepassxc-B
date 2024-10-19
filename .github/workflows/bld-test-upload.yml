@@ -24,13 +24,16 @@ jobs:
       matrix:
         build_type: [RelWithDebInfo,Debug] #Release with no debug info is useless I believe
         config:
-        - os: windows-2022 # , ubuntu-latest] #[windows-latest] # [ubuntu-latest, windows-latest]
+        - os: windows-2022 
           vcpkg_triplet: x64-windows
           github-binarycache: true   
-        - os: ubuntu-22.04 # , ubuntu-latest] #[windows-latest] # [ubuntu-latest, windows-latest]
+        - os: ubuntu-22.04 
           vcpkg_triplet: x64-linux
           github-binarycache: true   
         - os: macos-latest
+          vcpkg_triplet: arm64-osx-dynamic-release
+          github-binarycache: true
+        - os: macos-12
           vcpkg_triplet: x64-osx-dynamic-release
           github-binarycache: true
 
@@ -97,14 +100,14 @@ jobs:
 
     - name: Windows AND MacOS  // VCPKG install build
       id: vcpkg
-      if: ${{ startsWith( matrix.config.os  , 'windows' ) }} || ${{ startsWith( matrix.config.os  , 'macos' ) }}
+      if: startsWith( "${{ matrix.config.os }}" , 'windows' )  || startsWith( "${{ matrix.config.os }}" , 'macos' ) 
       uses: blessio/vcpkg-actionB@vbleo7.0
       with:
         manifest-dir: ${{ github.workspace }}            # Set to directory containing vcpkg.json
-        triplet:      ${{ matrix.config.vcpkg_triplet }} # x64-windows-release
+        triplet:      ${{matrix.config.vcpkg_triplet }} # x64-windows-release
         token:        ${{ github.token }}
         github-binarycache: true
-        vcpkg-subdir: ${{ steps.strings.outputs.build-root-vcpkg-dir}}
+        vcpkg-subdir: ${{steps.strings.outputs.build-root-vcpkg-dir}}
         cache-key: "kpxco5-${{ matrix.config.vcpkg_triplet }}"
         fetch-depth: "0"
     
