@@ -40,11 +40,11 @@ jobs:
     steps:
     ###################################
 
-    - name: Generate UUID
+    - name: 100. Generate UUID
       id: generate-uuid
       uses: filipstefansson/uuid-action@v1
 
-    - name: Set reusable strings and Environment for actions
+    - name: 110. Set reusable strings and Environment for actions
       # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
       id: strings
       shell: bash
@@ -57,24 +57,24 @@ jobs:
         echo "TRIPLET IS ${{ matrix.config.vcpkg_triplet }}"
         echo "Running on ${{ matrix.config.os }}"
 
-    - name: Windows Only // Install Winget so that e can use it to install SDK as needed
+    - name: 120. Windows Only // Install Winget so that e can use it to install SDK as needed
       if: ${{ startsWith( matrix.config.os , 'windows' ) }}
       uses: Cyberboss/install-winget@v1
  
-    - name: Windows Only // Set Up windows SDK and Ruby and the needed gem of asciidoctor 
+    - name: 130. Windows Only // Set Up windows SDK and Ruby and the needed gem of asciidoctor 
       if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
       run: | 
         winget install --source winget --exact --id Microsoft.WindowsSDK.${{ steps.strings.outputs.build-winsdk }} --silent
         winget install RubyInstallerTeam.Ruby.3.2 --accept-package-agreements --accept-source-agreements
         gem install asciidoctor
 
-    - name: Windows Only // Set environment variable VCPKG_ROOT
+    - name: 140. Windows Only // Set environment variable VCPKG_ROOT
       if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
       run: |
         $env:VCPKG_ROOT = "$env:VCPKG_INSTALLATION_ROOT"
         echo "VCPKG_ROOT=$env:VCPKG_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
         
-    - name: LINUX Only // Prepare Linux packages that are needed
+    - name: 150. LINUX Only // Prepare Linux packages that are needed
       if: ${{ startsWith( matrix.config.os , 'ubuntu' ) }}
       run: > 
         sudo apt update -y  && 
@@ -85,22 +85,29 @@ jobs:
         libkeyutils-dev zlib1g-dev libreadline-dev libpcsclite-dev libusb-1.0-0-dev 
         libxi-dev libxtst-dev  libqt5x11extras5-dev                                          
       
-    - name: MACOS Only // Prepare Linux packages that are needed
+    - name: 170. MACOS Only // Prepare Linux packages that are needed
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
-      run: | 
-        xcode-select --install
-        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-        brew install cmake asciidoctor
-        brew install pkg-config vcpkg
-        
-
+      run: xcode-select --install
+    - name: 171. MACOS Only // Prepare Linux packages that are needed
+      if: ${{ startsWith( matrix.config.os , 'macos' ) }}
+      continue-on-error: true
+      run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    - name: 172. MACOS Only // Prepare Linux packages that are needed
+      if: ${{ startsWith( matrix.config.os , 'macos' ) }}
+      continue-on-error: true
+      run: brew install cmake asciidoctor
+    - name: 173. MACOS Only // Prepare Linux packages that are needed
+      if: ${{ startsWith( matrix.config.os , 'macos' ) }}
+      continue-on-error: true
+      run: brew install pkg-config vcpkg
+      
     - name: get from Git
       uses: actions/checkout@v4
 
-    - name: Windows AND MacOS  // VCPKG install build
+    - name: 300. Windows AND MacOS  // VCPKG install build
       id: vcpkg
-      if: startsWith( "${{ matrix.config.os }}" , 'windows' )  || startsWith( "${{ matrix.config.os }}" , 'macos' ) 
+      if: startsWith( "${{ matrix.config.os }}" , 'windows' ) || startsWith( "${{ matrix.config.os }}" , 'macos' ) 
       uses: blessio/vcpkg-actionB@vbleo7.0
       with:
         manifest-dir: ${{ github.workspace }}            # Set to directory containing vcpkg.json
@@ -111,13 +118,13 @@ jobs:
         cache-key: "kpxco5-${{ matrix.config.vcpkg_triplet }}"
         fetch-depth: "0"
     
-    - name: Print intermediate environment results 
+    - name: 500. Print intermediate environment results 
       shell: bash
       run: |   
         echo  " *** RECOMENDED CMAKE CONFIG is ${{ steps.vcpkg.outputs.vcpkg-cmake-config }}"  
         echo  " *** HASH IS ${{ steps.vcpkg.outputs.vcpkg-cache-hash }}"                       
     
-    - name: Windows ONLY // Configure CMake
+    - name: 550. Windows ONLY // Configure CMake
       if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
       run: >
         mkdir  ${{ steps.strings.outputs.build-sub-dir }}  && 
@@ -125,12 +132,25 @@ jobs:
         cmake -DWITH_XC_ALL=ON 
         -DCMAKE_SYSTEM_VERSION=${{ steps.strings.outputs.build-winsdk }} 
         -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}\${{ steps.strings.outputs.build-root-vcpkg-dir}}\scripts\buildsystems\vcpkg.cmake 
-        -DVCPKG_TARGET_TRIPLET= ${{ matrix.config.vcpkg_triplet }}
-        -DCMAKE_BUILD_TYPE= ${{ matrix.build_type }}
+        -DVCPKG_TARGET_TRIPLET=${{ matrix.config.vcpkg_triplet}}
+        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
         -DWITH_GUI_TESTS=ON 
         ..
+
+    - name: 555. MacOS ONLY // Configure CMake
+      if: ${{ startsWith( matrix.config.os  , 'macos' ) }}
+      run: >
+        mkdir  ${{ steps.strings.outputs.build-sub-dir }}  && 
+        cd     ${{ steps.strings.outputs.build-sub-dir }}  &&
+        cmake -DWITH_XC_ALL=ON 
+        -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}\${{ steps.strings.outputs.build-root-vcpkg-dir}}\scripts\buildsystems\vcpkg.cmake 
+        -DVCPKG_TARGET_TRIPLET=${{ matrix.config.vcpkg_triplet }}
+        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        -DWITH_GUI_TESTS=ON 
+        ..
+        
     
-    - name: LINUX ONLY // Configure CMake
+    - name: 560. LINUX ONLY // Configure CMake
       if: ${{ startsWith( matrix.config.os  , 'ubuntu' ) }}
       run: >
         mkdir  ${{ steps.strings.outputs.build-sub-dir }}  && 
@@ -139,7 +159,7 @@ jobs:
         -DWITH_GUI_TESTS=ON 
         ..
     
-    - name: Windows Check DiskSpace 
+    - name: 600. Windows Check DiskSpace 
       if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
       run: > 
         Get-PSDrive -PSProvider FileSystem | Select-Object Name, @{Name="Used (GB)";Expression={[math]::round($_.Used/1GB,2)}},
@@ -149,32 +169,32 @@ jobs:
     #  run: >
     #    Get-ChildItem Env: | Sort-Object Name
 
-    - name: Build
+    - name: 650. Build
       # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
       working-directory: ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }} 
       run: |
         cmake --build . --config ${{ matrix.build_type }}  
 
     # Prep for the tests
-    - name: Windows Only // ADD paths to some specual DLLs needed for the testing 
+    - name: 700. Windows Only // ADD paths to some specual DLLs needed for the testing 
       if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
       run: |
         $env:PATH="$env:PATH;${{ github.workspace }}\${{ steps.strings.outputs.build-sub-dir }}\src\autotype\test\${{ matrix.build_type }}"
         echo "PATH=$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-    - name: Linux // ADD paths to some specual DLLs needed for the testing 
+    - name: 710. Linux // ADD paths to some specual DLLs needed for the testing 
       if: ${{ startsWith( matrix.config.os  , 'ubuntu' ) }}
       run: |
         echo "export PATH=$PATH:${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }}/src/autotype/test/${{ matrix.build_type }}" >> ~/.bashrc
         source ~/.bashrc
         
-    - name: PRINT Environment Variable 
+    - name: 730. PRINT Environment Variable 
       if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
       run: |
         Get-ChildItem Env: | Sort-Object Name
         cd "${{ github.workspace }}\${{ steps.strings.outputs.build-sub-dir }}\src\autotype\test\${{ matrix.build_type }}"
         ls
       
-    - name: Test and Install
+    - name: 750. Test 
       working-directory: ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }} 
       # Execute tests defined by the CMake configuration. Note that --build-config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
@@ -184,7 +204,7 @@ jobs:
         ctest --build-config ${{ matrix.build_type }} 
         ctest --build-config ${{ matrix.build_type }} --rerun-failed --output-on-failure 
 
-    - name: Install
+    - name: 760. Install
       working-directory: ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }} 
       # Execute tests defined by the CMake configuration. Note that --build-config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
@@ -194,7 +214,7 @@ jobs:
         cmake --install  ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }} 
         --config ${{ matrix.build_type }}  --prefix ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }}/_install  -v 
   
-    - name: WINDOWS ONLY // Upload build Executables 
+    - name: 770. WINDOWS ONLY // Upload build Executables 
       if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
       uses: actions/upload-artifact@v3
       with:
@@ -202,7 +222,7 @@ jobs:
         path: |
           ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }}/src/${{ matrix.build_type }} 
 
-    - name: NON-WINDOWS // Upload build Executables 
+    - name: 780. NON-WINDOWS // Upload build Executables 
       if: ${{ ! startsWith( matrix.config.os  , 'windows' ) }}
       uses: actions/upload-artifact@v3
       with:
@@ -211,7 +231,7 @@ jobs:
           ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }}/_install
 
 
-    - name: Upload build Test Result Logs
+    - name: 790. Upload build Test Result Logs
       uses: actions/upload-artifact@v3
       with:
         name: Test-Logs ${{ steps.strings.outputs.bld-var-str }}
