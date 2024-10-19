@@ -117,7 +117,8 @@ jobs:
       if:  ${{ startsWith( matrix.config.os , 'macos' )  ||  startsWith( matrix.config.os , 'windows' ) }}    
       uses: blessio/vcpkg-actionB@vbleo7.0
       with:
-        manifest-dir: ${{ github.workspace }}            # Set to directory containing vcpkg.json
+        manifest-dir: ${{ github.workspace }}           # Set to directory containing vcpkg.json
+        extra-args:  ' --x-make '
         triplet:      ${{matrix.config.vcpkg_triplet }} # x64-windows-release
         token:        ${{ github.token }}
         github-binarycache: true
