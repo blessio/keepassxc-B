@@ -33,7 +33,7 @@ jobs:
         - os: macos-latest
           vcpkg_triplet: arm64-osx-dynamic-release
           github-binarycache: true
-        - os: macos-12
+        - os: macos-15
           vcpkg_triplet: x64-osx-dynamic-release
           github-binarycache: true
 
@@ -56,6 +56,13 @@ jobs:
         echo "bld-var-str=${{ matrix.build_type }}-BLD_ON_${{ matrix.config.os }}_${{  matrix.config.vcpkg_triplet }}_${{ steps.generate-uuid.outputs.uuid }}" >> "$GITHUB_OUTPUT"
         echo "TRIPLET IS ${{ matrix.config.vcpkg_triplet }}"
         echo "Running on ${{ matrix.config.os }}"
+
+    - name: 112. MacOS version and environment
+      if: ${{ startsWith( matrix.config.os , 'macos' ) }}
+      continue-on-error: true
+      run: | 
+         xcodebuild -version
+         sw_vers 
 
     - name: 120. Windows Only // Install Winget so that e can use it to install SDK as needed
       if: ${{ startsWith( matrix.config.os , 'windows' ) }}
