@@ -104,10 +104,14 @@ jobs:
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
       run: brew install cmake asciidoctor
-    - name: 173. MACOS Only PKGs
+    - name: 173. MACOS Only cmake and asciidoctor
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
-      run: brew install pkg-config vcpkg
+      run: brew install python3
+    - name: 174. MACOS Only PKGs
+      if: ${{ startsWith( matrix.config.os , 'macos' ) }}
+      continue-on-error: true
+      run: brew install pkg-config vcpkg 
       
     - name: 180. get the Source from Git from Git
       uses: actions/checkout@v4
