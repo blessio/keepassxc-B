@@ -92,10 +92,10 @@ jobs:
         libkeyutils-dev zlib1g-dev libreadline-dev libpcsclite-dev libusb-1.0-0-dev 
         libxi-dev libxtst-dev  libqt5x11extras5-dev                                          
       
-    - name: 170. MACOS Only // commandline extension
-      if: ${{ startsWith( matrix.config.os , 'macos' ) }}
-      continue-on-error: true
-      run: xcode-select --install
+    #- name: 170. MACOS Only // commandline extension
+    #  if: ${{ startsWith( matrix.config.os , 'macos' ) }}
+    #  continue-on-error: true
+    #  run: xcode-select --install
     - name: 171. MACOS Only // Homebrew
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
@@ -103,17 +103,17 @@ jobs:
     - name: 172. MACOS Only cmake and asciidoctor
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
-      run: brew install cmake asciidoctor
+      run: brew install asciidoctor
     - name: 173. MACOS (re)install pyhon
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
       run: | 
-        brew uninstall python
-        brew uninstall python3
-        brew install python3
-        brew install python-build
+        # brew uninstall python
+        # brew uninstall python3
+        # brew install python3
+        # brew install python-build
         python3 --version
-        python --version
+        # python --version
 
     - name: 174. MACOS Only PKGs
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
