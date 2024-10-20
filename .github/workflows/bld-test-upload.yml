@@ -109,8 +109,10 @@ jobs:
       continue-on-error: true
       run: | 
         brew uninstall python
-        brew install python
+        brew uninstall python3
+        brew install python3
         brew install python-build
+        python3 --version
         python --version
 
     - name: 174. MACOS Only PKGs
