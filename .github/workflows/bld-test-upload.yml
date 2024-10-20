@@ -115,7 +115,7 @@ jobs:
     - name: 300. Windows AND MacOS  // VCPKG install build
       id: vcpkg1
       if:  ${{ startsWith( matrix.config.os , 'macos' )  ||  startsWith( matrix.config.os , 'windows' ) }}    
-      uses: blessio/vcpkg-actionB@vbleo7.0
+      uses: blessio/vcpkg-actionB@master #vbleo7.0
       with:
         manifest-dir: ${{ github.workspace }}           # Set to directory containing vcpkg.json
                                                         # No verbose available extra-args:  ' --x-make '
