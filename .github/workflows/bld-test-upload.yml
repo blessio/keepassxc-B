@@ -212,7 +212,7 @@ jobs:
         ctest --build-config ${{ matrix.build_type }} 
         ctest --build-config ${{ matrix.build_type }} --rerun-failed --output-on-failure 
 
-    - name: 760. Install
+    - name: 760. Install RUN on any host with bash
       working-directory: ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }} 
       # Execute tests defined by the CMake configuration. Note that --build-config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
@@ -234,7 +234,7 @@ jobs:
       if: ${{ ! startsWith( matrix.config.os  , 'windows' ) }}
       uses: actions/upload-artifact@v3
       with:
-        name: build-non-win-executables- ${{ steps.strings.outputs.bld-var-str }}
+        name: build-non-win-executables-${{ steps.strings.outputs.bld-var-str }}
         path: |
           ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }}/_install
 
