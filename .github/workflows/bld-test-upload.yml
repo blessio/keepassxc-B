@@ -125,7 +125,7 @@ jobs:
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
       run: | 
-        brew install python-build
+        brew install setuptools
 
     - name: 173.4 MACOS (re)install pyhon
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
