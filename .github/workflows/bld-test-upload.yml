@@ -108,17 +108,12 @@ jobs:
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
       run: | 
-        brew uninstall python
-        # brew uninstall python3
-        # brew install python3
-        # brew install python-build
-        python3 --version
-        # python --version
+        brew uninstall --ignore-dependencies python
     - name: 173.1 MACOS (re)install pyhon
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
       run: | 
-        brew uninstall python3
+        brew uninstall --ignore-dependencies python3
 
     - name: 173.2 MACOS (re)install pyhon
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
