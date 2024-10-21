@@ -186,7 +186,7 @@ jobs:
         mkdir  ${{ steps.strings.outputs.build-sub-dir }}  && 
         cd     ${{ steps.strings.outputs.build-sub-dir }}  &&
         cmake -DWITH_XC_ALL=ON 
-        -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}\${{ steps.strings.outputs.build-root-vcpkg-dir}}\scripts\buildsystems\vcpkg.cmake 
+        -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/${{ steps.strings.outputs.build-root-vcpkg-dir}}/scripts/buildsystems/vcpkg.cmake 
         -DVCPKG_TARGET_TRIPLET=${{ matrix.config.vcpkg_triplet }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
         -DWITH_GUI_TESTS=ON 
@@ -255,13 +255,14 @@ jobs:
       continue-on-error: true
       run: > 
         cmake --install  ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }} 
-        --config ${{ matrix.build_type }}  --prefix ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }}/_install  -v 
+        --config ${{ matrix.build_type }}  
+        --prefix ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }}/_install  -v 
   
     - name: 770. WINDOWS ONLY // Upload build Executables 
       if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
       uses: actions/upload-artifact@v3
       with:
-        name: build-win-executables- ${{ steps.strings.outputs.bld-var-str }}
+        name: build-win-executables-${{ steps.strings.outputs.bld-var-str }}
         path: |
           ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }}/src/${{ matrix.build_type }} 
 
