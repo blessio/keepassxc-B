@@ -104,16 +104,45 @@ jobs:
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
       run: brew install asciidoctor
-    - name: 173. MACOS (re)install pyhon
+    - name: 173.0 MACOS (re)install pyhon
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
       run: | 
-        # brew uninstall python
+        brew uninstall python
         # brew uninstall python3
         # brew install python3
         # brew install python-build
         python3 --version
         # python --version
+    - name: 173.1 MACOS (re)install pyhon
+      if: ${{ startsWith( matrix.config.os , 'macos' ) }}
+      continue-on-error: true
+      run: | 
+        brew uninstall python3
+
+    - name: 173.2 MACOS (re)install pyhon
+      if: ${{ startsWith( matrix.config.os , 'macos' ) }}
+      continue-on-error: true
+      run: | 
+        brew install python3       
+
+    - name: 173.3 MACOS (re)install pyhon
+      if: ${{ startsWith( matrix.config.os , 'macos' ) }}
+      continue-on-error: true
+      run: | 
+        brew install python-build
+
+    - name: 173.4 MACOS (re)install pyhon
+      if: ${{ startsWith( matrix.config.os , 'macos' ) }}
+      continue-on-error: true
+      run: | 
+        python3 --version
+
+    - name: 173.5 MACOS (re)install pyhon
+      if: ${{ startsWith( matrix.config.os , 'macos' ) }}
+      continue-on-error: true
+      run: | 
+        python --version
 
     - name: 174. MACOS Only PKGs
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
