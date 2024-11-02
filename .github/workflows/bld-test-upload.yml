@@ -67,6 +67,8 @@ jobs:
     - name: 120. Windows Only // Install Winget so that e can use it to install SDK as needed
       if: ${{ startsWith( matrix.config.os , 'windows' ) }}
       uses: Cyberboss/install-winget@v1
+      with:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
  
     - name: 130. Windows Only // Set Up windows SDK and Ruby and the needed gem of asciidoctor 
       if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
@@ -84,8 +86,7 @@ jobs:
     - name: 150. LINUX Only // Prepare Linux packages that are needed
       if: ${{ startsWith( matrix.config.os , 'ubuntu' ) }}
       run: > 
-        sudo apt update -y  && 
-        sudo apt upgrade -y &&  
+        sudo apt update -y && 
         sudo apt install -y build-essential cmake g++ asciidoctor &&
         sudo apt install -y qtbase5-dev qtbase5-private-dev qttools5-dev qttools5-dev-tools  
         libqt5svg5-dev libargon2-dev libminizip-dev libbotan-2-dev libqrencode-dev 
