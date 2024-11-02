@@ -64,9 +64,9 @@ jobs:
          xcodebuild -version
          sw_vers 
 
-    - name: 120. Windows Only // Install Winget so that e can use it to install SDK as needed
+    - name: 120. Windows Only // Install Winget so that it can use it to install SDK as needed
       if: ${{ startsWith( matrix.config.os , 'windows' ) }}
-      uses: Cyberboss/install-winget@v1
+      uses: blessio/install-winget@blessio-patch-1  # Cyberboss/install-winget@v1
       with:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
  
