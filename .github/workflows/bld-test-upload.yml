@@ -66,9 +66,10 @@ jobs:
 
     - name: 120. Windows Only // Install Winget so that it can use it to install SDK as needed
       if: ${{ startsWith( matrix.config.os , 'windows' ) }}
-      uses: blessio/install-winget@blessio-patch-1  # Cyberboss/install-winget@v1
+      uses: blessio/install-winget@develop  # Cyberboss/install-winget@v1
       with:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        wget_release_id: '164835566'
  
     - name: 130. Windows Only // Set Up windows SDK and Ruby and the needed gem of asciidoctor 
       if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
