@@ -8,18 +8,19 @@
 name: BLD AND TEST MatrixBased-WIN64-UBUNTU-MacOS
 
 on:
+  schedule:
+    - cron: 7 3 * * FRI
+    # runs every Friday 3:07AM 
   push:
     branches: [ "develop", "devbleo3", bleo8, bleo5_01, bleo5_01.1 ]
   pull_request:
     branches: [ "devbleo" , bleo5_01 ]
 
 jobs:
-  build:
-    
-    #needs: [winprep]
+  build: # BUILD JOB ############################################################################
+    if: ${{ github.event_name != 'schedule' || github.ref == 'refs/heads/devbleo3' }}   
     runs-on: ${{ matrix.config.os }}
     strategy:
-      # Set fail-fast to false to ensure that feedback is delivered for all matrix combinations. Consider changing this to true when your workflow is stable.
       fail-fast: false
       matrix:
         build_type: [RelWithDebInfo,Debug] #Release with no debug info is useless I believe
