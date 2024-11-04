@@ -34,7 +34,7 @@ jobs:
         - os: macos-latest
           vcpkg_triplet: arm64-osx-dynamic-release
           github-binarycache: true
-        - os: macos-12
+        - os: macos-13
           vcpkg_triplet: x64-osx-dynamic-release
           github-binarycache: true
 
