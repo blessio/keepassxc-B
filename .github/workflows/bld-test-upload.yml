@@ -1,10 +1,13 @@
+#################################################
 # File: .github/workflows/bld-test-upload.yml
-# Copyright: 2024, Owner of blessio.com
+# Copyright: 2024 - 2025, Owner of blessio.com
 # License: MIT
-############################################
+#################################################
 # Used the starter here:
 # See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-single-platform.yml
 # BUILDS KeepasXC 
+#################################################
+
 name: BLD AND TEST MatrixBased-WIN64-UBUNTU-MacOS
 
 on:
@@ -12,7 +15,7 @@ on:
     - cron: 7 3 * * FRI
     # runs every Friday 3:07AM 
   push:
-    branches: [ "develop", "devbleo3", bleo8, bleo5_01, bleo5_01.1 ]
+    branches: [ "develop", "devbleo3", bleo8, bleo5_01, bleo5_01.5 ]
   pull_request:
     branches: [ "devbleo" , bleo5_01 ]
 
@@ -23,12 +26,20 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        build_type: [RelWithDebInfo,Debug] #Release with no debug info is useless I believe
+        build_type: [RelWithDebInfo] # [RelWithDebInfo,Release,Debug] practically only this one is needed
         config:
         - os: windows-latest 
           vcpkg_triplet: x64-windows
           github-binarycache: true   
+
+        # - os: windows-latest 
+        #  vcpkg_triplet: arm64-windows # 2025-01-05 This could not compile Qt5 yet
+        #  github-binarycache: true   
+
         - os: ubuntu-latest
+          vcpkg_triplet: x64-linux
+          github-binarycache: true
+        - os: ubuntu-24.04
           vcpkg_triplet: x64-linux
           github-binarycache: true   
         - os: macos-latest
@@ -43,8 +54,14 @@ jobs:
 
     - name: 100. Generate UUID
       id: generate-uuid
-      uses: filipstefansson/uuid-action@v1
-
+      shell: bash            
+      run: |
+        if [[ "$RUNNER_OS" == "Windows" ]]; then 
+          echo "uuid=$(powershell -Command '[guid]::NewGuid().ToString()')" >> "$GITHUB_OUTPUT"
+        else
+          echo "uuid=$(uuidgen)" >> "$GITHUB_OUTPUT"
+        fi
+      
     - name: 110. Set reusable strings and Environment for actions
       # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
       id: strings
@@ -55,6 +72,7 @@ jobs:
         echo "build-winsdk=10.0.26100" >> "$GITHUB_OUTPUT"
         echo "FORCE_JAVASCRIPT_ACTIONS_TO_NODE20=true"  >> "$GITHUB_OUTPUT"
         echo "bld-var-str=${{ matrix.build_type }}-BLD_ON_${{ matrix.config.os }}_${{  matrix.config.vcpkg_triplet }}_${{ steps.generate-uuid.outputs.uuid }}" >> "$GITHUB_OUTPUT"
+        echo "bld-humanreadable-str=${{ matrix.config.vcpkg_triplet }} (built on: ${{ matrix.config.os }} of type: ${{ matrix.build_type }})" >> "$GITHUB_OUTPUT"
         echo "TRIPLET IS ${{ matrix.config.vcpkg_triplet }}"
         echo "Running on ${{ matrix.config.os }}"
 
@@ -107,36 +125,27 @@ jobs:
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
       run: brew install asciidoctor
-    - name: 173.0 MACOS (re)install pyhon
-      if: ${{ startsWith( matrix.config.os , 'macos' ) }}
-      continue-on-error: true
-      run: | 
-        brew uninstall --ignore-dependencies python
-    - name: 173.1 MACOS (re)install pyhon
-      if: ${{ startsWith( matrix.config.os , 'macos' ) }}
-      continue-on-error: true
-      run: | 
-        brew uninstall --ignore-dependencies python3
 
-    - name: 173.2 MACOS (re)install pyhon
+    - name: 173.0 MACOS (re)install python
+      if: ${{ startsWith( matrix.config.os , 'macos' ) }}
+      continue-on-error: true
+      run: | 
+        brew uninstall --ignore-dependencies python ||
+        brew uninstall --ignore-dependencies python3    
+
+    - name: 173.2 MACOS (re)install python
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
       run: | 
         brew install python@3.12     
 
-    - name: 173.3 MACOS (re)install pyhon
-      if: ${{ startsWith( matrix.config.os , 'macos' ) }}
-      continue-on-error: true
-      run: | 
-        pip install setuptools
-
-    - name: 173.4 MACOS (re)install pyhon
+    - name: 173.4 MACOS (re)install python
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
       run: | 
         python3 --version
 
-    - name: 173.5 MACOS (re)install pyhon
+    - name: 173.5 MACOS (re)install python
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
       run: | 
@@ -146,8 +155,8 @@ jobs:
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
       run: brew install pkg-config vcpkg 
-      
-    - name: 180. get the Source from Git from Git
+
+    - name: 180. get the Source from Git
       uses: actions/checkout@v4
 
     - name: 300. Windows AND MacOS  // VCPKG install build
@@ -162,25 +171,18 @@ jobs:
         github-binarycache: true
         vcpkg-subdir: ${{steps.strings.outputs.build-root-vcpkg-dir}}
         cache-key: "kpxco7-1-${{ matrix.config.vcpkg_triplet }}"
-        fetch-depth: "0"
-    
-    - name: 500. Print intermediate environment results 
-      shell: bash
-      run: |   
-        echo  " ***** RECOMENDED CMAKE CONFIG is ${{ steps.vcpkg.outputs.vcpkg-cmake-config }}"  
-        echo  " ***** HASH IS ${{ steps.vcpkg.outputs.vcpkg-cache-hash }}"                       
+        fetch-depth: "0"                 
     
     - name: 550. Windows ONLY // Configure CMake
       if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
       run: >
         mkdir  ${{ steps.strings.outputs.build-sub-dir }}  && 
         cd     ${{ steps.strings.outputs.build-sub-dir }}  &&
-        cmake -DWITH_XC_ALL=ON 
+        cmake -DWITH_XC_ALL=ON -DWITH_GUI_TESTS=ON 
         -DCMAKE_SYSTEM_VERSION=${{ steps.strings.outputs.build-winsdk }} 
         -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}\${{ steps.strings.outputs.build-root-vcpkg-dir}}\scripts\buildsystems\vcpkg.cmake 
         -DVCPKG_TARGET_TRIPLET=${{ matrix.config.vcpkg_triplet}}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-        -DWITH_GUI_TESTS=ON 
         ..
 
     - name: 555. MacOS ONLY // Configure CMake
@@ -188,21 +190,20 @@ jobs:
       run: >
         mkdir  ${{ steps.strings.outputs.build-sub-dir }}  && 
         cd     ${{ steps.strings.outputs.build-sub-dir }}  &&
-        cmake -DWITH_XC_ALL=ON 
+        cmake -DWITH_XC_ALL=ON -DWITH_GUI_TESTS=ON 
         -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/${{ steps.strings.outputs.build-root-vcpkg-dir}}/scripts/buildsystems/vcpkg.cmake 
         -DVCPKG_TARGET_TRIPLET=${{ matrix.config.vcpkg_triplet }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-        -DWITH_GUI_TESTS=ON 
         ..
         
-    
     - name: 560. LINUX ONLY // Configure CMake
       if: ${{ startsWith( matrix.config.os  , 'ubuntu' ) }}
       run: >
         mkdir  ${{ steps.strings.outputs.build-sub-dir }}  && 
         cd     ${{ steps.strings.outputs.build-sub-dir }}  &&
-        cmake -DWITH_XC_ALL=ON 
-        -DWITH_GUI_TESTS=ON 
+        cmake -DWITH_XC_ALL=ON -DWITH_GUI_TESTS=ON 
+        -DVCPKG_TARGET_TRIPLET=${{ matrix.config.vcpkg_triplet }}
+        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
         ..
     
     - name: 600. Windows Check DiskSpace 
@@ -211,7 +212,7 @@ jobs:
         Get-PSDrive -PSProvider FileSystem | Select-Object Name, @{Name="Used (GB)";Expression={[math]::round($_.Used/1GB,2)}},
         @{Name="Free (GB)";Expression={[math]::round($_.Free/1GB,2)}}
     
-    #- name: Print all environement Variables
+    #- name: Print all environment Variables
     #  run: >
     #    Get-ChildItem Env: | Sort-Object Name
 
@@ -222,34 +223,51 @@ jobs:
         cmake --build . --config ${{ matrix.build_type }}  
 
     # Prep for the tests
-    - name: 700. Windows Only // ADD paths to some specual DLLs needed for the testing 
+    - name: 700. Windows Only // ADD paths to some special DLLs needed for the testing 
       if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
       run: |
         $env:PATH="$env:PATH;${{ github.workspace }}\${{ steps.strings.outputs.build-sub-dir }}\src\autotype\test\${{ matrix.build_type }}"
         echo "PATH=$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-    - name: 710. Linux // ADD paths to some specual DLLs needed for the testing 
+    - name: 710. Linux ONLY // ADD paths to TESTS and prepare GUI Tests, print environment
       if: ${{ startsWith( matrix.config.os  , 'ubuntu' ) }}
       run: |
-        echo "export PATH=$PATH:${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }}/src/autotype/test/${{ matrix.build_type }}" >> ~/.bashrc
-        source ~/.bashrc
+        # echo "export PATH=$PATH:${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }}/src/autotype/test/${{ matrix.build_type }}" >> ~/.bashrc
+        echo "PATH=$PATH:${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }}/src/autotype/test/${{ matrix.build_type }}" >> $GITHUB_ENV
+        # sudo apt-get install xvfb # is already installed on GitHUB Linux runner
+        Xvfb :99 -ac &
+        # echo "export DISPLAY=:99" >> ~/.bashrc
+        echo "DISPLAY=:99" >> $GITHUB_ENV
         
-    - name: 730. PRINT Environment Variable 
+    - name: 730. PRINT Environment Variables on Windows
       if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
       run: |
         Get-ChildItem Env: | Sort-Object Name
         cd "${{ github.workspace }}\${{ steps.strings.outputs.build-sub-dir }}\src\autotype\test\${{ matrix.build_type }}"
-        ls
-      
-    - name: 750. Test 
+        ls 
+
+    - name: 731. PRINT Environment Variables on NON-Windows
+      if: ${{ ! startsWith( matrix.config.os  , 'windows' ) }}
+      run: |
+        echo "Environment printed" 
+        echo "===== ALL ENV START =====" 
+        printenv | sort 
+        echo "===== ALL ENV END   =====" 
+        echo "List of files and folders in buildtype subdir" 
+        ls 
+    # END OF PREP for TEST
+
+    - name: 750. AUTOMATIC TESTS
       working-directory: ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }} 
       # Execute tests defined by the CMake configuration. Note that --build-config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       shell: bash
       continue-on-error: true
-      run: | 
-        ctest --build-config ${{ matrix.build_type }} 
-        ctest --build-config ${{ matrix.build_type }} --rerun-failed --output-on-failure 
-
+      run: > # this sequence is executed so that the result can be both parsed in a later step (step_summary) and visible in the step itself
+        ctest --build-config ${{ matrix.build_type }} > ctest-pass1.txt && 
+        cat ctest-pass1.txt ||
+        ctest --build-config ${{ matrix.build_type }} --rerun-failed --output-on-failure > ctest-pass2-results-of-failedonly.txt ||
+        cat  ctest-pass1.txt  ctest-pass2-results-of-failedonly.txt
+        
     - name: 760. Install RUN on any host with bash
       working-directory: ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }} 
       # Execute tests defined by the CMake configuration. Note that --build-config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
@@ -263,7 +281,8 @@ jobs:
   
     - name: 770. WINDOWS ONLY // Upload build Executables 
       if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
-      uses: actions/upload-artifact@v3
+      id: a-wexecutables
+      uses: actions/upload-artifact@v4
       with:
         name: build-win-executables-${{ steps.strings.outputs.bld-var-str }}
         path: |
@@ -271,16 +290,46 @@ jobs:
 
     - name: 780. NON-WINDOWS // Upload build Executables 
       if: ${{ ! startsWith( matrix.config.os  , 'windows' ) }}
-      uses: actions/upload-artifact@v3
+      id: a-executables
+      uses: actions/upload-artifact@v4
       with:
         name: build-non-win-executables-${{ steps.strings.outputs.bld-var-str }}
         path: |
           ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }}/_install
 
-
     - name: 790. Upload build Test Result Logs
-      uses: actions/upload-artifact@v3
+      id: a-TestLog
+      uses: actions/upload-artifact@v4
       with:
         name: Test-Logs ${{ steps.strings.outputs.bld-var-str }}
+        if-no-files-found: ignore # Last file will be present only if there are failed tests
         path: |
           ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }}/Testing/Temporary
+          ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }}/ctest-pass1.txt
+          ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }}/ctest-pass2-results-of-failedonly.txt 
+          
+    - name: 800. SUMMARY PAGE UPDATE
+      working-directory: ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }} 
+      shell: bash
+      continue-on-error: true
+      run: |
+        echo "### ${{ steps.strings.outputs.bld-humanreadable-str }}" >> $GITHUB_STEP_SUMMARY
+        echo " - Download built files from: ${{ steps.a-wexecutables.outputs.artifact-url }} ${{ steps.a-executables.outputs.artifact-url }}" >> $GITHUB_STEP_SUMMARY
+        if [ -f ctest-pass2-results-of-failedonly.txt ]; then
+          echo -e " - 🟡 Some tests **failed**.  " >> $GITHUB_STEP_SUMMARY
+          # echo all lines from file ctest-pass2-results-of-failedonly.txt starting from the line that contains the string "The following tests FAILED:"
+          awk '/The following tests FAILED:/ {flag=1; next} /Errors while running CTest/ {flag=0} flag {print "    " $0}' ctest-pass2-results-of-failedonly.txt >> $GITHUB_STEP_SUMMARY            
+          echo "    Download the test results to check why. Look into \`ctest-pass2-results-of-failedonly.txt\` file in Test-Result logs, which  " >> $GITHUB_STEP_SUMMARY
+        else
+          echo -e " - 🟢 All tests **passed**. Test-Result logs " >> $GITHUB_STEP_SUMMARY
+        fi
+        echo -e "are here: ${{ steps.a-TestLog.outputs.artifact-url }}." >> $GITHUB_STEP_SUMMARY
+      
+      # - `\u26A0` represents the warning emoji  ⚠️.
+      # - `\u2705` represents the check mark emoji ✅.
+      # - `\u274C` represents the cross mark emoji `❌`. 
+      # - 🟢 represents a green circle.
+      # - 🟡 represents a yellow circle.
+      # - 🔴 represents a red circle.
+
+
