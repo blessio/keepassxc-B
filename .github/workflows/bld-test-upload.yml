@@ -15,7 +15,7 @@ on:
     - cron: 7 3 * * FRI
     # runs every Friday 3:07AM 
   push:
-    branches: [ "develop", "devbleo3", bleo8, bleo5_01, bleo5_01.5 ]
+    branches: [ "develop", "devbleo3", bleo8, bleo05_01, bleo05_01.1, bleo05_01.5 ]
   pull_request:
     branches: [ "devbleo" , bleo5_01 ]
 
