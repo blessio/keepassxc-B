@@ -31,6 +31,7 @@ private slots:
     void testBitwarden();
     void testBitwardenEncrypted();
     void testBitwardenPasskey();
+    void testProtonPass();
 };
 
 #endif /* TEST_IMPORTS_H */

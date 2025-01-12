@@ -100,7 +100,7 @@
               <enum>Qt::ClickFocus</enum>
              </property>
              <property name="textFormat">
-              <enum>Qt::AutoText</enum>
+              <enum>Qt::PlainText</enum>
              </property>
              <property name="textInteractionFlags">
               <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
@@ -279,11 +279,17 @@
                     </property>
                     <item>
                      <widget class="QLabel" name="entryPasswordLabel">
+                      <property name="focusPolicy">
+                       <enum>Qt::ClickFocus</enum>
+                      </property>
                       <property name="text">
                        <string notr="true">TextLabel</string>
                       </property>
                       <property name="textInteractionFlags">
                        <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+                      </property>
+                      <property name="blendIn" stdset="0">
+                       <bool>true</bool>
                       </property>
                      </widget>
                     </item>
@@ -316,8 +322,14 @@
                 <property name="text">
                  <string notr="true">https://example.com</string>
                 </property>
+                <property name="textFormat">
+                 <enum>Qt::RichText</enum>
+                </property>
                 <property name="textInteractionFlags">
                  <set>Qt::TextBrowserInteraction</set>
+                </property>
+                <property name="blendIn" stdset="0">
+                 <bool>true</bool>
                 </property>
                </widget>
               </item>
@@ -403,6 +415,9 @@
                   <property name="readOnly">
                    <bool>true</bool>
                   </property>
+                  <property name="blendIn" stdset="0">
+                   <bool>true</bool>
+                  </property>
                  </widget>
                 </item>
                </layout>
@@ -476,6 +491,9 @@
                   <property name="readOnly">
                    <bool>true</bool>
                   </property>
+                  <property name="blendIn" stdset="0">
+                   <bool>true</bool>
+                  </property>
                  </widget>
                 </item>
                </layout>
@@ -487,6 +505,9 @@
                 </property>
                 <property name="accessibleName">
                  <string>Tags list</string>
+                </property>
+                <property name="blendIn" stdset="0">
+                 <bool>true</bool>
                 </property>
                </widget>
               </item>
@@ -504,8 +525,14 @@
                 <property name="text">
                  <string notr="true">expired</string>
                 </property>
+                <property name="textFormat">
+                 <enum>Qt::PlainText</enum>
+                </property>
                 <property name="textInteractionFlags">
                  <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+                </property>
+                <property name="blendIn" stdset="0">
+                 <bool>true</bool>
                 </property>
                </widget>
               </item>
@@ -1098,6 +1125,9 @@
                    <bool>true</bool>
                   </property>
                   <property name="readOnly">
+                   <bool>true</bool>
+                  </property>
+                  <property name="blendIn" stdset="0">
                    <bool>true</bool>
                   </property>
                  </widget>

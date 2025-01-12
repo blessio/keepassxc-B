@@ -15,29 +15,29 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef KEEPASSX_TESTTOOLS_H
-#define KEEPASSX_TESTTOOLS_H
+#ifndef PROTONPASS_READER_H
+#define PROTONPASS_READER_H
 
-#include "core/Tools.h"
+#include <QSharedPointer>
 
-class TestTools : public QObject
+class Database;
+
+/*!
+ * Imports a Proton Pass vault in JSON format: https://proton.me/support/pass-export
+ */
+class ProtonPassReader
 {
-    Q_OBJECT
-private slots:
-    void testHumanReadableFileSize();
-    void testIsHex();
-    void testIsBase64();
-    void testIsAsciiString();
-    void testEnvSubstitute();
-    void testValidUuid();
-    void testBackupFilePatternSubstitution_data();
-    void testBackupFilePatternSubstitution();
-    void testEscapeRegex();
-    void testEscapeRegex_data();
-    void testConvertToRegex();
-    void testConvertToRegex_data();
-    void testArrayContainsValues();
-    void testMimeTypes();
+public:
+    explicit ProtonPassReader() = default;
+    ~ProtonPassReader() = default;
+
+    QSharedPointer<Database> convert(const QString& path);
+
+    bool hasError();
+    QString errorString();
+
+private:
+    QString m_error;
 };
 
-#endif // KEEPASSX_TESTTOOLS_H
+#endif // PROTONPASS_READER_H
