@@ -46,7 +46,17 @@ if(NOT PCSC_FOUND)
          ${CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES}
          /usr/include/PCSC
          ${WINSDKROOTC_INCLUDE}
+         ${CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES}
+         /usr/include/PCSC
+         ${WINSDKROOTC_INCLUDE}
       PATH_SUFFIXES PCSC)
+
+   # Check if the library was found
+   if (PCSC_INCLUDE_DIRS)
+      message(STATUS "pcsc-header FOUND")
+   else()
+      message(FATAL_ERROR "pcsc-header not found")
+   endif()
 
    # MAC library is PCSC, Windows library is WinSCard
    find_library(PCSC_LIBRARIES NAMES pcsclite libpcsclite WinSCard PCSC
