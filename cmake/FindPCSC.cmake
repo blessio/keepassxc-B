@@ -22,8 +22,8 @@ endif()
 if(NOT PCSC_FOUND)
    # Search for PC/SC headers on Mac and Windows
 
-   if (WIN32) # some special handling on windows for finding the SDK
-
+   # Additional search paths for Windows if not running in Visual Studio environment
+   if (WIN32) 
       # Resolve the ambiguity of using two names for one architechture
       if(CMAKE_SYSTEM_PROCESSOR STREQUAL "AMD64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "x64")
          set(ARCH_DIR "x64")
@@ -31,13 +31,13 @@ if(NOT PCSC_FOUND)
          set(ARCH_DIR "${CMAKE_SYSTEM_PROCESSOR}")
       endif()
 
-      # LOCATE WINDOWS SDK PATHs
+      # Locate Windows SDK Paths
       if (CMAKE_WINDOWS_KITS_10_DIR)
-         set (WINSDKROOTC_INCLUDE "${CMAKE_WINDOWS_KITS_10_DIR}/Include/${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION}/um")
-         set (WINSDKROOTC_LIB     "${CMAKE_WINDOWS_KITS_10_DIR}/LIB/${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION}/um/${ARCH_DIR}")
+         set(WINSDKROOTC_INCLUDE "${CMAKE_WINDOWS_KITS_10_DIR}/Include/${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION}/um")
+         set(WINSDKROOTC_LIB     "${CMAKE_WINDOWS_KITS_10_DIR}/LIB/${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION}/um/${ARCH_DIR}")
       else()
-         set (WINSDKROOTC_INCLUDE "$ENV{ProgramFiles\(x86\)}/Windows Kits/10/Include/${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION}/um")
-         set (WINSDKROOTC_LIB     "$ENV{ProgramFiles\(x86\)}/Windows Kits/10/LIB/${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION}/um/${ARCH_DIR}")
+         set(WINSDKROOTC_INCLUDE "$ENV{ProgramFiles\(x86\)}/Windows Kits/10/Include/${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION}/um")
+         set(WINSDKROOTC_LIB     "$ENV{ProgramFiles\(x86\)}/Windows Kits/10/LIB/${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION}/um/${ARCH_DIR}")
       endif()
    endif()
 
@@ -59,14 +59,7 @@ if(NOT PCSC_FOUND)
    find_library(PCSC_LIBRARIES NAMES pcsclite libpcsclite WinSCard PCSC
       HINTS   
          ${CMAKE_C_IMPLICIT_LINK_DIRECTORIES}
-         ${WINSDKROOTC_LIB}
-      )
-
-   if (PCSC_LIBRARIES)
-      message(STATUS "PCSC_LIBRARIES FOUND")
-   else()
-      message(FATAL_ERROR "PCSC_LIBRARIES _NOT_ FOUND")
-   endif()
+         ${WINSDKROOTC_LIB})
 endif()
 
 include(FindPackageHandleStandardArgs)
