@@ -130,14 +130,15 @@ jobs:
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
       run: | 
-        brew uninstall --ignore-dependencies python ||
-        brew uninstall --ignore-dependencies python3    
+        brew uninstall --ignore-dependencies python 
+        brew uninstall --ignore-dependencies python3
 
     - name: 173.2 MACOS (re)install python
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
       run: | 
-        brew install python@3.12     
+        brew install python@3.12
+        brew reinstall python@3.12 
 
     - name: 173.4 MACOS (re)install python
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
