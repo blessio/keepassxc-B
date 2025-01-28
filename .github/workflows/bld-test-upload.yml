@@ -15,9 +15,9 @@ on:
     - cron: 7 3 * * FRI
     # runs every Friday 3:07AM 
   push:
-    branches: [ "develop", "devbleo3", bleo8, bleo05_01, bleo05_01.1, bleo05_01.5 ]
+    branches: [ "devbleo*", "bleo*" ]
   pull_request:
-    branches: [ "devbleo" , bleo5_01 ]
+    branches: [ "devbleo*", "bleo*" ]
 
 jobs:
   build: # BUILD JOB ############################################################################
@@ -126,31 +126,18 @@ jobs:
       continue-on-error: true
       run: brew install asciidoctor
 
-    - name: 173.0 MACOS (re)install python
-      if: ${{ startsWith( matrix.config.os , 'macos' ) }}
-      continue-on-error: true
-      run: | 
-        brew uninstall --ignore-dependencies python 
-        brew uninstall --ignore-dependencies python3
 
-    - name: 173.2 MACOS (re)install python
-      if: ${{ startsWith( matrix.config.os , 'macos' ) }}
-      continue-on-error: true
-      run: | 
-        brew install python@3.12
-        brew reinstall python@3.12 
+    - name: 172. Fix Python dependency 
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
 
     - name: 173.4 MACOS (re)install python
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
       run: | 
-        python3 --version
+        python3 --version # MUST BE 3.12
 
-    - name: 173.5 MACOS (re)install python
-      if: ${{ startsWith( matrix.config.os , 'macos' ) }}
-      continue-on-error: true
-      run: | 
-        python --version
 
     - name: 174. MACOS Only PKGs
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
@@ -163,7 +150,7 @@ jobs:
     - name: 300. Windows AND MacOS  // VCPKG install build
       id: vcpkg1
       if:  ${{ startsWith( matrix.config.os , 'macos' )  ||  startsWith( matrix.config.os , 'windows' ) }}    
-      uses: blessio/vcpkg-actionB@bleo_v7.1.0 # vbleo7.0
+      uses: blessio/vcpkg-actionB@v7.1 # vbleo7.0
       with:
         manifest-dir: ${{ github.workspace }}           # Set to directory containing vcpkg.json
                                                         # No verbose available extra-args:  ' --x-make '
@@ -171,7 +158,7 @@ jobs:
         token:        ${{ github.token }}
         github-binarycache: true
         vcpkg-subdir: ${{steps.strings.outputs.build-root-vcpkg-dir}}
-        cache-key: "kpxco7-1-${{ matrix.config.vcpkg_triplet }}"
+        cache-key: "kpxco7a-1-${{ matrix.config.vcpkg_triplet }}"
         fetch-depth: "0"                 
     
     - name: 550. Windows ONLY // Configure CMake
