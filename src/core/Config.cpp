@@ -77,6 +77,8 @@ static const QHash<Config::ConfigKey, ConfigDirective> configStrings = {
     {Config::AutoTypeDelay,{QS("AutoTypeDelay"), Roaming, 25}},
     {Config::AutoTypeStartDelay,{QS("AutoTypeStartDelay"), Roaming, 500}},
     {Config::AutoTypeHideExpiredEntry,{QS("AutoTypeHideExpiredEntry"), Roaming, false}},
+    {Config::AutoTypeDialogSortColumn,{QS("AutoTypeDialogSortColumn"), Roaming, 0}},
+    {Config::AutoTypeDialogSortOrder,{QS("AutoTypeDialogSortOrder"), Roaming, Qt::AscendingOrder}},
     {Config::GlobalAutoTypeKey,{QS("GlobalAutoTypeKey"), Roaming, 0}},
     {Config::GlobalAutoTypeModifiers,{QS("GlobalAutoTypeModifiers"), Roaming, 0}},
     {Config::GlobalAutoTypeRetypeTime,{QS("GlobalAutoTypeRetypeTime"), Roaming, 15}},
@@ -117,6 +119,7 @@ static const QHash<Config::ConfigKey, ConfigDirective> configStrings = {
     {Config::GUI_CheckForUpdatesIncludeBetas, {QS("GUI/CheckForUpdatesIncludeBetas"), Roaming, false}},
     {Config::GUI_ShowExpiredEntriesOnDatabaseUnlock, {QS("GUI/ShowExpiredEntriesOnDatabaseUnlock"), Roaming, true}},
     {Config::GUI_ShowExpiredEntriesOnDatabaseUnlockOffsetDays, {QS("GUI/ShowExpiredEntriesOnDatabaseUnlockOffsetDays"), Roaming, 3}},
+    {Config::GUI_FontSizeOffset, {QS("GUI/FontSizeOffset"), Local, 0}},
 
     {Config::GUI_MainWindowGeometry, {QS("GUI/MainWindowGeometry"), Local, {}}},
     {Config::GUI_MainWindowState, {QS("GUI/MainWindowState"), Local, {}}},

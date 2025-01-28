@@ -243,6 +243,26 @@
         <source>Export KeePassXC Settings</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Small</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Normal</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Medium</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Large</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Custom</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ApplicationSettingsWidgetGeneral</name>
@@ -543,6 +563,14 @@
     </message>
     <message>
         <source>Open browser on double clicking URL field in entry view</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Font size:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Font size selection</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -4197,6 +4225,10 @@ Would you like to overwrite the existing attachment?</source>
         <source>Background Color</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Group Path</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>EntryPreviewWidget</name>
@@ -5951,6 +5983,10 @@ Expect some bugs and minor issues, this version is meant for testing purposes.</
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Remote S&amp;ync…</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Quit Application</source>
         <translation type="unfinished"></translation>
     </message>
@@ -6052,6 +6088,10 @@ Expect some bugs and minor issues, this version is meant for testing purposes.</
     </message>
     <message>
         <source>Show Password Generator</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Remove Passkey From Entry</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -6199,18 +6239,6 @@ Expect some bugs and minor issues, this version is meant for testing purposes.</
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Remote S&amp;ync…</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Remove Passkey From Entry</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Setup Remote Sync…</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Show Group Panel</source>
         <translation type="unfinished"></translation>
     </message>
@@ -6219,7 +6247,15 @@ Expect some bugs and minor issues, this version is meant for testing purposes.</
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Setup Remote Sync…</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Password Generator</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>E&amp;xpire Entry…</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -9281,6 +9317,13 @@ This option is deprecated, use --set-key-file instead.</source>
         <source>Exclude from reports</source>
         <translation type="unfinished"></translation>
     </message>
+    <message numerus="yes">
+        <source>Expire Entry(s)…</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
     <message>
         <source>Only show entries that have a URL</source>
         <translation type="unfinished"></translation>
@@ -9307,6 +9350,14 @@ This option is deprecated, use --set-key-file instead.</source>
 </context>
 <context>
     <name>ReportsWidgetHealthcheck</name>
+    <message>
+        <source>Show expired entries</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source> (Expired)</source>
+        <translation type="unfinished"></translation>
+    </message>
     <message>
         <source>Hover over reason to show additional details. Double-click entries to edit.</source>
         <translation type="unfinished"></translation>
@@ -9370,16 +9421,15 @@ This option is deprecated, use --set-key-file instead.</source>
         <source>Exclude from reports</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
-        <source>Show expired entries</source>
-        <translation type="unfinished"></translation>
+    <message numerus="yes">
+        <source>Expire Entry(s)…</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
     </message>
     <message>
         <source>Show entries that have been excluded from reports</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source> (Expired)</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -9479,6 +9529,13 @@ This option is deprecated, use --set-key-file instead.</source>
     <message>
         <source>Exclude from reports</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <source>Expire Entry(s)…</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
     </message>
 </context>
 <context>
