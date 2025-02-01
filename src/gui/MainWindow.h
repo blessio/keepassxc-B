@@ -155,6 +155,7 @@ private slots:
     void focusSearchWidget();
     void enableMenuAndToolbar();
     void disableMenuAndToolbar();
+    void clearSSHAgent();
 
 private:
     static const QString BaseWindowTitle;

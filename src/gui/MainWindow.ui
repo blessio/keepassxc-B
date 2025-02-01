@@ -369,6 +369,7 @@
      <string>&amp;Tools</string>
     </property>
     <addaction name="actionPasswordGenerator"/>
+    <addaction name="actionClearSSHAgent"/>
     <addaction name="actionSettings"/>
    </widget>
    <widget class="QMenu" name="menuView">
@@ -1310,6 +1311,17 @@
    </property>
    <property name="toolTip">
     <string>Toggle Show Group Panel</string>
+   </property>
+  </action>
+  <action name="actionClearSSHAgent">
+   <property name="text">
+    <string>Clear SSH Agent</string>
+   </property>
+   <property name="toolTip">
+    <string>Clear all identities in ssh-agent</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::TextHeuristicRole</enum>
    </property>
   </action>
  </widget>
