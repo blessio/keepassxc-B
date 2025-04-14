@@ -619,19 +619,6 @@ void Config::createConfigFromFile(const QString& configFileName, const QString& 
                             qApp);
 }
 
-void Config::createTempFileInstance()
-{
-    if (m_instance) {
-        delete m_instance;
-    }
-    auto* tmpFile = new QTemporaryFile();
-    bool openResult = tmpFile->open();
-    Q_ASSERT(openResult);
-    Q_UNUSED(openResult);
-    m_instance = new Config(tmpFile->fileName(), "", qApp);
-    tmpFile->setParent(m_instance);
-}
-
 bool Config::isPortable()
 {
 #ifdef Q_OS_WIN
