@@ -54,7 +54,7 @@ jobs:
 
     - name: 100. Generate UUID
       id: generate-uuid
-      shell: bash            
+      shell: bash
       run: |
         if [[ "$RUNNER_OS" == "Windows" ]]; then 
           echo "uuid=$(powershell -Command '[guid]::NewGuid().ToString()')" >> "$GITHUB_OUTPUT"
@@ -76,14 +76,14 @@ jobs:
         echo "TRIPLET IS ${{ matrix.config.vcpkg_triplet }}"
         echo "Running on ${{ matrix.config.os }}"
 
-    - name: 112. MacOS version and environment
+    - name: 112. MacOS ONLY // version and environment
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
       run: | 
          xcodebuild -version
          sw_vers 
 
-    - name: 120. Windows Only // Install Winget so that it can use it to install SDK as needed
+    - name: 120. Windows ONLY // Install Winget so that it can use it to install SDK as needed
       if: ${{ startsWith( matrix.config.os , 'windows' ) }}
       uses: blessio/install-winget@PR05  # instead of Cyberboss/install-winget@v1 because the default "latest" is not working on latest runner windows images
       with:
@@ -112,11 +112,7 @@ jobs:
         libqt5svg5-dev libargon2-dev libminizip-dev libbotan-2-dev libqrencode-dev 
         libkeyutils-dev zlib1g-dev libreadline-dev libpcsclite-dev libusb-1.0-0-dev 
         libxi-dev libxtst-dev  libqt5x11extras5-dev                                          
-      
-    #- name: 170. MACOS Only // commandline extension
-    #  if: ${{ startsWith( matrix.config.os , 'macos' ) }}
-    #  continue-on-error: true
-    #  run: xcode-select --install
+
     - name: 171. MACOS Only // Homebrew
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
@@ -130,13 +126,13 @@ jobs:
     - name: 172. Fix Python dependency 
       uses: actions/setup-python@v5
       with:
-        python-version: '3.11'
+        python-version: '3.13'
 
     - name: 173.4 MACOS (re)install python
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
       run: | 
-        python3 --version # MUST BE 3.12
+        python3 --version # MUST BE 3.13
 
 
     - name: 174. MACOS Only PKGs
@@ -161,7 +157,7 @@ jobs:
         cache-key: "kpxco7a-1-${{ matrix.config.vcpkg_triplet }}"
         fetch-depth: "0"                 
     
-    - name: 550. Windows ONLY // Configure CMake
+    - name: 550. Windows ONLY // ***** Configure CMake
       if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
       run: >
         mkdir  ${{ steps.strings.outputs.build-sub-dir }}  && 
@@ -173,7 +169,7 @@ jobs:
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
         ..
 
-    - name: 555. MacOS ONLY // Configure CMake
+    - name: 555. MacOS ONLY // ***** Configure CMake
       if: ${{ startsWith( matrix.config.os  , 'macos' ) }}
       run: >
         mkdir  ${{ steps.strings.outputs.build-sub-dir }}  && 
@@ -184,7 +180,7 @@ jobs:
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
         ..
         
-    - name: 560. LINUX ONLY // Configure CMake
+    - name: 560. LINUX ONLY // ***** Configure CMake
       if: ${{ startsWith( matrix.config.os  , 'ubuntu' ) }}
       run: >
         mkdir  ${{ steps.strings.outputs.build-sub-dir }}  && 
