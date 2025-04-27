@@ -122,18 +122,25 @@ jobs:
       continue-on-error: true
       run: brew install asciidoctor
 
-
-    - name: 172. Fix Python dependency 
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.13'
-
-    - name: 173.4 MACOS (re)install python
+    - name: 173.0 MACOS (re)install python
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
       run: | 
-        python3 --version # MUST BE 3.13
+        brew uninstall --ignore-dependencies python 
+        brew uninstall --ignore-dependencies python3
 
+    - name: 173.2 MACOS (re)install python
+      if: ${{ startsWith( matrix.config.os , 'macos' ) }}
+      continue-on-error: true
+      run: | 
+        brew install python@3.12
+        brew reinstall python@3.12 
+
+    - name: 173.5 MACOS (re)install python
+      if: ${{ startsWith( matrix.config.os , 'macos' ) }}
+      continue-on-error: true
+      run: | 
+        python --version
 
     - name: 174. MACOS Only PKGs
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
