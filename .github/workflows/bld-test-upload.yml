@@ -141,6 +141,7 @@ jobs:
       continue-on-error: true
       run: | 
         brew install python@3.11 || brew reinstall python@3.11
+        brew link --overwrite python@3.11
         brew install python-distutils
     
       # distutils
