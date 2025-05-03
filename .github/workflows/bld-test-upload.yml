@@ -134,7 +134,7 @@ jobs:
       continue-on-error: true
       run: | 
         brew install python3 || brew reinstall python3
-        brew install python3-setuptools 
+        brew install python-setuptools
       # distutils
       # brew install python@3.11
       # brew reinstall python@3.11 
