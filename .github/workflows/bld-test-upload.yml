@@ -122,19 +122,27 @@ jobs:
       continue-on-error: true
       run: brew install asciidoctor
 
-    - name: 173.0 MACOS (re)install python
+    - name: 173.0 MACOS uninstall python BY FORCE so that the correct one can be (re)installed
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
       run: | 
         brew uninstall --ignore-dependencies python 
         brew uninstall --ignore-dependencies python3
 
-    - name: 173.2 MACOS (re)install python
-      if: ${{ startsWith( matrix.config.os , 'macos' ) }}
+    - name: 173.2.1 MACOS-LATEST (re)install python
+      if: ${{ startsWith( matrix.config.os , 'macos-latest' ) }}
       continue-on-error: true
       run: | 
         brew install python3 || brew reinstall python3
         brew install python-setuptools
+
+    - name: 173.2.2 MACOS-13 (re)install python
+      if: ${{ startsWith( matrix.config.os , 'macos-13' ) }}
+      continue-on-error: true
+      run: | 
+        brew install python@3.11 || brew reinstall python@3.11
+        brew install python-distutils
+    
       # distutils
       # brew install python@3.11
       # brew reinstall python@3.11 
