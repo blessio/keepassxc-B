@@ -141,11 +141,15 @@ jobs:
       continue-on-error: true
       run: | 
         brew install python@3.11 || brew reinstall python@3.11
-        echo ==========PYTHON FIX LINKS ============================================
+    
+    - name: 173.2.3 MACOS-13 (re)link python
+      if: ${{ startsWith( matrix.config.os , 'macos-13' ) }}
+      continue-on-error: true
+      run: | 
         brew link --overwrite python@3.11
         echo ========== Distutils PYTHON FIX LINKS ============================================
         brew install python-distutils
-    
+
       # distutils
       # brew install python@3.11
       # brew reinstall python@3.11 
