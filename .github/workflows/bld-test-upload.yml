@@ -141,7 +141,7 @@ jobs:
       uses: gabrielfalcao/pyenv-action@v18
       with:
         default: 3.11
-        versions: 3.11 3.13
+        versions: 3.11, 3.13
         command: python --version
 
     - name: 173.5 check python version
