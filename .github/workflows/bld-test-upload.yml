@@ -136,34 +136,15 @@ jobs:
         brew install python3 || brew reinstall python3
         brew install python-setuptools
 
-    - name: 173.2.2 MACOS-13 (re)install python
+    - name: 173.2.2 MACOS-13 ONLY (re)install python 3.11
       if: ${{ startsWith( matrix.config.os , 'macos-13' ) }}
-      continue-on-error: true
-      run: | 
-        brew install pyenv 
-        pyenv install 3.11
-        pyenv global 3.11
+      uses: gabrielfalcao/pyenv-action@v18
+      with:
+        default: 3.11
+        versions: 3.11 3.13
+        command: python --version
 
-      #  brew install python@3.11 || brew reinstall python@3.11
-    
-    #- name: 173.2.3 MACOS-13 (re)link python
-    #  if: ${{ startsWith( matrix.config.os , 'macos-13' ) }}
-    #  continue-on-error: true
-    #  run: | 
-    #    brew link --overwrite python@3.11
-    #    echo "PATH fixing" 
-    #    echo "/usr/local/opt/python@3.11/bin" >> $GITHUB_PATH
-
-      #  echo ========== Distutils PYTHON FIX LINKS ============================================
-      #  brew install python-distutils
-      #  echo 'export PATH="/usr/local/opt/python@3.11/bin:$PATH"' >> ~/.zshrc
-
-      # distutils
-      # brew install python@3.11
-      # brew reinstall python@3.11 
-
-    - name: 173.5 MACOS check python version
-      # if: ${{ startsWith( matrix.config.os , 'macos' ) }}
+    - name: 173.5 check python version
       continue-on-error: true
       run: | 
         python --version
