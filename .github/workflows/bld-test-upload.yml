@@ -141,11 +141,15 @@ jobs:
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
       run: | 
-        brew install python@3.11 || brew reinstall python@3.11
-        brew link --overwrite --force python@3.11
-        brew install python-tk@3.11
-        brew install python-gdbm@3.11
-        brew link --overwrite --force python@3.11
+        brew install python@3.11 || brew reinstall python@3.11 || (true)
+        echo "******* Relinking 1"
+        brew link --overwrite --force python@3.11 || (true)
+        echo "******* Tk-ing"
+        brew install python-tk@3.11 || (true)
+        echo "******* GDBM-ing"
+        brew install python-gdbm@3.11 || (true)
+        echo "******* Relinking 2" 
+        brew link --overwrite --force python@3.11 || (true)
 
 
     # - name: 173.2.2 MACOS-13 ONLY (re)install python 3.11
