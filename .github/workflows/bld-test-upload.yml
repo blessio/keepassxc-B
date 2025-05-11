@@ -197,7 +197,7 @@ jobs:
                                                         # No verbose available extra-args:  ' --x-make '
         triplet:      ${{matrix.config.vcpkg_triplet }} # x64-windows-release
         token:        ${{ github.token }}
-        github-binarycache: true
+        github-binarycache: false
         vcpkg-subdir: ${{steps.strings.outputs.build-root-vcpkg-dir}}
         cache-key: ${{ steps.strings.outputs.cache-key-kp }}-${{ hashFiles('**/vcpkg.json') }} # "kp23x-${{ matrix.config.vcpkg_triplet }}"
         fetch-depth: "0"
