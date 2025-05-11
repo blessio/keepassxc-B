@@ -142,8 +142,11 @@ jobs:
       continue-on-error: true
       run: | 
         brew install python@3.11 || brew reinstall python@3.11
-        brew install distutils
-        brew link --overwrite --force python3
+        brew link --overwrite --force python@3.11
+        brew install python-tk@3.11
+        brew install python-gdbm@3.11
+        brew link --overwrite --force python@3.11
+
 
     # - name: 173.2.2 MACOS-13 ONLY (re)install python 3.11
     #   if: ${{ startsWith( matrix.config.os , 'macos-13' ) }}
