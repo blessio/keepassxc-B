@@ -136,18 +136,13 @@ jobs:
         brew install python3 || brew reinstall python3
         brew install python-setuptools
 
-    # - name: 173.2.2 MACOS-13 ONLY (re)install python 3.11
-    #  if: ${{ startsWith( matrix.config.os , 'macos-13' ) }}
-    #  uses: gabrielfalcao/pyenv-action@v18
-    #  with:
-    #    default: 3.11.11
-    #    versions: 3.11.11, 3.13.1
-    #    command: python --version
-    - name: 173.2.2 MACOS-13 ONLY patch python
+    - name: 173.2.2 MACOS-13 ONLY (re)install python 3.11
       if: ${{ startsWith( matrix.config.os , 'macos-13' ) }}
-      run: | 
-        python3 -m pip install --upgrade pip setuptools
-        brew link --overwrite --force python3
+      uses: gabrielfalcao/pyenv-action@v18
+      with:
+        default: 3.11.11
+        versions: 3.11.11
+        command: brew link --overwrite --force python3
 
     - name: 173.5 check python version
       continue-on-error: true
@@ -164,7 +159,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: 300. Windows AND MacOS  // VCPKG install build
-      id: vcpkg1
+      id: vcpkg # The vcpkg-action step must have the id vcpkg.
       if:  ${{ startsWith( matrix.config.os , 'macos' )  ||  startsWith( matrix.config.os , 'windows' ) }}    
       uses: blessio/vcpkg-actionB@v7.1 # vbleo7.0
       with:
@@ -174,8 +169,8 @@ jobs:
         token:        ${{ github.token }}
         github-binarycache: true
         vcpkg-subdir: ${{steps.strings.outputs.build-root-vcpkg-dir}}
-        cache-key: "kpxco7a-1-${{ matrix.config.vcpkg_triplet }}"
-        fetch-depth: "0"                 
+        cache-key: "kp23x-${{ matrix.config.vcpkg_triplet }}"
+        fetch-depth: "0"
     
     - name: 550. Windows ONLY // ***** Configure CMake
       if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
