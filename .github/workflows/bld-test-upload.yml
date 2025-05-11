@@ -117,6 +117,7 @@ jobs:
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
       run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+      
     - name: 172. MACOS Only cmake and asciidoctor
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
@@ -138,7 +139,7 @@ jobs:
 
     
     - name: 173.2.2 MACOS-LATEST (re)install python
-      if: ${{ startsWith( matrix.config.os , 'macos' ) }}
+      if: ${{ startsWith( matrix.config.os , 'macos-13' ) }}
       continue-on-error: true
       run: | 
         brew install python@3.11 || brew reinstall python@3.11 || (true)
