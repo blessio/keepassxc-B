@@ -111,7 +111,7 @@ jobs:
         sudo apt install -y qtbase5-dev qtbase5-private-dev qttools5-dev qttools5-dev-tools  
         libqt5svg5-dev libargon2-dev libminizip-dev libbotan-2-dev libqrencode-dev 
         libkeyutils-dev zlib1g-dev libreadline-dev libpcsclite-dev libusb-1.0-0-dev 
-        libxi-dev libxtst-dev  libqt5x11extras5-dev                                          
+        libxi-dev libxtst-dev  libqt5x11extras5-dev
 
     - name: 171. MACOS Only // Homebrew
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
@@ -143,6 +143,11 @@ jobs:
     #    default: 3.11.11
     #    versions: 3.11.11, 3.13.1
     #    command: python --version
+    - name: 173.2.2 MACOS-13 ONLY patch python
+      if: ${{ startsWith( matrix.config.os , 'macos-13' ) }}
+      run: | 
+        python3 -m pip install --upgrade pip setuptools
+        brew link --overwrite --force python3
 
     - name: 173.5 check python version
       continue-on-error: true
