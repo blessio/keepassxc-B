@@ -68,6 +68,7 @@ jobs:
       shell: bash
       run: |
         echo "build-sub-dir=build" >> "$GITHUB_OUTPUT" 
+        echo "cache-key-kp=kp273x_${{ matrix.build_type }}_${{ matrix.config.os }}_${{ matrix.config.vcpkg_triplet }}" >> "$GITHUB_OUTPUT"
         echo "build-root-vcpkg-dir=_vpkg"  >> "$GITHUB_OUTPUT"
         echo "build-winsdk=10.0.26100" >> "$GITHUB_OUTPUT"
         echo "FORCE_JAVASCRIPT_ACTIONS_TO_NODE20=true"  >> "$GITHUB_OUTPUT"
@@ -171,11 +172,21 @@ jobs:
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
       run: | 
-        brew install pkg-config vcpkg 
+        brew install pkg-config vcpkg || (true)
+        echo "**********************************   bre link --overwrite vcpkg "
         brew link --overwrite vcpkg
 
     - name: 180. get the Source from Git
       uses: actions/checkout@v4
+
+    # - name: 200. Restore cached on Windowa and MacOS
+    #   id: cache-restore
+    #   if:  ${{ startsWith( matrix.config.os , 'macos' )  ||  startsWith( matrix.config.os , 'windows' ) }}  
+    #   uses: actions/cache/restore@v4
+    #   with:
+    #     path: |
+    #       ${{ github.workspace }}/${{ steps.strings.outputs.build-root-vcpkg-dir}}
+    #     key: ${{ steps.strings.outputs.cache-key-kp }}-${{ hashFiles('**/vcpkg.json') }}
 
     - name: 300. Windows AND MacOS  // VCPKG install build
       id: vcpkg # The vcpkg-action step must have the id vcpkg.
@@ -188,7 +199,7 @@ jobs:
         token:        ${{ github.token }}
         github-binarycache: true
         vcpkg-subdir: ${{steps.strings.outputs.build-root-vcpkg-dir}}
-        cache-key: "kp23x-${{ matrix.config.vcpkg_triplet }}"
+        cache-key: ${{ steps.strings.outputs.cache-key-kp }}-${{ hashFiles('**/vcpkg.json') }} # "kp23x-${{ matrix.config.vcpkg_triplet }}"
         fetch-depth: "0"
     
     - name: 550. Windows ONLY // ***** Configure CMake
@@ -197,6 +208,7 @@ jobs:
         mkdir  ${{ steps.strings.outputs.build-sub-dir }}  && 
         cd     ${{ steps.strings.outputs.build-sub-dir }}  &&
         cmake -DWITH_XC_ALL=ON -DWITH_GUI_TESTS=ON 
+        -DVCPKG_MANIFEST_MODE=OFF 
         -DCMAKE_SYSTEM_VERSION=${{ steps.strings.outputs.build-winsdk }} 
         -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}\${{ steps.strings.outputs.build-root-vcpkg-dir}}\scripts\buildsystems\vcpkg.cmake 
         -DVCPKG_TARGET_TRIPLET=${{ matrix.config.vcpkg_triplet}}
@@ -209,6 +221,7 @@ jobs:
         mkdir  ${{ steps.strings.outputs.build-sub-dir }}  && 
         cd     ${{ steps.strings.outputs.build-sub-dir }}  &&
         cmake -DWITH_XC_ALL=ON -DWITH_GUI_TESTS=ON 
+        -DVCPKG_MANIFEST_MODE=OFF 
         -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/${{ steps.strings.outputs.build-root-vcpkg-dir}}/scripts/buildsystems/vcpkg.cmake 
         -DVCPKG_TARGET_TRIPLET=${{ matrix.config.vcpkg_triplet }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
@@ -224,6 +237,15 @@ jobs:
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
         ..
     
+    # - name: 590. Save Cache on Windowa and MacOS
+    #   if:  ${{ startsWith( matrix.config.os , 'macos' )  ||  startsWith( matrix.config.os , 'windows' ) }}  
+    #   uses: actions/cache/restore@v4
+    #   with:
+    #     path: |
+    #       ${{ github.workspace }}/${{ steps.strings.outputs.build-root-vcpkg-dir}}
+    #     key: ${{ steps.strings.outputs.cache-key-kp }}-${{ hashFiles('**/vcpkg.json') }}
+
+
     - name: 600. Windows Check DiskSpace 
       if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
       run: > 
