@@ -170,7 +170,9 @@ jobs:
     - name: 174. MACOS Only PKGs
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
-      run: brew install pkg-config vcpkg 
+      run: | 
+        brew install pkg-config vcpkg 
+        brew link --overwrite vcpkg
 
     - name: 180. get the Source from Git
       uses: actions/checkout@v4
@@ -178,7 +180,7 @@ jobs:
     - name: 300. Windows AND MacOS  // VCPKG install build
       id: vcpkg # The vcpkg-action step must have the id vcpkg.
       if:  ${{ startsWith( matrix.config.os , 'macos' )  ||  startsWith( matrix.config.os , 'windows' ) }}    
-      uses: blessio/vcpkg-actionB@v7.1 # vbleo7.0
+      uses: blessio/vcpkg-actionB@v7.2 # vbleo7.0
       with:
         manifest-dir: ${{ github.workspace }}           # Set to directory containing vcpkg.json
                                                         # No verbose available extra-args:  ' --x-make '
