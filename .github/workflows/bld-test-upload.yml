@@ -358,7 +358,7 @@ jobs:
         echo "### ${{ steps.strings.outputs.bld-humanreadable-str }}" >> $GITHUB_STEP_SUMMARY
         echo " - Download built files from: ${{ steps.a-wexecutables.outputs.artifact-url }} ${{ steps.a-executables.outputs.artifact-url }}" >> $GITHUB_STEP_SUMMARY
         if [ -f ctest-pass2-results-of-failedonly.txt ]; then
-          echo -e " - 🟡 Some tests **failed**.  " >> $GITHUB_STEP_SUMMARY
+          echo -e " - 🟡 Some test(s) **failed**. Namely: " >> $GITHUB_STEP_SUMMARY
           # echo all lines from file ctest-pass2-results-of-failedonly.txt starting from the line that contains the string "The following tests FAILED:"
           awk '/The following tests FAILED:/ {flag=1; next} /Errors while running CTest/ {flag=0} flag {print "    " $0}' ctest-pass2-results-of-failedonly.txt >> $GITHUB_STEP_SUMMARY            
           echo "    Download the test results to check why. Look into \`ctest-pass2-results-of-failedonly.txt\` file in Test-Result logs, which  " >> $GITHUB_STEP_SUMMARY
