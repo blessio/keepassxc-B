@@ -197,13 +197,14 @@ jobs:
                                                         # No verbose available extra-args:  ' --x-make '
         triplet:      ${{matrix.config.vcpkg_triplet }} # x64-windows-release
         token:        ${{ github.token }}
-        github-binarycache: false
+        github-binarycache: false # This must be false for it to use the cache designed in the action
         vcpkg-subdir: ${{steps.strings.outputs.build-root-vcpkg-dir}}
         cache-key: ${{ steps.strings.outputs.cache-key-kp }}-${{ hashFiles('**/vcpkg.json') }} # "kp23x-${{ matrix.config.vcpkg_triplet }}"
         fetch-depth: "0"
     
     - name: 550. Windows ONLY // ***** Configure CMake
       if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
+      # If manifest mode is not OFF it will always make a vcpkg install which nullifies the idea of caching
       run: >
         mkdir  ${{ steps.strings.outputs.build-sub-dir }}  && 
         cd     ${{ steps.strings.outputs.build-sub-dir }}  &&
@@ -217,6 +218,7 @@ jobs:
 
     - name: 555. MacOS ONLY // ***** Configure CMake
       if: ${{ startsWith( matrix.config.os  , 'macos' ) }}
+      # If manifest mode is not OFF it will always make a vcpkg install which nullifies the idea of caching
       run: >
         mkdir  ${{ steps.strings.outputs.build-sub-dir }}  && 
         cd     ${{ steps.strings.outputs.build-sub-dir }}  &&
