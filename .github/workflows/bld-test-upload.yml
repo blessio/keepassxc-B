@@ -155,9 +155,10 @@ jobs:
         brew install python-gdbm@3.11 || (true)
         echo "******* Relinking 2" 
         brew link --overwrite python@3.11 || (true)
-        echo "Python3_ROOT_DIR=/usr/local/bin/python3.11" >> $GITHUB_ENV
-
-
+        echo "/usr/local/bin/python3.11" >> $GITHUB_PATH
+        ls -l /usr/local/bin/python3.11
+        
+        
     # - name: 173.2.2 MACOS-13 ONLY (re)install python 3.11
     #   if: ${{ startsWith( matrix.config.os , 'macos-13' ) }}
     #   uses: gabrielfalcao/pyenv-action@v18
@@ -171,6 +172,7 @@ jobs:
       run: | 
         python --version
         python3 --version 
+        which python3
 
     - name: 174. MACOS Only PKGs
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
