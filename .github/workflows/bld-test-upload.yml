@@ -53,20 +53,8 @@ jobs:
 
     steps:
     ###################################
-
-    - name: 100. Generate UUID and specific environment variables
-      id: generate-uuid
-      shell: bash
-      run: |
-        if [[ "$RUNNER_OS" == "Windows" ]]; then 
-          echo "uuid=$(powershell -Command '[guid]::NewGuid().ToString()')" >> "$GITHUB_OUTPUT"
-          echo "VCPKG_ROOT= ${{ github.workspace }}\{{_vpkg}}" >> "$GITHUB_ENV" 
-        else
-          echo "uuid=$(uuidgen)" >> "$GITHUB_OUTPUT"
-          echo "VCPKG_ROOT= ${{ github.workspace }}/{{_vpkg}}" >> "$GITHUB_ENV"
-        fi
       
-    - name: 110. Set reusable strings and Environment for actions
+    - name: 100. Set reusable strings and Environment for actions
       # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
       id: strings
       shell: bash
@@ -80,6 +68,18 @@ jobs:
         echo "bld-humanreadable-str=${{ matrix.config.vcpkg_triplet }} (built on: ${{ matrix.config.os }} of type: ${{ matrix.build_type }})" >> "$GITHUB_OUTPUT"
         echo "TRIPLET IS ${{ matrix.config.vcpkg_triplet }}"
         echo "Running on ${{ matrix.config.os }}"
+
+    - name: 110. Generate UUID and specific environment variables
+      id: generate-uuid
+      shell: bash
+      run: |
+        if [[ "$RUNNER_OS" == "Windows" ]]; then 
+          echo "uuid=$(powershell -Command '[guid]::NewGuid().ToString()')" >> "$GITHUB_OUTPUT"
+          echo "VCPKG_ROOT= ${{ github.workspace }}\${{ steps.strings.outputs.build-root-vcpkg-dir }}" >> "$GITHUB_ENV" 
+        else
+          echo "uuid=$(uuidgen)" >> "$GITHUB_OUTPUT"
+          echo "VCPKG_ROOT= ${{ github.workspace }}/${{ steps.strings.outputs.build-root-vcpkg-dir }}" >> "$GITHUB_ENV"
+        fi
 
     - name: 112. MacOS ONLY // version and environment
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
