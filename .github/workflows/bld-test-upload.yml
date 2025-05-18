@@ -176,6 +176,8 @@ jobs:
       continue-on-error: true
       run: | 
         python --version
+        which python
+        echo "*************** 3 ****************"
         python3 --version 
         which python3
 
