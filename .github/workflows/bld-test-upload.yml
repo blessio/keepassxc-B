@@ -54,14 +54,16 @@ jobs:
     steps:
     ###################################
 
-    - name: 100. Generate UUID
+    - name: 100. Generate UUID and specific environment variables
       id: generate-uuid
       shell: bash
       run: |
         if [[ "$RUNNER_OS" == "Windows" ]]; then 
           echo "uuid=$(powershell -Command '[guid]::NewGuid().ToString()')" >> "$GITHUB_OUTPUT"
+          echo "VCPKG_ROOT= ${{ github.workspace }}\{{_vpkg}}" >> "$GITHUB_ENV" 
         else
           echo "uuid=$(uuidgen)" >> "$GITHUB_OUTPUT"
+          echo "VCPKG_ROOT= ${{ github.workspace }}/{{_vpkg}}" >> "$GITHUB_ENV"
         fi
       
     - name: 110. Set reusable strings and Environment for actions
