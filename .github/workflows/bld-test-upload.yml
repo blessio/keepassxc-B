@@ -45,9 +45,11 @@ jobs:
         - os: macos-latest
           vcpkg_triplet: arm64-osx-dynamic-release
           github-binarycache: true
+          python-bld-version: 3.13
         - os: macos-13
           vcpkg_triplet: x64-osx-dynamic-release
           github-binarycache: true
+          python-bld-version: 3.11
 
     steps:
     ###################################
@@ -137,7 +139,6 @@ jobs:
       run: | 
         brew install python3 || brew reinstall python3
         brew install python-setuptools
-
     
     - name: 173.2.2 MACOS-LATEST (re)install python
       if: ${{ startsWith( matrix.config.os , 'macos-13' ) }}
@@ -227,6 +228,7 @@ jobs:
         -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/${{ steps.strings.outputs.build-root-vcpkg-dir}}/scripts/buildsystems/vcpkg.cmake 
         -DVCPKG_TARGET_TRIPLET=${{ matrix.config.vcpkg_triplet }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        -DCMAKE_PYTHON_VERSION=${{ steps.strings.outputs.python-bld-version }}
         ..
         
     - name: 560. LINUX ONLY // ***** Configure CMake
