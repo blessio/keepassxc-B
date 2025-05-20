@@ -85,8 +85,10 @@ jobs:
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
       run: | 
-         xcodebuild -version
-         sw_vers 
+        echo "********************* xcode version ******************************"
+        xcodebuild -version
+        echo "*********************    sw_vers    ******************************"
+        sw_vers 
 
     - name: 120. Windows ONLY // Install Winget so that it can use it to install SDK as needed
       if: ${{ startsWith( matrix.config.os , 'windows' ) }}
