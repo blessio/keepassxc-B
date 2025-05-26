@@ -152,11 +152,22 @@ bool MacUtils::isCapslockEnabled()
 
 void MacUtils::setUserInputProtection(bool enable)
 {
+    static bool secureInputEnabled = false;
     if (enable) {
+        /*
+         * MacOS keeps a single counter over all apps that needs to be zero to disable secure input. By never going
+         * higher than 1 internally this makes sure secure input doesn't stay active after calling this function
+         * multiple times.
+         */
+        if (secureInputEnabled) {
+            DisableSecureEventInput();
+        }
         EnableSecureEventInput();
     } else {
         DisableSecureEventInput();
     }
+    // Store our last known state
+    secureInputEnabled = enable;
 }
 
 /**
