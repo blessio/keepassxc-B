@@ -108,6 +108,7 @@ void TotpSetupDialog::init()
         m_ui->algorithmComboBox->addItem(item.first, item.second);
     }
     m_ui->algorithmComboBox->setCurrentIndex(0);
+    m_ui->invalidKeyLabel->setVisible(false);
 
     // Read entry totp settings
     auto settings = m_entry->totpSettings();
@@ -127,5 +128,8 @@ void TotpSetupDialog::init()
                 m_ui->algorithmComboBox->setCurrentIndex(index);
             }
         }
+
+        auto error = Totp::checkValidSettings(settings);
+        m_ui->invalidKeyLabel->setVisible(!error.isEmpty());
     }
 }

@@ -17,14 +17,16 @@
 
 #pragma once
 
-#include "core/Tools.h"
+#include "attachments/AttachmentTypes.h"
+
+#include <core/Tools.h>
 
 #include <QDialog>
 #include <QPointer>
 
 namespace Ui
 {
-    class EntryAttachmentsDialog;
+    class PreviewEntryAttachmentsDialog;
 }
 
 class PreviewEntryAttachmentsDialog : public QDialog
@@ -35,29 +37,12 @@ public:
     explicit PreviewEntryAttachmentsDialog(QWidget* parent = nullptr);
     ~PreviewEntryAttachmentsDialog() override;
 
-    void setAttachment(const QString& name, const QByteArray& data);
+    void setAttachment(attachments::Attachment attachment);
 
 signals:
     void openAttachment(const QString& name);
     void saveAttachment(const QString& name);
 
-protected:
-    void resizeEvent(QResizeEvent* event) override;
-
 private:
-    Tools::MimeType attachmentType(const QByteArray& data) const;
-
-    void update();
-    void updateTextAttachment(const QByteArray& data);
-    void updateImageAttachment(const QByteArray& data);
-    void updateImageAttachment(const QImage& data);
-
-    QSize calculateImageSize();
-
-    QScopedPointer<Ui::EntryAttachmentsDialog> m_ui;
-
-    QString m_name;
-    QByteArray m_data;
-    QImage m_imageCache;
-    Tools::MimeType m_type{Tools::MimeType::Unknown};
+    QScopedPointer<Ui::PreviewEntryAttachmentsDialog> m_ui;
 };

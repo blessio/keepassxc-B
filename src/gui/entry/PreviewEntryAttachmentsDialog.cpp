@@ -16,117 +16,48 @@
  */
 
 #include "PreviewEntryAttachmentsDialog.h"
-#include "ui_EntryAttachmentsDialog.h"
+#include "ui_PreviewEntryAttachmentsDialog.h"
 
+#include <QDebug>
 #include <QDialogButtonBox>
 #include <QMimeDatabase>
 #include <QPushButton>
-#include <QTextCursor>
-#include <QtDebug>
 
 PreviewEntryAttachmentsDialog::PreviewEntryAttachmentsDialog(QWidget* parent)
     : QDialog(parent)
-    , m_ui(new Ui::EntryAttachmentsDialog)
+    , m_ui(new Ui::PreviewEntryAttachmentsDialog)
 {
     m_ui->setupUi(this);
 
-    setWindowTitle(tr("Preview entry attachment"));
     // Disable the help button in the title bar
     setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
-
-    // Set to read-only
-    m_ui->titleEdit->setReadOnly(true);
-    m_ui->attachmentTextEdit->setReadOnly(true);
-    m_ui->errorLabel->setVisible(false);
 
     // Initialize dialog buttons
     m_ui->dialogButtons->setStandardButtons(QDialogButtonBox::Close | QDialogButtonBox::Open | QDialogButtonBox::Save);
     auto closeButton = m_ui->dialogButtons->button(QDialogButtonBox::Close);
     closeButton->setDefault(true);
 
-    connect(m_ui->dialogButtons, SIGNAL(rejected()), this, SLOT(reject()));
+    auto saveButton = m_ui->dialogButtons->button(QDialogButtonBox::Save);
+    saveButton->setText(tr("Save…"));
+
+    connect(m_ui->dialogButtons, &QDialogButtonBox::rejected, this, &PreviewEntryAttachmentsDialog::reject);
     connect(m_ui->dialogButtons, &QDialogButtonBox::clicked, [this](QAbstractButton* button) {
         auto pressedButton = m_ui->dialogButtons->standardButton(button);
+
+        const auto attachment = m_ui->attachmentWidget->getAttachment();
         if (pressedButton == QDialogButtonBox::Open) {
-            emit openAttachment(m_name);
+            emit openAttachment(attachment.name);
         } else if (pressedButton == QDialogButtonBox::Save) {
-            emit saveAttachment(m_name);
+            emit saveAttachment(attachment.name);
         }
     });
 }
 
 PreviewEntryAttachmentsDialog::~PreviewEntryAttachmentsDialog() = default;
 
-void PreviewEntryAttachmentsDialog::setAttachment(const QString& name, const QByteArray& data)
+void PreviewEntryAttachmentsDialog::setAttachment(attachments::Attachment attachment)
 {
-    m_name = name;
-    m_ui->titleEdit->setText(m_name);
+    setWindowTitle(tr("Preview: %1").arg(attachment.name));
 
-    m_type = attachmentType(data);
-    m_data = data;
-    m_imageCache = QImage();
-
-    update();
-}
-
-void PreviewEntryAttachmentsDialog::update()
-{
-    if (m_type == Tools::MimeType::Unknown) {
-        updateTextAttachment(tr("No preview available").toUtf8());
-    } else if (m_type == Tools::MimeType::Image) {
-        updateImageAttachment(m_data);
-    } else if (m_type == Tools::MimeType::PlainText) {
-        updateTextAttachment(m_data);
-    }
-}
-
-void PreviewEntryAttachmentsDialog::updateTextAttachment(const QByteArray& data)
-{
-    m_ui->attachmentTextEdit->setPlainText(QString::fromUtf8(data));
-}
-
-void PreviewEntryAttachmentsDialog::updateImageAttachment(const QByteArray& data)
-{
-    if (m_imageCache.isNull() && !m_imageCache.loadFromData(data)) {
-        updateTextAttachment(tr("Image format not supported").toUtf8());
-        return;
-    }
-
-    updateImageAttachment(m_imageCache);
-}
-
-void PreviewEntryAttachmentsDialog::updateImageAttachment(const QImage& image)
-{
-    m_ui->attachmentTextEdit->clear();
-    auto cursor = m_ui->attachmentTextEdit->textCursor();
-
-    cursor.insertImage(image.scaled(calculateImageSize(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
-}
-
-QSize PreviewEntryAttachmentsDialog::calculateImageSize()
-{
-    // Scale the image to the contents rect minus another set of margins to avoid scrollbars
-    auto margins = m_ui->attachmentTextEdit->contentsMargins();
-    auto size = m_ui->attachmentTextEdit->contentsRect().size();
-    size.setWidth(size.width() - margins.left() - margins.right());
-    size.setHeight(size.height() - margins.top() - margins.bottom());
-
-    return size;
-}
-
-Tools::MimeType PreviewEntryAttachmentsDialog::attachmentType(const QByteArray& data) const
-{
-    QMimeDatabase mimeDb{};
-    const auto mime = mimeDb.mimeTypeForData(data);
-
-    return Tools::toMimeType(mime.name());
-}
-
-void PreviewEntryAttachmentsDialog::resizeEvent(QResizeEvent* event)
-{
-    QDialog::resizeEvent(event);
-
-    if (m_type == Tools::MimeType::Image) {
-        update();
-    }
+    m_ui->attachmentWidget->openAttachment(std::move(attachment), attachments::OpenMode::ReadOnly);
 }
