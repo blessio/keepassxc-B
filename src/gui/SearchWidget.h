@@ -68,6 +68,7 @@ public slots:
     void clearSearch();
 
 private slots:
+    void onReturnPressed();
     void startSearchTimer();
     void startSearch();
     void updateCaseSensitive();
@@ -83,6 +84,7 @@ private:
     QTimer* m_clearSearchTimer;
     QAction* m_actionCaseSensitive;
     QAction* m_actionLimitGroup;
+    QAction* m_actionWaitForEnter;
     QMenu* m_searchMenu;
 };
 

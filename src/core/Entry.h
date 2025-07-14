@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2024 KeePassXC Team <team@keepassxc.org>
+ *  Copyright (C) 2025 KeePassXC Team <team@keepassxc.org>
  *  Copyright (C) 2010 Felix Geyer <debfx@fobos.de>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -100,14 +100,16 @@ public:
     const AutoTypeAssociations* autoTypeAssociations() const;
     QString title() const;
     QString url() const;
+    QString resolveUrl() const;
     QStringList getAllUrls() const;
+    QStringList getAdditionalUrls() const;
     QString webUrl() const;
     QString displayUrl() const;
     QString username() const;
     QString password() const;
     QString notes() const;
     QString attribute(const QString& key) const;
-    QString totp() const;
+    QString totp(bool* isValid = nullptr) const;
     QString totpSettingsString() const;
     QSharedPointer<Totp::Settings> totpSettings() const;
     Group* previousParentGroup();
@@ -124,6 +126,7 @@ public:
     void removePasskey();
 
     bool hasTotp() const;
+    bool hasValidTotp() const;
     bool isExpired() const;
     bool willExpireInDays(int days) const;
     void expireNow();

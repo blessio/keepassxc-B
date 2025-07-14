@@ -211,7 +211,10 @@ MainWindow::MainWindow()
 #ifdef WITH_XC_SSHAGENT
     connect(sshAgent(), SIGNAL(error(QString)), this, SLOT(showErrorMessage(QString)));
     connect(sshAgent(), SIGNAL(enabledChanged(bool)), this, SLOT(agentEnabled(bool)));
+    connect(m_ui->actionClearSSHAgent, SIGNAL(triggered()), SLOT(clearSSHAgent()));
     m_ui->settingsWidget->addSettingsPage(new AgentSettingsPage());
+#else
+    agentEnabled(false);
 #endif
 
 #if defined(WITH_XC_KEESHARE)
@@ -270,7 +273,7 @@ MainWindow::MainWindow()
     m_ui->actionAllowScreenCapture->setVisible(osUtils->canPreventScreenCapture());
 
     m_inactivityTimer = new InactivityTimer(this);
-    connect(m_inactivityTimer, SIGNAL(inactivityDetected()), this, SLOT(lockDatabasesAfterInactivity()));
+    connect(m_inactivityTimer, SIGNAL(inactivityDetected()), this, SLOT(lockAllDatabases()));
     applySettingsChanges();
 
     // Qt 5.10 introduced a new "feature" to hide shortcuts in context menus
@@ -414,6 +417,7 @@ MainWindow::MainWindow()
 
     m_ui->actionSettings->setIcon(icons()->icon("configure"));
     m_ui->actionPasswordGenerator->setIcon(icons()->icon("password-generator"));
+    m_ui->actionClearSSHAgent->setIcon(icons()->icon("utilities-terminal"));
 
     m_ui->actionAbout->setIcon(icons()->icon("help-about"));
     m_ui->actionDonate->setIcon(icons()->icon("donate"));
@@ -683,11 +687,6 @@ MainWindow::MainWindow()
 
     restoreConfigState();
     updateMenuActionState();
-
-    // Check the current screen and hide the status bar if it is the WelcomeScreen
-    if (m_ui->stackedWidget->currentIndex() == WelcomeScreen) {
-        statusBar()->hide();
-    }
 }
 
 MainWindow::~MainWindow()
@@ -813,31 +812,51 @@ void MainWindow::updateCopyAttributesMenu()
 
 void MainWindow::updateSetTagsMenu()
 {
-    // Remove all existing actions
-    m_ui->menuTags->clear();
+    auto actionForTag = [](const QMenu* menu, const QString& tag) -> QAction* {
+        for (const auto action : menu->actions()) {
+            if (action->text() == tag) {
+                return action;
+            }
+        }
+        return nullptr;
+    };
+
+    m_ui->menuTags->setTearOffEnabled(true);
 
     auto dbWidget = m_ui->tabWidget->currentDatabaseWidget();
     if (dbWidget) {
         // Enumerate tags applied to the selected entries
         QSet<QString> selectedTags;
-        for (auto entry : dbWidget->entryView()->selectedEntries()) {
-            for (auto tag : entry->tagList()) {
+        for (const auto entry : dbWidget->entryView()->selectedEntries()) {
+            for (const auto& tag : entry->tagList()) {
                 selectedTags.insert(tag);
+            }
+        }
+
+        // Remove missing tags
+        const auto tagList = dbWidget->database()->tagList();
+        for (const auto action : m_ui->menuTags->actions()) {
+            if (!tagList.contains(action->text()) || !action->isEnabled()) {
+                delete action;
             }
         }
 
         // Add known database tags as actions and set checked if
         // a selected entry has that tag
-        for (auto tag : dbWidget->database()->tagList()) {
-            auto action = m_ui->menuTags->addAction(icons()->icon("tag"), tag);
-            action->setCheckable(true);
+        for (const auto& tag : tagList) {
+            auto action = actionForTag(m_ui->menuTags, tag);
+            if (!action) {
+                action = m_ui->menuTags->addAction(icons()->icon("tag"), tag);
+                action->setCheckable(true);
+                m_setTagsMenuActions->addAction(action);
+            }
             action->setChecked(selectedTags.contains(tag));
-            m_setTagsMenuActions->addAction(action);
         }
     }
 
     // If no tags exist in the database then show a tip to the user
     if (m_ui->menuTags->isEmpty()) {
+        m_ui->menuTags->setTearOffEnabled(false);
         auto action = m_ui->menuTags->addAction(tr("No Tags"));
         action->setEnabled(false);
     }
@@ -938,6 +957,14 @@ void MainWindow::updateMenuActionState()
     m_ui->menuEntryCopyAttribute->setEnabled(singleEntryOrEditing);
     m_ui->menuEntryTotp->setEnabled(singleEntrySelected);
     m_ui->menuTags->setEnabled(multiEntrySelected);
+    // Handle tear-off tags menu
+    if (m_ui->menuTags->isTearOffMenuVisible()) {
+        if (!databaseUnlocked) {
+            m_ui->menuTags->hideTearOffMenu();
+        } else {
+            updateSetTagsMenu();
+        }
+    }
     m_ui->actionEntryAutoType->setEnabled(singleEntrySelected && dbWidget->currentEntryHasAutoTypeEnabled());
     m_ui->actionEntryAutoType->menu()->setEnabled(singleEntrySelected && dbWidget->currentEntryHasAutoTypeEnabled());
     m_ui->actionEntryAutoTypeSequence->setText(singleEntrySelected
@@ -970,6 +997,8 @@ void MainWindow::updateMenuActionState()
     m_ui->actionEntryAddToAgent->setEnabled(hasSSHKey);
     m_ui->actionEntryRemoveFromAgent->setVisible(hasSSHKey);
     m_ui->actionEntryRemoveFromAgent->setEnabled(hasSSHKey);
+    m_ui->actionClearSSHAgent->setVisible(sshAgent()->isEnabled());
+    m_ui->actionClearSSHAgent->setEnabled(sshAgent()->isEnabled());
 #endif
 
     m_ui->actionGroupNew->setEnabled(groupSelected && !inRecycleBin);
@@ -988,7 +1017,7 @@ void MainWindow::updateMenuActionState()
     m_ui->actionGroupDownloadFavicons->setEnabled(groupSelected && groupHasEntries && !inRecycleBin);
 
     // Database Menu
-    m_ui->actionDatabaseSave->setEnabled(m_ui->tabWidget->canSave());
+    m_ui->actionDatabaseSave->setEnabled(databaseUnlocked && m_ui->tabWidget->canSave());
     m_ui->actionDatabaseSaveAs->setEnabled(databaseUnlocked);
     m_ui->actionDatabaseSaveBackup->setEnabled(databaseUnlocked);
     m_ui->actionDatabaseClose->setEnabled(dbWidget);
@@ -1164,10 +1193,10 @@ void MainWindow::switchToDatabases()
 {
     if (m_ui->tabWidget->currentIndex() == -1) {
         m_ui->stackedWidget->setCurrentIndex(WelcomeScreen);
-        statusBar()->hide();
+        statusBar()->setAutoFillBackground(false);
     } else {
         m_ui->stackedWidget->setCurrentIndex(DatabaseTabScreen);
-        statusBar()->show();
+        statusBar()->setAutoFillBackground(true);
     }
 }
 
@@ -1176,6 +1205,7 @@ void MainWindow::switchToSettings(bool enabled)
     if (enabled) {
         m_ui->settingsWidget->loadSettings();
         m_ui->stackedWidget->setCurrentIndex(SettingsScreen);
+        statusBar()->setAutoFillBackground(true);
     } else {
         switchToDatabases();
     }
@@ -1187,6 +1217,7 @@ void MainWindow::togglePasswordGenerator(bool enabled)
         m_ui->passwordGeneratorWidget->loadSettings();
         m_ui->passwordGeneratorWidget->regeneratePassword();
         m_ui->stackedWidget->setCurrentIndex(PasswordGeneratorScreen);
+        statusBar()->setAutoFillBackground(false);
     } else {
         m_ui->passwordGeneratorWidget->saveSettings();
         switchToDatabases();
@@ -1276,14 +1307,19 @@ void MainWindow::databaseTabChanged(int tabIndex)
 {
     if (tabIndex != -1 && m_ui->stackedWidget->currentIndex() == WelcomeScreen) {
         m_ui->stackedWidget->setCurrentIndex(DatabaseTabScreen);
-        statusBar()->show();
+        statusBar()->setAutoFillBackground(true);
     } else if (tabIndex == -1 && m_ui->stackedWidget->currentIndex() == DatabaseTabScreen) {
         m_ui->stackedWidget->setCurrentIndex(WelcomeScreen);
-        statusBar()->hide();
+        statusBar()->setAutoFillBackground(false);
     }
 
     m_actionMultiplexer.setCurrentObject(m_ui->tabWidget->currentDatabaseWidget());
     updateEntryCountLabel();
+
+    // Clear the tags menu to prevent re-use between databases
+    for (const auto action : m_ui->menuTags->actions()) {
+        delete action;
+    }
 }
 
 bool MainWindow::event(QEvent* event)
@@ -1460,6 +1496,15 @@ void MainWindow::disableMenuAndToolbar()
     m_ui->menubar->setDisabled(true);
 }
 
+void MainWindow::clearSSHAgent()
+{
+#ifdef WITH_XC_SSHAGENT
+    auto agent = SSHAgent::instance();
+    auto ret = agent->clearAllAgentIdentities();
+    displayGlobalMessage(agent->errorString(), ret ? MessageWidget::Positive : KMessageWidget::Error, false);
+#endif
+}
+
 void MainWindow::saveWindowInformation()
 {
     if (isVisible()) {
@@ -1585,6 +1630,8 @@ void MainWindow::agentEnabled(bool enabled)
 {
     m_ui->actionEntryAddToAgent->setVisible(enabled);
     m_ui->actionEntryRemoveFromAgent->setVisible(enabled);
+    m_ui->actionClearSSHAgent->setEnabled(enabled);
+    m_ui->actionClearSSHAgent->setVisible(enabled);
 }
 
 void MainWindow::showEntryContextMenu(const QPoint& globalPos)
@@ -1609,14 +1656,9 @@ void MainWindow::showGroupContextMenu(const QPoint& globalPos)
 
 void MainWindow::applySettingsChanges()
 {
-    int timeout = config()->get(Config::Security_LockDatabaseIdleSeconds).toInt() * 1000;
-    if (timeout <= 0) {
-        timeout = 60;
-    }
-
-    m_inactivityTimer->setInactivityTimeout(timeout);
     if (config()->get(Config::Security_LockDatabaseIdle).toBool()) {
-        m_inactivityTimer->activate();
+        auto timeout = config()->get(Config::Security_LockDatabaseIdleSeconds).toInt() * 1000;
+        m_inactivityTimer->activate(timeout);
     } else {
         m_inactivityTimer->deactivate();
     }
@@ -1640,6 +1682,8 @@ void MainWindow::applySettingsChanges()
     }
 
     updateTrayIcon();
+
+    kpxcApp->applyFontSize();
 }
 
 void MainWindow::setAllowScreenCapture(bool state)
@@ -1784,13 +1828,6 @@ void MainWindow::closeModalWindow()
     }
 }
 
-void MainWindow::lockDatabasesAfterInactivity()
-{
-    if (!m_ui->tabWidget->lockDatabases()) {
-        m_inactivityTimer->activate();
-    }
-}
-
 bool MainWindow::isTrayIconEnabled() const
 {
     return m_trayIcon && m_trayIcon->isVisible();
@@ -1845,7 +1882,7 @@ void MainWindow::bringToFront()
 void MainWindow::handleScreenLock()
 {
     if (config()->get(Config::Security_LockDatabaseScreenLock).toBool()) {
-        lockDatabasesAfterInactivity();
+        lockAllDatabases();
     }
 }
 
@@ -1895,7 +1932,7 @@ void MainWindow::closeAllDatabases()
 
 void MainWindow::lockAllDatabases()
 {
-    lockDatabasesAfterInactivity();
+    m_ui->tabWidget->lockDatabases();
 }
 
 void MainWindow::displayDesktopNotification(const QString& msg, QString title, int msTimeoutHint)
@@ -2076,6 +2113,7 @@ void MainWindow::initActionCollection()
                     m_ui->actionGroupEmptyRecycleBin,
                     // Tools Menu
                     m_ui->actionPasswordGenerator,
+                    m_ui->actionClearSSHAgent,
                     m_ui->actionSettings,
                     // View Menu
                     m_ui->actionThemeAuto,
@@ -2190,6 +2228,15 @@ bool MainWindowEventFilter::eventFilter(QObject* watched, QEvent* event)
 #endif
     } else if (eventType == QEvent::KeyRelease && watched == mainWindow) {
         auto keyEvent = dynamic_cast<QKeyEvent*>(event);
+#ifdef Q_OS_WIN
+        // Windows translates AltGr into CTRL + ALT, this breaks using AltGr when the menubar is hidden
+        // Prevent this by activating the ALT cooldown to ignore the next key event which will be an ALT key
+        if (keyEvent->key() == Qt::Key_Control && keyEvent->modifiers() == Qt::AltModifier
+            && config()->get(Config::GUI_HideMenubar).toBool()) {
+            m_altCoolDown.start();
+            return false;
+        }
+#endif
         if (keyEvent->key() == Qt::Key_Alt && !keyEvent->modifiers() && config()->get(Config::GUI_HideMenubar).toBool()
             && !m_altCoolDown.isActive()) {
             auto menubar = mainWindow->m_ui->menubar;

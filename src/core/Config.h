@@ -98,8 +98,10 @@ public:
         GUI_CompactMode,
         GUI_CheckForUpdates,
         GUI_CheckForUpdatesIncludeBetas,
+        SearchWaitForEnter,
         GUI_ShowExpiredEntriesOnDatabaseUnlock,
         GUI_ShowExpiredEntriesOnDatabaseUnlockOffsetDays,
+        GUI_FontSizeOffset,
 
         GUI_MainWindowGeometry,
         GUI_MainWindowState,
@@ -229,7 +231,6 @@ public:
 
     static Config* instance();
     static void createConfigFromFile(const QString& configFileName, const QString& localConfigFileName = {});
-    static void createTempFileInstance();
     static bool isPortable();
     static QString portableConfigDir();
 

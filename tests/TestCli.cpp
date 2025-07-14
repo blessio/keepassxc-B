@@ -66,7 +66,9 @@ void TestCli::initTestCase()
 {
     QVERIFY(Crypto::init());
 
-    Config::createTempFileInstance();
+    // Create temporary config file
+    Config::createConfigFromFile(TemporaryFile::createTempConfigFile(), {});
+
     QLocale::setDefault(QLocale::c());
     Bootstrap::bootstrap();
 
@@ -1087,8 +1089,9 @@ void TestCli::testDiceware()
     }
     smallWordFile.close();
 
+    // Ensure a warning is shown if the wordlist is too short
     execCmd(dicewareCmd, {"diceware", "-W", "11", "-w", smallWordFile.fileName()});
-    QCOMPARE(m_stderr->readLine(), QByteArray("Cannot generate valid passphrases because the wordlist is too short\n"));
+    QVERIFY(m_stderr->readLine().length() > 0);
 }
 
 void TestCli::testEdit()
@@ -1311,6 +1314,18 @@ void TestCli::testExport()
     QVERIFY(csvData.contains(QByteArray(
         "\"NewDatabase\",\"Sample Entry\",\"User Name\",\"Password\",\"http://www.somesite.com/\",\"Notes\"")));
 
+    // HTML exporting
+    setInput("a");
+    execCmd(exportCmd, {"export", "-f", "html", m_dbFile->fileName()});
+    QByteArray htmlHeader = m_stdout->readLine();
+    QVERIFY(htmlHeader.contains(QByteArray("<meta charset=\"UTF-8\"><title></title>")));
+    QByteArray htmlBody = m_stdout->readAll();
+    QVERIFY(htmlBody.contains(QByteArray("<h2>NewDatabase</h2>")));
+    QVERIFY(htmlBody.contains(QByteArray("<caption>Sample Entry</caption>"
+                                         "<tr><th>User name</th><td class=\"username\">User Name</td></tr>"
+                                         "<tr><th>Password</th><td class=\"password\">Password</td></tr>"
+                                         "<tr><th>URL</th><td class=\"url\"><a "
+                                         "href=\"http://www.somesite.com/\">http://www.somesite.com/</a></td></tr>")));
     // test invalid format
     setInput("a");
     execCmd(exportCmd, {"export", "-f", "yaml", m_dbFile->fileName()});

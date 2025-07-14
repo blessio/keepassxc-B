@@ -22,12 +22,13 @@ KeePassXC has numerous features for novice and power users alike. Our goal is to
 * Password generator
 * Auto-Type passwords into applications
 * Browser integration with Google Chrome, Mozilla Firefox, Microsoft Edge, Chromium, Vivaldi, Brave, and Tor-Browser
+* Support for passkeys using the browser integration
 * Entry icon download
-* Import databases from CSV, 1Password, and KeePass1 formats
+* Import databases from CSV, 1Password, Bitwarden, Proton Pass, and KeePass1 formats
 
 ### Advanced
 * Database reports (password health, HIBP, and statistics)
-* Database export to CSV and HTML formats
+* Database export to CSV, XML, and HTML formats
 * TOTP storage and generation
 * Field references between entries
 * File attachments and custom attributes
@@ -54,6 +55,10 @@ We are always looking for suggestions on how to improve KeePassXC. If you find a
 You may directly contribute your own code by submitting a pull request. Please read the [CONTRIBUTING](.github/CONTRIBUTING.md) document for further information.
 
 Contributors are required to adhere to the project's [Code of Conduct](CODE-OF-CONDUCT.md).
+
+## Generative AI
+
+Generative AI is fast becoming a first-party feature in most development environments, including GitHub itself. If the majority of a code submission is made using Generative AI (e.g., agent-based or vibe coding) then **we will document that in the pull request.** All code submissions go through a rigorous review process regardless of the development workflow or submitter.
 
 ## License
 

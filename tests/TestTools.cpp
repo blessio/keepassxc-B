@@ -18,7 +18,9 @@
 #include "TestTools.h"
 
 #include "core/Clock.h"
+#include "core/Tools.h"
 
+#include <QFileInfo>
 #include <QRegularExpression>
 #include <QTest>
 #include <QUuid>
@@ -277,10 +279,8 @@ void TestTools::testMimeTypes()
 {
     const QStringList TextMimeTypes = {
         "text/plain", // Plain text
-        "text/html", // HTML documents
         "text/css", // CSS stylesheets
         "text/javascript", // JavaScript files
-        "text/markdown", // Markdown documents
         "text/xml", // XML documents
         "text/rtf", // Rich Text Format
         "text/vcard", // vCard files
@@ -327,6 +327,9 @@ void TestTools::testMimeTypes()
         "application/x-shellscript", // Shell scripts
     };
 
+    QCOMPARE(Tools::toMimeType("text/html"), Tools::MimeType::Html);
+    QCOMPARE(Tools::toMimeType("text/markdown"), Tools::MimeType::Markdown);
+
     for (const auto& mime : TextMimeTypes) {
         QCOMPARE(Tools::toMimeType(mime), Tools::MimeType::PlainText);
     }
@@ -337,5 +340,91 @@ void TestTools::testMimeTypes()
 
     for (const auto& mime : UnknownMimeTypes) {
         QCOMPARE(Tools::toMimeType(mime), Tools::MimeType::Unknown);
+    }
+}
+
+void TestTools::testGetMimeType()
+{
+    const QStringList Text = {"0x42", ""};
+
+    for (const auto& text : Text) {
+        QCOMPARE(Tools::getMimeType(text.toUtf8()), Tools::MimeType::PlainText);
+    }
+
+    const QByteArrayList ImageHeaders = {
+        // JPEG: starts with 0xFF 0xD8 0xFF (Start of Image marker)
+        QByteArray::fromHex("FFD8FF"),
+        // PNG: starts with 0x89 0x50 0x4E 0x47 0D 0A 1A 0A (PNG signature)
+        QByteArray::fromHex("89504E470D0A1A0A"),
+        // GIF87a: original GIF format (1987 standard)
+        QByteArray("GIF87a"),
+        // GIF89a: extended GIF format (1989, supports animation, transparency, etc.)
+        QByteArray("GIF89a"),
+    };
+
+    for (const auto& image : ImageHeaders) {
+        QCOMPARE(Tools::getMimeType(image), Tools::MimeType::Image);
+    }
+
+    const QByteArrayList UnknownHeaders = {
+        // MP3: typically starts with ID3 tag (ID3v2)
+        QByteArray("ID3"),
+        // MP4: usually starts with a 'ftyp' box (ISO base media file format)
+        // Common major brands: isom, mp42, avc1, etc.
+        QByteArray::fromHex("000000186674797069736F6D"), // size + 'ftyp' + 'isom'
+        // PDF: starts with "%PDF-" followed by version (e.g., %PDF-1.7)
+        QByteArray("%PDF-"),
+    };
+
+    for (const auto& unknown : UnknownHeaders) {
+        QCOMPARE(Tools::getMimeType(unknown), Tools::MimeType::Unknown);
+    }
+}
+
+void TestTools::testGetMimeTypeByFileInfo()
+{
+    const QStringList Text = {"test.txt", "test.csv", "test.xml", "test.json"};
+
+    for (const auto& text : Text) {
+        QCOMPARE(Tools::getMimeType(QFileInfo(text)), Tools::MimeType::PlainText);
+    }
+
+    const QStringList Images = {"test.jpg", "test.png", "test.bmp", "test.svg"};
+
+    for (const auto& image : Images) {
+        QCOMPARE(Tools::getMimeType(QFileInfo(image)), Tools::MimeType::Image);
+    }
+
+    const QStringList Htmls = {"test.html", "test.htm"};
+
+    for (const auto& html : Htmls) {
+        QCOMPARE(Tools::getMimeType(QFileInfo(html)), Tools::MimeType::Html);
+    }
+
+    const QStringList Markdowns = {"test.md", "test.markdown"};
+
+    for (const auto& makdown : Markdowns) {
+        QCOMPARE(Tools::getMimeType(QFileInfo(makdown)), Tools::MimeType::Markdown);
+    }
+
+    const QStringList UnknownHeaders = {"test.doc", "test.pdf", "test.docx"};
+
+    for (const auto& unknown : UnknownHeaders) {
+        QCOMPARE(Tools::getMimeType(unknown), Tools::MimeType::Unknown);
+    }
+}
+
+void TestTools::testIsTextMimeType()
+{
+    const auto Text = {Tools::MimeType::PlainText, Tools::MimeType::Html, Tools::MimeType::Markdown};
+
+    for (const auto& text : Text) {
+        QVERIFY(Tools::isTextMimeType(text));
+    }
+
+    const auto NoText = {Tools::MimeType::Image, Tools::MimeType::Unknown};
+
+    for (const auto& noText : NoText) {
+        QVERIFY(!Tools::isTextMimeType(noText));
     }
 }

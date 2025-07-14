@@ -153,6 +153,7 @@ AutoType::AutoType(QObject* parent, bool test)
 #endif
     }
 
+    connect(this, SIGNAL(autotypeFinished()), SLOT(resetAutoTypeState()));
     connect(qApp, SIGNAL(aboutToQuit()), SLOT(unloadPlugin()));
 }
 
@@ -353,7 +354,6 @@ void AutoType::executeAutoTypeActions(const Entry* entry,
         }
     }
 
-    resetAutoTypeState();
     m_inAutoType.unlock();
     emit autotypeFinished();
 }
@@ -434,38 +434,33 @@ void AutoType::startGlobalAutoType(const QString& search)
  */
 void AutoType::performGlobalAutoType(const QList<QSharedPointer<Database>>& dbList, const QString& search)
 {
-    if (!m_plugin) {
-        return;
-    }
-
-    if (!m_inGlobalAutoTypeDialog.tryLock()) {
-        return;
-    }
-
-    if (m_windowTitleForGlobal.isEmpty()) {
-        m_inGlobalAutoTypeDialog.unlock();
+    if (!m_plugin || !m_inGlobalAutoTypeDialog.tryLock()) {
         return;
     }
 
     QList<AutoTypeMatch> matchList;
-    bool hideExpired = config()->get(Config::AutoTypeHideExpiredEntry).toBool();
+    // Generate entry/sequence match list if there is a valid window title
+    if (!m_windowTitleForGlobal.isEmpty()) {
+        bool hideExpired = config()->get(Config::AutoTypeHideExpiredEntry).toBool();
+        for (const auto& db : dbList) {
+            const QList<Entry*> dbEntries = db->rootGroup()->entriesRecursive();
+            for (auto entry : dbEntries) {
+                auto group = entry->group();
+                if (!group || !group->resolveAutoTypeEnabled() || !entry->autoTypeEnabled()) {
+                    continue;
+                }
 
-    for (const auto& db : dbList) {
-        const QList<Entry*> dbEntries = db->rootGroup()->entriesRecursive();
-        for (auto entry : dbEntries) {
-            auto group = entry->group();
-            if (!group || !group->resolveAutoTypeEnabled() || !entry->autoTypeEnabled()) {
-                continue;
-            }
-
-            if (hideExpired && entry->isExpired()) {
-                continue;
-            }
-            const QSet<QString> sequences = Tools::asSet(entry->autoTypeSequences(m_windowTitleForGlobal));
-            for (const auto& sequence : sequences) {
-                matchList << AutoTypeMatch(entry, sequence);
+                if (hideExpired && entry->isExpired()) {
+                    continue;
+                }
+                const QSet<QString> sequences = Tools::asSet(entry->autoTypeSequences(m_windowTitleForGlobal));
+                for (const auto& sequence : sequences) {
+                    matchList << AutoTypeMatch(entry, sequence);
+                }
             }
         }
+    } else {
+        qWarning() << "Auto-Type: Window title was empty from the operating system";
     }
 
     // Show the selection dialog if we always ask, have multiple matches, or no matches
@@ -493,11 +488,9 @@ void AutoType::performGlobalAutoType(const QList<QSharedPointer<Database>>& dbLi
                                            m_windowForGlobal,
                                            virtualMode ? AutoTypeExecutor::Mode::VIRTUAL
                                                        : AutoTypeExecutor::Mode::NORMAL);
-                    resetAutoTypeState();
                 });
         connect(selectDialog, &QDialog::rejected, this, [this] {
             restoreWindowState();
-            resetAutoTypeState();
             emit autotypeFinished();
         });
 
@@ -511,10 +504,8 @@ void AutoType::performGlobalAutoType(const QList<QSharedPointer<Database>>& dbLi
     } else if (!matchList.isEmpty()) {
         // Only one match and not asking, do it!
         executeAutoTypeActions(matchList.first().first, matchList.first().second, m_windowForGlobal);
-        resetAutoTypeState();
     } else {
         // We should never get here
-        resetAutoTypeState();
         emit autotypeFinished();
     }
 }
@@ -646,10 +637,16 @@ AutoType::parseSequence(const QString& entrySequence, const Entry* entry, QStrin
             // Platform-specific field clearing
             actions << QSharedPointer<AutoTypeClearField>::create();
         } else if (placeholder == "totp") {
-            // Entry totp (requires special handling)
-            QString totp = entry->totp();
-            for (const auto& ch : totp) {
-                actions << QSharedPointer<AutoTypeKey>::create(ch);
+            if (entry->hasValidTotp()) {
+                // Entry totp (requires special handling)
+                QString totp = entry->totp();
+                for (const auto& ch : totp) {
+                    actions << QSharedPointer<AutoTypeKey>::create(ch);
+                }
+            } else if (entry->hasTotp()) {
+                // Entry has TOTP configured but invalid settings
+                error = tr("Entry has invalid TOTP settings");
+                return {};
             }
         } else if (placeholder.startsWith("pickchars")) {
             // Reset to the original capture to preserve case

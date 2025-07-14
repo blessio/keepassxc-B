@@ -606,6 +606,7 @@ void EditEntryWidget::setupSSHAgent()
     connect(m_sshAgentUi->browseButton, &QPushButton::clicked, this, &EditEntryWidget::browsePrivateKey);
     connect(m_sshAgentUi->addToAgentButton, &QPushButton::clicked, this, &EditEntryWidget::addKeyToAgent);
     connect(m_sshAgentUi->removeFromAgentButton, &QPushButton::clicked, this, &EditEntryWidget::removeKeyFromAgent);
+    connect(m_sshAgentUi->clearAgentButton, &QPushButton::clicked, this, &EditEntryWidget::clearAgent);
     connect(m_sshAgentUi->decryptButton, &QPushButton::clicked, this, &EditEntryWidget::decryptPrivateKey);
     connect(m_sshAgentUi->copyToClipboardButton, &QPushButton::clicked, this, &EditEntryWidget::copyPublicKey);
     connect(m_sshAgentUi->generateButton, &QPushButton::clicked, this, &EditEntryWidget::generatePrivateKey);
@@ -719,6 +720,7 @@ void EditEntryWidget::updateSSHAgentKeyInfo()
     if (sshAgent()->isAgentRunning()) {
         m_sshAgentUi->addToAgentButton->setEnabled(true);
         m_sshAgentUi->removeFromAgentButton->setEnabled(true);
+        m_sshAgentUi->clearAgentButton->setEnabled(true);
 
         sshAgent()->setAutoRemoveOnLock(key, m_sshAgentUi->removeKeyFromAgentCheckBox->isChecked());
     }
@@ -819,6 +821,12 @@ void EditEntryWidget::removeKeyFromAgent()
         showMessage(sshAgent()->errorString(), MessageWidget::Error);
         return;
     }
+}
+
+void EditEntryWidget::clearAgent()
+{
+    auto ret = sshAgent()->clearAllAgentIdentities();
+    showMessage(sshAgent()->errorString(), ret ? MessageWidget::Positive : KMessageWidget::Error);
 }
 
 void EditEntryWidget::decryptPrivateKey()

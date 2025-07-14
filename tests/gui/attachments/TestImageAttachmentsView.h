@@ -17,32 +17,22 @@
 
 #pragma once
 
-#include <QDialog>
-#include <QPointer>
+#include <attachments/ImageAttachmentsView.h>
 
-namespace Ui
-{
-    class EntryAttachmentsDialog;
-}
+#include <QObject>
+#include <QScopedPointer>
 
-class QByteArray;
-class EntryAttachments;
-
-class NewEntryAttachmentsDialog : public QDialog
+class TestImageAttachmentsView : public QObject
 {
     Q_OBJECT
 
-public:
-    explicit NewEntryAttachmentsDialog(QPointer<EntryAttachments> attachments, QWidget* parent = nullptr);
-    ~NewEntryAttachmentsDialog() override;
-
 private slots:
-    void saveAttachment();
-    void fileNameTextChanged(const QString& fileName);
+    void initTestCase();
+
+    void testEmitWheelEvent();
+    void testEnableFit();
+    void testDisableFit();
 
 private:
-    bool validateFileName(const QString& fileName, QString& error) const;
-
-    QPointer<EntryAttachments> m_attachments;
-    QScopedPointer<Ui::EntryAttachmentsDialog> m_ui;
+    QScopedPointer<ImageAttachmentsView> m_view{};
 };

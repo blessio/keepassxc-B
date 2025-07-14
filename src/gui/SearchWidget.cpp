@@ -54,6 +54,7 @@ SearchWidget::SearchWidget(QWidget* parent)
     connect(m_searchTimer, SIGNAL(timeout()), SLOT(startSearch()));
     connect(m_clearSearchTimer, SIGNAL(timeout()), SLOT(clearSearch()));
     connect(this, SIGNAL(escapePressed()), SLOT(clearSearch()));
+    connect(m_ui->searchEdit, &QLineEdit::returnPressed, this, &SearchWidget::onReturnPressed);
 
     m_ui->searchEdit->setPlaceholderText(tr("Search (%1)…", "Search placeholder text, %1 is the keyboard shortcut")
                                              .arg(QKeySequence(QKeySequence::Find).toString(QKeySequence::NativeText)));
@@ -68,6 +69,12 @@ SearchWidget::SearchWidget(QWidget* parent)
     m_actionLimitGroup->setObjectName("actionSearchLimitGroup");
     m_actionLimitGroup->setCheckable(true);
     m_actionLimitGroup->setChecked(config()->get(Config::SearchLimitGroup).toBool());
+
+    m_actionWaitForEnter = m_searchMenu->addAction(
+        tr("Press Enter to search"), this, [](bool state) { config()->set(Config::SearchWaitForEnter, state); });
+    m_actionWaitForEnter->setObjectName("actionSearchWaitForEnter");
+    m_actionWaitForEnter->setCheckable(true);
+    m_actionWaitForEnter->setChecked(config()->get(Config::SearchWaitForEnter).toBool());
 
     m_ui->searchIcon->setIcon(icons()->icon("system-search"));
     m_ui->searchEdit->addAction(m_ui->searchIcon, QLineEdit::LeadingPosition);
@@ -153,12 +160,12 @@ void SearchWidget::connectSignals(SignalMultiplexer& mx)
     mx.connect(SIGNAL(entrySelectionChanged()), this, SLOT(resetSearchClearTimer()));
     mx.connect(SIGNAL(currentModeChanged(DatabaseWidget::Mode)), this, SLOT(resetSearchClearTimer()));
     mx.connect(SIGNAL(databaseUnlocked()), this, SLOT(focusSearch()));
-    mx.connect(m_ui->searchEdit, SIGNAL(returnPressed()), SLOT(switchToEntryEdit()));
+    mx.connect(this, SIGNAL(enterPressed()), SLOT(switchToEntryEdit()));
 }
 
 void SearchWidget::databaseChanged(DatabaseWidget* dbWidget)
 {
-    if (dbWidget != nullptr) {
+    if (dbWidget) {
         // Set current search text from this database
         m_ui->searchEdit->setText(dbWidget->getCurrentSearch());
         // Enforce search policy
@@ -171,18 +178,15 @@ void SearchWidget::databaseChanged(DatabaseWidget* dbWidget)
 
 void SearchWidget::startSearchTimer()
 {
-    if (!m_searchTimer->isActive()) {
+    if (m_actionWaitForEnter->isChecked()) {
         m_searchTimer->stop();
+    } else {
+        m_searchTimer->start(500);
     }
-    m_searchTimer->start(100);
 }
 
 void SearchWidget::startSearch()
 {
-    if (!m_searchTimer->isActive()) {
-        m_searchTimer->stop();
-    }
-
     m_ui->saveIcon->setVisible(true);
     search(m_ui->searchEdit->text());
 }
@@ -200,16 +204,16 @@ void SearchWidget::updateCaseSensitive()
     emit caseSensitiveChanged(m_actionCaseSensitive->isChecked());
 }
 
-void SearchWidget::setCaseSensitive(bool state)
-{
-    m_actionCaseSensitive->setChecked(state);
-    updateCaseSensitive();
-}
-
 void SearchWidget::updateLimitGroup()
 {
     config()->set(Config::SearchLimitGroup, m_actionLimitGroup->isChecked());
     emit limitGroupChanged(m_actionLimitGroup->isChecked());
+}
+
+void SearchWidget::setCaseSensitive(bool state)
+{
+    m_actionCaseSensitive->setChecked(state);
+    updateCaseSensitive();
 }
 
 void SearchWidget::setLimitGroup(bool state)
@@ -243,4 +247,13 @@ void SearchWidget::toggleHelp()
 void SearchWidget::showSearchMenu()
 {
     m_searchMenu->exec(m_ui->searchEdit->mapToGlobal(m_ui->searchEdit->rect().bottomLeft()));
+}
+
+void SearchWidget::onReturnPressed()
+{
+    if (m_actionWaitForEnter->isChecked()) {
+        emit search(m_ui->searchEdit->text());
+    } else {
+        emit enterPressed();
+    }
 }

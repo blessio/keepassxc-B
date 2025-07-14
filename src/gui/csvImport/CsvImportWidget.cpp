@@ -17,6 +17,7 @@
  */
 
 #include "CsvImportWidget.h"
+
 #include "ui_CsvImportWidget.h"
 
 #include "core/Clock.h"
@@ -74,13 +75,14 @@ CsvImportWidget::CsvImportWidget(QWidget* parent)
     m_ui->tableViewFields->setFocusPolicy(Qt::NoFocus);
 
     m_columnHeader << QObject::tr("Group") << QObject::tr("Title") << QObject::tr("Username") << QObject::tr("Password")
-                   << QObject::tr("URL") << QObject::tr("Notes") << QObject::tr("TOTP") << QObject::tr("Icon")
-                   << QObject::tr("Last Modified") << QObject::tr("Created");
+                   << QObject::tr("URL") << QObject::tr("Tags") << QObject::tr("Notes") << QObject::tr("TOTP")
+                   << QObject::tr("Icon") << QObject::tr("Last Modified") << QObject::tr("Created");
 
     m_fieldSeparatorList << "," << ";" << "-" << ":" << "." << "\t";
 
     m_combos << m_ui->groupCombo << m_ui->titleCombo << m_ui->usernameCombo << m_ui->passwordCombo << m_ui->urlCombo
-             << m_ui->notesCombo << m_ui->totpCombo << m_ui->iconCombo << m_ui->lastModifiedCombo << m_ui->createdCombo;
+             << m_ui->tagsCombo << m_ui->notesCombo << m_ui->totpCombo << m_ui->iconCombo << m_ui->lastModifiedCombo
+             << m_ui->createdCombo;
 
     for (auto combo : m_combos) {
         combo->setModel(m_comboModel);
@@ -145,6 +147,13 @@ void CsvImportWidget::updatePreview()
     m_ui->spinBoxSkip->setRange(minSkip, qMax(minSkip, m_parserModel->rowCount() - 1));
     m_ui->spinBoxSkip->setValue(minSkip);
 
+    // Store the previous column information for comparison later
+    auto prevColumns = m_comboModel->stringList();
+    QList<int> prevComboIndexes;
+    for (auto combo : m_combos) {
+        prevComboIndexes << combo->currentIndex();
+    }
+
     QStringList csvColumns(tr("Not Present"));
     auto parser = m_parserModel->parser();
     for (int i = 0; i < parser->getCsvCols(); ++i) {
@@ -159,6 +168,8 @@ void CsvImportWidget::updatePreview()
             csvColumns << QString(tr("Column %1").arg(i));
         }
     }
+    // Before setting new columns, see if they changed
+    bool newColumns = prevColumns != csvColumns;
     m_comboModel->setStringList(csvColumns);
 
     // Try to match named columns to the combo boxes
@@ -177,9 +188,10 @@ void CsvImportWidget::updatePreview()
                 break;
             }
         }
-        // Named column not found, default to "Not Present"
+        // Named column not found, default to "Not Present" or previous index
         if (!found) {
-            m_combos.at(i)->setCurrentIndex(0);
+            auto idx = newColumns ? 0 : prevComboIndexes.at(i);
+            m_combos.at(i)->setCurrentIndex(idx);
         }
     }
 
@@ -196,15 +208,19 @@ void CsvImportWidget::load(const QString& filename)
 
 void CsvImportWidget::parse()
 {
-    configParser();
+    // Hide any previous messages
+    emit message("");
+
     QApplication::setOverrideCursor(Qt::WaitCursor);
     QApplication::processEvents();
-    bool good = m_parserModel->parse();
-    updatePreview();
-    QApplication::restoreOverrideCursor();
-    if (!good) {
+
+    configParser();
+    if (!m_parserModel->parse()) {
         emit message(tr("Failed to parse CSV file: %1").arg(formatStatusText()));
     }
+    updatePreview();
+
+    QApplication::restoreOverrideCursor();
 }
 
 QSharedPointer<Database> CsvImportWidget::buildDatabase()
@@ -239,10 +255,11 @@ QSharedPointer<Database> CsvImportWidget::buildDatabase()
         entry->setUsername(m_parserModel->data(m_parserModel->index(r, 2)).toString());
         entry->setPassword(m_parserModel->data(m_parserModel->index(r, 3)).toString());
         entry->setUrl(m_parserModel->data(m_parserModel->index(r, 4)).toString());
-        entry->setNotes(m_parserModel->data(m_parserModel->index(r, 5)).toString());
+        entry->setTags(m_parserModel->data(m_parserModel->index(r, 5)).toString());
+        entry->setNotes(m_parserModel->data(m_parserModel->index(r, 6)).toString());
 
         // TOTP
-        auto otpString = m_parserModel->data(m_parserModel->index(r, 6));
+        auto otpString = m_parserModel->data(m_parserModel->index(r, 7));
         if (otpString.isValid() && !otpString.toString().isEmpty()) {
             auto totp = Totp::parseSettings(otpString.toString());
             if (!totp || totp->key.isEmpty()) {
@@ -254,14 +271,14 @@ QSharedPointer<Database> CsvImportWidget::buildDatabase()
 
         // Icon
         bool ok;
-        int icon = m_parserModel->data(m_parserModel->index(r, 7)).toInt(&ok);
+        int icon = m_parserModel->data(m_parserModel->index(r, 8)).toInt(&ok);
         if (ok) {
             entry->setIcon(icon);
         }
 
         // Modified Time
         TimeInfo timeInfo;
-        if (m_parserModel->data(m_parserModel->index(r, 8)).isValid()) {
+        if (m_parserModel->data(m_parserModel->index(r, 9)).isValid()) {
             auto datetime = m_parserModel->data(m_parserModel->index(r, 8)).toString();
             if (datetime.contains(QRegularExpression("^\\d+$"))) {
                 auto t = datetime.toLongLong();
@@ -280,7 +297,7 @@ QSharedPointer<Database> CsvImportWidget::buildDatabase()
             }
         }
         // Creation Time
-        if (m_parserModel->data(m_parserModel->index(r, 9)).isValid()) {
+        if (m_parserModel->data(m_parserModel->index(r, 10)).isValid()) {
             auto datetime = m_parserModel->data(m_parserModel->index(r, 9)).toString();
             if (datetime.contains(QRegularExpression("^\\d+$"))) {
                 auto t = datetime.toLongLong();

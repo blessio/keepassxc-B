@@ -119,6 +119,7 @@ static const QHash<Config::ConfigKey, ConfigDirective> configStrings = {
     {Config::GUI_CheckForUpdatesIncludeBetas, {QS("GUI/CheckForUpdatesIncludeBetas"), Roaming, false}},
     {Config::GUI_ShowExpiredEntriesOnDatabaseUnlock, {QS("GUI/ShowExpiredEntriesOnDatabaseUnlock"), Roaming, true}},
     {Config::GUI_ShowExpiredEntriesOnDatabaseUnlockOffsetDays, {QS("GUI/ShowExpiredEntriesOnDatabaseUnlockOffsetDays"), Roaming, 3}},
+    {Config::GUI_FontSizeOffset, {QS("GUI/FontSizeOffset"), Local, 0}},
 
     {Config::GUI_MainWindowGeometry, {QS("GUI/MainWindowGeometry"), Local, {}}},
     {Config::GUI_MainWindowState, {QS("GUI/MainWindowState"), Local, {}}},
@@ -616,19 +617,6 @@ void Config::createConfigFromFile(const QString& configFileName, const QString& 
     m_instance = new Config(configFileName.isEmpty() ? defaultFiles.first : configFileName,
                             localConfigFileName.isEmpty() ? defaultFiles.second : localConfigFileName,
                             qApp);
-}
-
-void Config::createTempFileInstance()
-{
-    if (m_instance) {
-        delete m_instance;
-    }
-    auto* tmpFile = new QTemporaryFile();
-    bool openResult = tmpFile->open();
-    Q_ASSERT(openResult);
-    Q_UNUSED(openResult);
-    m_instance = new Config(tmpFile->fileName(), "", qApp);
-    tmpFile->setParent(m_instance);
 }
 
 bool Config::isPortable()

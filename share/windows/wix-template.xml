@@ -73,6 +73,7 @@
                             Name="KeePassXC - User Guide"
                             Target="[#CM_FP_share.docs.KeePassXC_UserGuide.html]"
                             WorkingDirectory="INSTALL_ROOT" />
+                        <RemoveFile Id="RemoveShortcuts" Name="*.*" On="uninstall" />
                         <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall" />
                         <RegistryValue Root="HKCU" Key="Software\KeePassXC" Name="StartMenuShortcut" Type="integer" Value="1" KeyPath="yes"/>
                     </Component>
@@ -114,14 +115,6 @@
             <ComponentRef Id="Autostart" />
             <ComponentRef Id="DesktopShortcut" />
         </FeatureRef>
-
-        <!-- Detect VCRedist Version -->
-        <Property Id="VCREDISTINSTALLED">
-            <RegistrySearch Id="SearchVCRedist" Root="HKLM" Key="SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x64" Name="Version" Type="raw" Win64="yes"/>
-        </Property>
-        <Condition Message="The installed version of Visual Studio Redistributable is too old. Please install the latest version from: https://aka.ms/vs/17/release/vc_redist.x64.exe">
-            <![CDATA[VCREDISTINSTALLED AND VCREDISTINSTALLED > "14.32.31332.0"]]>
-        </Condition>
 
         <!-- Action to launch application after installer exits -->
         <Property Id="WixShellExecTarget" Value="[#CM_FP_KeePassXC.exe]" />

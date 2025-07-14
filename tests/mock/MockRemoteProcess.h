@@ -23,7 +23,7 @@
 class MockRemoteProcess : public RemoteProcess
 {
 public:
-    explicit MockRemoteProcess(QObject* parent, const QString& dbPath);
+    explicit MockRemoteProcess(QObject* parent, QString dbPath);
     ~MockRemoteProcess() override = default;
 
     void start(const QString& program) override;
@@ -32,6 +32,8 @@ public:
     void closeWriteChannel() override;
     bool waitForFinished(int msecs) override;
     [[nodiscard]] int exitCode() const override;
+    virtual QString readOutput() override;
+    virtual QString readError() override;
 
 private:
     QByteArray m_data;
