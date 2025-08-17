@@ -94,8 +94,8 @@ jobs:
       continue-on-error: true
       run: |
         echo "VCPKG_PREROOT=$HOME/${{ steps.strings.outputs.build-root-vcpkg-dir }}" >> "$GITHUB_ENV"   
-        echo "VCPKG_ROOT=$HOME/${{ steps.strings.outputs.build-root-vcpkg-dir }}"\vcpkg >> "$GITHUB_ENV"
-        echo "VCPKG_INSTALLATION_ROOT=$HOME/${{ steps.strings.outputs.build-root-vcpkg-dir }}\vcpkg" >> "$GITHUB_ENV"
+        echo "VCPKG_ROOT=$HOME/${{ steps.strings.outputs.build-root-vcpkg-dir }}/vcpkg" >> "$GITHUB_ENV"
+        echo "VCPKG_INSTALLATION_ROOT=$HOME/${{ steps.strings.outputs.build-root-vcpkg-dir }}/vcpkg" >> "$GITHUB_ENV"
         echo "********************* xcode version ******************************"
         xcodebuild -version
         echo "*********************    sw_vers    ******************************"
@@ -218,24 +218,25 @@ jobs:
         echo ${{ env.VCPKG_ROOT }}
         echo ${{ env.VCPKG_PREROOT }}
 
-    - name: 178. Clone vcpkg as recommended not by a command
+    - name: 250. get the Source of the project from Git
+      uses: actions/checkout@v4
+
+
+    - name: 255. Clone vcpkg as recommended not by a command
       if:  ${{ startsWith( matrix.config.os , 'macos' )  ||  startsWith( matrix.config.os , 'windows' ) }}
       uses: actions/checkout@v4
       with:
         path: ${{ env.VCPKG_PREROOT }}
         repository: microsoft/vcpkg
 
-    - name: 179. see what is fetched
+    - name: 260. see what is fetched
       if: ${{ startsWith( matrix.config.os , 'macos' )  || startsWith( matrix.config.os  , 'windows' ) }}
       working-directory: ${{ env.VCPKG_PREROOT }}
       run: |
         ls
         cd vcpkg
-        ls
+        ls 
 
-
-    - name: 250. get the Source from Git
-      uses: actions/checkout@v4
 
     - name: 300. Windows AND MacOS  // VCPKG install build
       id: vcpkg # The vcpkg-action step must have the id vcpkg.
