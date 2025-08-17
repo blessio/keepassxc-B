@@ -61,7 +61,7 @@ jobs:
       run: |
         echo "build-sub-dir=build" >> "$GITHUB_OUTPUT" 
         echo "cache-key-kp=kq273x_${{ matrix.build_type }}_${{ matrix.config.os }}_${{ matrix.config.vcpkg_triplet }}" >> "$GITHUB_OUTPUT"
-        echo "cache-key-kp=kq273x_${{ matrix.build_type }}_${{ matrix.config.os }}_${{ matrix.config.vcpkg_triplet }}" >> "$GITHUB_ENV"
+        echo "cache-key-kp=kq27_${{ matrix.build_type }}_${{ matrix.config.os }}_${{ matrix.config.vcpkg_triplet }}" >> "$GITHUB_ENV"
         echo "build-root-vcpkg-dir=_v"  >> "$GITHUB_OUTPUT"
         echo "build-winsdk=10.0.26100" >> "$GITHUB_OUTPUT"
         echo "FORCE_JAVASCRIPT_ACTIONS_TO_NODE20=true"  >> "$GITHUB_OUTPUT"
@@ -241,19 +241,28 @@ jobs:
       run: |
         ./bootstrap-vcpkg.bat
 
-    - name: 300. Windows AND MacOS  // VCPKG install build
-      id: vcpkg # The vcpkg-action step must have the id vcpkg.
-      if:  ${{ startsWith( matrix.config.os , 'macos' )  ||  startsWith( matrix.config.os , 'windows' ) }}    
-      uses: blessio/vcpkg-actionB@v7.2 # vbleo7.0
+
+    - name: 290 Cache vcpkg install
+      uses: actions/cache@v4
       with:
-        manifest-dir: ${{ github.workspace }}           # Set to directory containing vcpkg.json
-                                                        # No verbose available extra-args:  ' --x-make '
-        triplet:      ${{matrix.config.vcpkg_triplet }} # x64-windows-release
-        token:        ${{ github.token }}
-        github-binarycache: false # This must be false for it to use the cache designed in the action
-        vcpkg-subdir: ${{steps.strings.outputs.build-root-vcpkg-dir}}
-        cache-key: ${{ steps.strings.outputs.cache-key-kp }}-${{ hashFiles('**/vcpkg.json') }} # "kp23x-${{ matrix.config.vcpkg_triplet }}"
-        fetch-depth: "0"
+        path: | 
+          ${{ env.VCPKG_ROOT }}/installed
+        key: ${{ steps.strings.outputs.cache-key-kp }}-${{ hashFiles('**/vcpkg.json') }}
+
+
+    # - name: 300. Windows AND MacOS  // VCPKG install build
+    #  id: vcpkg # The vcpkg-action step must have the id vcpkg.
+    #  if:  ${{ startsWith( matrix.config.os , 'macos' )  ||  startsWith( matrix.config.os , 'windows' ) }}
+    #    uses: blessio/vcpkg-actionB@v7.2 # vbleo7.0
+    #    with:
+    #      manifest-dir: ${{ github.workspace }}           # Set to directory containing vcpkg.json
+                                                           # No verbose available extra-args:  ' --x-make '
+    #        triplet:      ${{matrix.config.vcpkg_triplet }} # x64-windows-release
+    #  token:        ${{ github.token }}
+    #  github-binarycache: false # This must be false for it to use the cache designed in the action
+    #  vcpkg-subdir: ${{steps.strings.outputs.build-root-vcpkg-dir}}
+    #  cache-key: ${{ steps.strings.outputs.cache-key-kp }}-${{ hashFiles('**/vcpkg.json') }} # "kp23x-${{ matrix.config.vcpkg_triplet }}"
+    #  fetch-depth: "0"
     
     - name: 550. Windows ONLY // ***** Configure CMake
       if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
@@ -264,7 +273,7 @@ jobs:
         cmake -DWITH_XC_ALL=ON -DWITH_GUI_TESTS=ON 
         -DVCPKG_MANIFEST_MODE=OFF 
         -DCMAKE_SYSTEM_VERSION=${{ steps.strings.outputs.build-winsdk }} 
-        -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}\${{ steps.strings.outputs.build-root-vcpkg-dir}}\scripts\buildsystems\vcpkg.cmake 
+        -DCMAKE_TOOLCHAIN_FILE=${{ env.VCPKG_ROOT }}\scripts\buildsystems\vcpkg.cmake 
         -DVCPKG_TARGET_TRIPLET=${{ matrix.config.vcpkg_triplet}}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
         ..
@@ -277,7 +286,7 @@ jobs:
         cd     ${{ steps.strings.outputs.build-sub-dir }}  &&
         cmake -DWITH_XC_ALL=ON -DWITH_GUI_TESTS=ON 
         -DVCPKG_MANIFEST_MODE=OFF 
-        -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/${{ steps.strings.outputs.build-root-vcpkg-dir}}/scripts/buildsystems/vcpkg.cmake 
+        -DCMAKE_TOOLCHAIN_FILE=${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake 
         -DVCPKG_TARGET_TRIPLET=${{ matrix.config.vcpkg_triplet }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
         ..
