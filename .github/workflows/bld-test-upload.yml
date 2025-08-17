@@ -234,9 +234,7 @@ jobs:
       working-directory: ${{ env.VCPKG_PREROOT }}
       run: |
         ls
-        cd vcpkg
-        ls 
-
+        
 
     - name: 300. Windows AND MacOS  // VCPKG install build
       id: vcpkg # The vcpkg-action step must have the id vcpkg.
