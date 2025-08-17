@@ -85,10 +85,10 @@ jobs:
     # PUT all Windows specific ENV here using poweshell to be native
     - name: 111. Windows ONLY // version and environment
       if: ${{ startsWith( matrix.config.os , 'windows' ) }}
-      shell: powershell
+      shell: pwsh
       run: |   
-        echo "VCPKG_ROOT=$HOME\${{ steps.strings.outputs.build-root-vcpkg-dir }}" >> "$GITHUB_ENV"
-        echo "VCPKG_INSTALLATION_ROOT=$HOME\${{ steps.strings.outputs.build-root-vcpkg-dir }}" >> "$GITHUB_ENV"
+        "VCPKG_ROOT=$HOME\${{ steps.strings.outputs.build-root-vcpkg-dir }}" | Out-File -FilePath $env:GITHUB_ENV -Append
+        "VCPKG_INSTALLATION_ROOT=$HOME\${{ steps.strings.outputs.build-root-vcpkg-dir }}" | Out-File -FilePath $env:GITHUB_ENV -Append
 
     - name: 112. MacOS ONLY // version and environment
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
