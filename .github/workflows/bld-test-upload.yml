@@ -212,6 +212,11 @@ jobs:
         echo "List of files and folders in buildtype subdir" 
         ls 
 
+    - name: 177. Read Environment
+      if: ${{ ! startsWith( matrix.config.os  , 'windows' ) }}
+      run: |
+        echo ${{ env.VCPKG_ROOT }}
+
     - name: 250. get the Source from Git
       uses: actions/checkout@v4
 
