@@ -183,7 +183,24 @@ jobs:
         echo "**********************************   bre link --overwrite vcpkg "
         # brew link --overwrite vcpkg
 
-    - name: 180. get the Source from Git
+    - name: 175. PRINT Environment Variables ( 1 ) on Windows
+      if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
+      run: |
+        Get-ChildItem Env: | Sort-Object Name
+        cd "${{ github.workspace }}\${{ steps.strings.outputs.build-sub-dir }}\src\autotype\test\${{ matrix.build_type }}"
+        ls 
+
+    - name: 176. PRINT Environment Variables ( 1 ) on NON-Windows
+      if: ${{ ! startsWith( matrix.config.os  , 'windows' ) }}
+      run: |
+        echo "Environment printed" 
+        echo "===== ALL ENV START =====" 
+        printenv | sort 
+        echo "===== ALL ENV END   =====" 
+        echo "List of files and folders in buildtype subdir" 
+        ls 
+
+    - name: 250. get the Source from Git
       uses: actions/checkout@v4
 
     - name: 300. Windows AND MacOS  // VCPKG install build
