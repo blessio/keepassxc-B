@@ -60,8 +60,8 @@ jobs:
       shell: bash
       run: |
         echo "build-sub-dir=build" >> "$GITHUB_OUTPUT" 
-        echo "cache-key-kp=kp273x_${{ matrix.build_type }}_${{ matrix.config.os }}_${{ matrix.config.vcpkg_triplet }}" >> "$GITHUB_OUTPUT"
-        echo "cache-key-kp=kp273x_${{ matrix.build_type }}_${{ matrix.config.os }}_${{ matrix.config.vcpkg_triplet }}" >> "$GITHUB_ENV"
+        echo "cache-key-kp=k273x_${{ matrix.build_type }}_${{ matrix.config.os }}_${{ matrix.config.vcpkg_triplet }}" >> "$GITHUB_OUTPUT"
+        echo "cache-key-kp=k273x_${{ matrix.build_type }}_${{ matrix.config.os }}_${{ matrix.config.vcpkg_triplet }}" >> "$GITHUB_ENV"
         echo "build-root-vcpkg-dir=_vpkg"  >> "$GITHUB_OUTPUT"
         echo "build-winsdk=10.0.26100" >> "$GITHUB_OUTPUT"
         echo "FORCE_JAVASCRIPT_ACTIONS_TO_NODE20=true"  >> "$GITHUB_OUTPUT"
@@ -76,10 +76,10 @@ jobs:
       run: |
         if [[ "$RUNNER_OS" == "Windows" ]]; then 
           echo "uuid=$(powershell -Command '[guid]::NewGuid().ToString()')" >> "$GITHUB_OUTPUT"
-          echo "VCPKG_ROOT=${{ github.workspace }}\${{ steps.strings.outputs.build-root-vcpkg-dir }}" >> "$GITHUB_ENV" 
+          echo "VCPKG_ROOT=${{ env.HOME }}\${{ steps.strings.outputs.build-root-vcpkg-dir }}" >> "$GITHUB_ENV" 
         else
           echo "uuid=$(uuidgen)" >> "$GITHUB_OUTPUT"
-          echo "VCPKG_ROOT=${{ github.workspace }}/${{ steps.strings.outputs.build-root-vcpkg-dir }}" >> "$GITHUB_ENV"
+          echo "VCPKG_ROOT=${{ env.HOME }}/${{ steps.strings.outputs.build-root-vcpkg-dir }}" >> "$GITHUB_ENV"
         fi
 
     - name: 112. MacOS ONLY // version and environment
@@ -104,12 +104,6 @@ jobs:
         winget install --source winget --exact --id Microsoft.WindowsSDK.${{ steps.strings.outputs.build-winsdk }} --silent
         winget install RubyInstallerTeam.Ruby.3.2 --accept-package-agreements --accept-source-agreements
         gem install asciidoctor
-
-    - name: 140. Windows Only // Set environment variable VCPKG_ROOT
-      if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
-      run: |
-        $env:VCPKG_ROOT = "$env:VCPKG_INSTALLATION_ROOT"
-        echo "VCPKG_ROOT=$env:VCPKG_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
         
     - name: 150. LINUX Only // Prepare Linux packages that are needed
       if: ${{ startsWith( matrix.config.os , 'ubuntu' ) }}
@@ -168,15 +162,6 @@ jobs:
         echo "**************** Listing 3"
         ls /usr/local/bin/python3
 
-        
-    # - name: 173.2.2 MACOS-13 ONLY (re)install python 3.11
-    #   if: ${{ startsWith( matrix.config.os , 'macos-13' ) }}
-    #   uses: gabrielfalcao/pyenv-action@v18
-    #   with:
-    #     default: 3.11.11
-    #     versions: 3.11.11
-    #     command: brew link --overwrite --force python3
-
     - name: 173.5 check python version
       continue-on-error: true
       run: | 
@@ -193,21 +178,13 @@ jobs:
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
       run: | 
-        brew install pkg-config vcpkg || (true)
+        # brew install pkg-config vcpkg || (true)
+        brew install pkg-config || (true)
         echo "**********************************   bre link --overwrite vcpkg "
-        brew link --overwrite vcpkg
+        # brew link --overwrite vcpkg
 
     - name: 180. get the Source from Git
       uses: actions/checkout@v4
-
-    # - name: 200. Restore cached on Windows and MacOS
-    #   id: cache-restore
-    #   if:  ${{ startsWith( matrix.config.os , 'macos' )  ||  startsWith( matrix.config.os , 'windows' ) }}  
-    #   uses: actions/cache/restore@v4
-    #   with:
-    #     path: |
-    #       ${{ github.workspace }}/${{ steps.strings.outputs.build-root-vcpkg-dir}}
-    #     key: ${{ steps.strings.outputs.cache-key-kp }}-${{ hashFiles('**/vcpkg.json') }}
 
     - name: 300. Windows AND MacOS  // VCPKG install build
       id: vcpkg # The vcpkg-action step must have the id vcpkg.
