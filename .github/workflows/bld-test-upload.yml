@@ -75,11 +75,9 @@ jobs:
       shell: bash
       run: |
         if [[ "$RUNNER_OS" == "Windows" ]]; then 
-          echo "uuid=$(powershell -Command '[guid]::NewGuid().ToString()')" >> "$GITHUB_OUTPUT"
-          # echo "VCPKG_ROOT=$HOME\${{ steps.strings.outputs.build-root-vcpkg-dir }}" >> "$GITHUB_ENV" 
+          echo "uuid=$(powershell -Command '[guid]::NewGuid().ToString()')" >> "$GITHUB_OUTPUT" 
         else
           echo "uuid=$(uuidgen)" >> "$GITHUB_OUTPUT"
-          # echo "VCPKG_ROOT=$HOME/${{ steps.strings.outputs.build-root-vcpkg-dir }}" >> "$GITHUB_ENV"
         fi
 
     # PUT all Windows specific ENV here using poweshell to be native
@@ -213,7 +211,7 @@ jobs:
         ls 
 
     - name: 177. Read Environment
-      if: ${{ ! startsWith( matrix.config.os  , 'windows' ) }}
+      if:  ${{ startsWith( matrix.config.os , 'macos' )  ||  ${{ startsWith( matrix.config.os  , 'windows' ) }}
       run: |
         echo ${{ env.VCPKG_ROOT }}
 
