@@ -62,7 +62,7 @@ jobs:
         echo "build-sub-dir=build" >> "$GITHUB_OUTPUT" 
         echo "cache-key-kp=kq273x_${{ matrix.build_type }}_${{ matrix.config.os }}_${{ matrix.config.vcpkg_triplet }}" >> "$GITHUB_OUTPUT"
         echo "cache-key-kp=kq273x_${{ matrix.build_type }}_${{ matrix.config.os }}_${{ matrix.config.vcpkg_triplet }}" >> "$GITHUB_ENV"
-        echo "build-root-vcpkg-dir=_vpkg"  >> "$GITHUB_OUTPUT"
+        echo "build-root-vcpkg-dir=_v"  >> "$GITHUB_OUTPUT"
         echo "build-winsdk=10.0.26100" >> "$GITHUB_OUTPUT"
         echo "FORCE_JAVASCRIPT_ACTIONS_TO_NODE20=true"  >> "$GITHUB_OUTPUT"
         echo "bld-var-str=${{ matrix.build_type }}-BLD_ON_${{ matrix.config.os }}_${{  matrix.config.vcpkg_triplet }}_${{ steps.generate-uuid.outputs.uuid }}" >> "$GITHUB_OUTPUT"
@@ -85,15 +85,17 @@ jobs:
       if: ${{ startsWith( matrix.config.os , 'windows' ) }}
       shell: pwsh
       run: |   
-        "VCPKG_ROOT=$HOME\${{ steps.strings.outputs.build-root-vcpkg-dir }}" | Out-File -FilePath $env:GITHUB_ENV -Append
-        "VCPKG_INSTALLATION_ROOT=$HOME\${{ steps.strings.outputs.build-root-vcpkg-dir }}" | Out-File -FilePath $env:GITHUB_ENV -Append
+        "VCPKG_PREROOT=$HOME\${{ steps.strings.outputs.build-root-vcpkg-dir }}" | Out-File -FilePath $env:GITHUB_ENV -Append
+        "VCPKG_ROOT=$HOME\${{ steps.strings.outputs.build-root-vcpkg-dir }}\vcpkg" | Out-File -FilePath $env:GITHUB_ENV -Append
+        "VCPKG_INSTALLATION_ROOT=$HOME\${{ steps.strings.outputs.build-root-vcpkg-dir }}\vcpkg" | Out-File -FilePath $env:GITHUB_ENV -Append
 
     - name: 112. MacOS ONLY // version and environment
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
       run: |
-        echo "VCPKG_ROOT=$HOME/${{ steps.strings.outputs.build-root-vcpkg-dir }}" >> "$GITHUB_ENV"
-        echo "VCPKG_INSTALLATION_ROOT=$HOME/${{ steps.strings.outputs.build-root-vcpkg-dir }}" >> "$GITHUB_ENV"
+        echo "VCPKG_PREROOT=$HOME/${{ steps.strings.outputs.build-root-vcpkg-dir }}" >> "$GITHUB_ENV"   
+        echo "VCPKG_ROOT=$HOME/${{ steps.strings.outputs.build-root-vcpkg-dir }}"\vcpkg >> "$GITHUB_ENV"
+        echo "VCPKG_INSTALLATION_ROOT=$HOME/${{ steps.strings.outputs.build-root-vcpkg-dir }}\vcpkg" >> "$GITHUB_ENV"
         echo "********************* xcode version ******************************"
         xcodebuild -version
         echo "*********************    sw_vers    ******************************"
@@ -214,6 +216,23 @@ jobs:
       if:  ${{ startsWith( matrix.config.os , 'macos' )  || startsWith( matrix.config.os  , 'windows' ) }}
       run: |
         echo ${{ env.VCPKG_ROOT }}
+        echo ${{ env.VCPKG_PREROOT }}
+
+    - name: 178. Clone vcpkg as recommended not by a command
+      if:  ${{ startsWith( matrix.config.os , 'macos' )  ||  startsWith( matrix.config.os , 'windows' ) }}
+      uses: actions/checkout@v4
+      with:
+        path: ${{ env.VCPKG_PREROOT }}
+        repository: microsoft/vcpkg
+
+    - name: 179. see what is fetched
+      if: ${{ startsWith( matrix.config.os , 'macos' )  || startsWith( matrix.config.os  , 'windows' ) }}
+      working-directory: ${{ env.VCPKG_PREROOT }}
+      run: |
+        ls
+        cd vcpkg
+        ls
+
 
     - name: 250. get the Source from Git
       uses: actions/checkout@v4
