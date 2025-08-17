@@ -30,11 +30,7 @@ jobs:
         config:
         - os: windows-latest 
           vcpkg_triplet: x64-windows
-          github-binarycache: true   
-
-        # - os: windows-latest 
-        #  vcpkg_triplet: arm64-windows # 2025-01-05 This could not compile Qt5 yet
-        #  github-binarycache: true   
+          github-binarycache: true
 
         - os: ubuntu-latest
           vcpkg_triplet: x64-linux
@@ -60,8 +56,9 @@ jobs:
       shell: bash
       run: |
         echo "build-sub-dir=build" >> "$GITHUB_OUTPUT" 
-        echo "cache-key-kp=kp273x_${{ matrix.build_type }}_${{ matrix.config.os }}_${{ matrix.config.vcpkg_triplet }}" >> "$GITHUB_OUTPUT"
-        echo "build-root-vcpkg-dir=_vpkg"  >> "$GITHUB_OUTPUT"
+        echo "cache-key-kp=kq273x_${{ matrix.build_type }}_${{ matrix.config.os }}_${{ matrix.config.vcpkg_triplet }}" >> "$GITHUB_OUTPUT"
+        echo "cache-key-kp=kq27_${{ matrix.build_type }}_${{ matrix.config.os }}_${{ matrix.config.vcpkg_triplet }}" >> "$GITHUB_ENV"
+        echo "build-root-vcpkg-dir=_v"  >> "$GITHUB_OUTPUT"
         echo "build-winsdk=10.0.26100" >> "$GITHUB_OUTPUT"
         echo "FORCE_JAVASCRIPT_ACTIONS_TO_NODE20=true"  >> "$GITHUB_OUTPUT"
         echo "bld-var-str=${{ matrix.build_type }}-BLD_ON_${{ matrix.config.os }}_${{  matrix.config.vcpkg_triplet }}_${{ steps.generate-uuid.outputs.uuid }}" >> "$GITHUB_OUTPUT"
@@ -74,17 +71,27 @@ jobs:
       shell: bash
       run: |
         if [[ "$RUNNER_OS" == "Windows" ]]; then 
-          echo "uuid=$(powershell -Command '[guid]::NewGuid().ToString()')" >> "$GITHUB_OUTPUT"
-          echo "VCPKG_ROOT=${{ github.workspace }}\${{ steps.strings.outputs.build-root-vcpkg-dir }}" >> "$GITHUB_ENV" 
+          echo "uuid=$(powershell -Command '[guid]::NewGuid().ToString()')" >> "$GITHUB_OUTPUT" 
         else
           echo "uuid=$(uuidgen)" >> "$GITHUB_OUTPUT"
-          echo "VCPKG_ROOT=${{ github.workspace }}/${{ steps.strings.outputs.build-root-vcpkg-dir }}" >> "$GITHUB_ENV"
         fi
+
+    # PUT all Windows specific ENV here using poweshell to be native
+    - name: 111. Windows ONLY // version and environment
+      if: ${{ startsWith( matrix.config.os , 'windows' ) }}
+      shell: pwsh
+      run: |   
+        "VCPKG_PREROOT=${{ github.workspace }}" | Out-File -FilePath $env:GITHUB_ENV -Append
+        "VCPKG_ROOT=${{ github.workspace }}\${{ steps.strings.outputs.build-root-vcpkg-dir }}" | Out-File -FilePath $env:GITHUB_ENV -Append
+        "VCPKG_INSTALLATION_ROOT=${{ github.workspace }}\${{ steps.strings.outputs.build-root-vcpkg-dir }}" | Out-File -FilePath $env:GITHUB_ENV -Append
 
     - name: 112. MacOS ONLY // version and environment
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
-      run: | 
+      run: |
+        echo "VCPKG_PREROOT=${{ github.workspace }}" >> "$GITHUB_ENV"   
+        echo "VCPKG_ROOT=${{ github.workspace }}/${{ steps.strings.outputs.build-root-vcpkg-dir }}" >> "$GITHUB_ENV"
+        echo "VCPKG_INSTALLATION_ROOT=${{ github.workspace }}/${{ steps.strings.outputs.build-root-vcpkg-dir }}" >> "$GITHUB_ENV"
         echo "********************* xcode version ******************************"
         xcodebuild -version
         echo "*********************    sw_vers    ******************************"
@@ -103,12 +110,6 @@ jobs:
         winget install --source winget --exact --id Microsoft.WindowsSDK.${{ steps.strings.outputs.build-winsdk }} --silent
         winget install RubyInstallerTeam.Ruby.3.2 --accept-package-agreements --accept-source-agreements
         gem install asciidoctor
-
-    - name: 140. Windows Only // Set environment variable VCPKG_ROOT
-      if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
-      run: |
-        $env:VCPKG_ROOT = "$env:VCPKG_INSTALLATION_ROOT"
-        echo "VCPKG_ROOT=$env:VCPKG_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
         
     - name: 150. LINUX Only // Prepare Linux packages that are needed
       if: ${{ startsWith( matrix.config.os , 'ubuntu' ) }}
@@ -167,15 +168,6 @@ jobs:
         echo "**************** Listing 3"
         ls /usr/local/bin/python3
 
-        
-    # - name: 173.2.2 MACOS-13 ONLY (re)install python 3.11
-    #   if: ${{ startsWith( matrix.config.os , 'macos-13' ) }}
-    #   uses: gabrielfalcao/pyenv-action@v18
-    #   with:
-    #     default: 3.11.11
-    #     versions: 3.11.11
-    #     command: brew link --overwrite --force python3
-
     - name: 173.5 check python version
       continue-on-error: true
       run: | 
@@ -192,36 +184,73 @@ jobs:
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
       run: | 
-        brew install pkg-config vcpkg || (true)
+        # brew install pkg-config vcpkg || (true)
+        brew install pkg-config || (true)
         echo "**********************************   bre link --overwrite vcpkg "
-        brew link --overwrite vcpkg
+        # brew link --overwrite vcpkg
 
-    - name: 180. get the Source from Git
+    - name: 175. PRINT Environment Variables ( 1 ) on Windows
+      if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
+      run: |
+        echo "===== ALL ENV START =====" 
+        Get-ChildItem Env: | Sort-Object Name
+        echo "===== ALL ENV END =====" 
+        echo "************* execute ls ****************"
+        ls 
+
+    - name: 176. PRINT Environment Variables ( 1 ) on NON-Windows
+      if: ${{ ! startsWith( matrix.config.os  , 'windows' ) }}
+      run: |
+        echo "Environment printed" 
+        echo "===== ALL ENV START =====" 
+        printenv | sort 
+        echo "===== ALL ENV END   =====" 
+        echo "List of files and folders in buildtype subdir" 
+        ls 
+
+    - name: 177. Read Environment
+      if:  ${{ startsWith( matrix.config.os , 'macos' )  || startsWith( matrix.config.os  , 'windows' ) }}
+      run: |
+        echo ${{ env.VCPKG_ROOT }}
+        echo ${{ env.VCPKG_PREROOT }}
+
+    - name: 250. get the Source of the project from Git
       uses: actions/checkout@v4
 
-    # - name: 200. Restore cached on Windows and MacOS
-    #   id: cache-restore
-    #   if:  ${{ startsWith( matrix.config.os , 'macos' )  ||  startsWith( matrix.config.os , 'windows' ) }}  
-    #   uses: actions/cache/restore@v4
-    #   with:
-    #     path: |
-    #       ${{ github.workspace }}/${{ steps.strings.outputs.build-root-vcpkg-dir}}
-    #     key: ${{ steps.strings.outputs.cache-key-kp }}-${{ hashFiles('**/vcpkg.json') }}
-
-    - name: 300. Windows AND MacOS  // VCPKG install build
-      id: vcpkg # The vcpkg-action step must have the id vcpkg.
-      if:  ${{ startsWith( matrix.config.os , 'macos' )  ||  startsWith( matrix.config.os , 'windows' ) }}    
-      uses: blessio/vcpkg-actionB@v7.2 # vbleo7.0
+    - name: 255. Clone vcpkg as recommended not by a command
+      if:  ${{ startsWith( matrix.config.os , 'macos' )  ||  startsWith( matrix.config.os , 'windows' ) }}
+      uses: actions/checkout@v4
       with:
-        manifest-dir: ${{ github.workspace }}           # Set to directory containing vcpkg.json
-                                                        # No verbose available extra-args:  ' --x-make '
-        triplet:      ${{matrix.config.vcpkg_triplet }} # x64-windows-release
-        token:        ${{ github.token }}
-        github-binarycache: false # This must be false for it to use the cache designed in the action
-        vcpkg-subdir: ${{steps.strings.outputs.build-root-vcpkg-dir}}
-        cache-key: ${{ steps.strings.outputs.cache-key-kp }}-${{ hashFiles('**/vcpkg.json') }} # "kp23x-${{ matrix.config.vcpkg_triplet }}"
-        fetch-depth: "0"
-    
+        path: ${{ env.VCPKG_ROOT }}
+        repository: microsoft/vcpkg
+        fetch-depth: 0
+
+    - name: 256. set-binarycache-variable
+      if:  ${{ startsWith( matrix.config.os , 'macos' )  || startsWith( matrix.config.os  , 'windows' ) }}
+      shell: bash
+      run: |
+        echo VCPKG_DEFAULT_BINARY_CACHE="${{ env.VCPKG_ROOT }}/vcpkg_cache" >> $GITHUB_ENV
+        mkdir -p "${{ env.VCPKG_ROOT }}/vcpkg_cache"
+
+    - name: 261. Bootstrap VCPKG MACOS
+      if: ${{ startsWith( matrix.config.os , 'macos' ) }}
+      working-directory: ${{ env.VCPKG_ROOT }}
+      run: |
+        ./bootstrap-vcpkg.sh
+
+    - name: 260. see what is fetched
+      if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
+      working-directory: ${{ env.VCPKG_ROOT }}
+      run: |
+        ./bootstrap-vcpkg.bat
+
+    - name: 290 Cache vcpkg install
+      uses: actions/cache@v4
+      with:
+        path: | 
+          ${{ env.VCPKG_ROOT }}/vcpkg_cache
+        key: ${{ steps.strings.outputs.cache-key-kp }}-${{ hashFiles('**/vcpkg.json') }}
+
     - name: 550. Windows ONLY // ***** Configure CMake
       if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
       # If manifest mode is not OFF it will always make a vcpkg install which nullifies the idea of caching
@@ -229,9 +258,9 @@ jobs:
         mkdir  ${{ steps.strings.outputs.build-sub-dir }}  && 
         cd     ${{ steps.strings.outputs.build-sub-dir }}  &&
         cmake -DWITH_XC_ALL=ON -DWITH_GUI_TESTS=ON 
-        -DVCPKG_MANIFEST_MODE=OFF 
+        -DVCPKG_MANIFEST_MODE=ON 
         -DCMAKE_SYSTEM_VERSION=${{ steps.strings.outputs.build-winsdk }} 
-        -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}\${{ steps.strings.outputs.build-root-vcpkg-dir}}\scripts\buildsystems\vcpkg.cmake 
+        -DCMAKE_TOOLCHAIN_FILE=${{ env.VCPKG_ROOT }}\scripts\buildsystems\vcpkg.cmake 
         -DVCPKG_TARGET_TRIPLET=${{ matrix.config.vcpkg_triplet}}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
         ..
@@ -243,10 +272,11 @@ jobs:
         mkdir  ${{ steps.strings.outputs.build-sub-dir }}  && 
         cd     ${{ steps.strings.outputs.build-sub-dir }}  &&
         cmake -DWITH_XC_ALL=ON -DWITH_GUI_TESTS=ON 
-        -DVCPKG_MANIFEST_MODE=OFF 
-        -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/${{ steps.strings.outputs.build-root-vcpkg-dir}}/scripts/buildsystems/vcpkg.cmake 
+        -DVCPKG_MANIFEST_MODE=ON 
+        -DCMAKE_TOOLCHAIN_FILE=${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake 
         -DVCPKG_TARGET_TRIPLET=${{ matrix.config.vcpkg_triplet }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        -G Ninja
         ..
         
     - name: 560. LINUX ONLY // ***** Configure CMake
@@ -259,24 +289,11 @@ jobs:
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
         ..
     
-    # - name: 590. Save Cache on Windows and MacOS
-    #   if:  ${{ startsWith( matrix.config.os , 'macos' )  ||  startsWith( matrix.config.os , 'windows' ) }}  
-    #   uses: actions/cache/restore@v4
-    #   with:
-    #     path: |
-    #       ${{ github.workspace }}/${{ steps.strings.outputs.build-root-vcpkg-dir}}
-    #     key: ${{ steps.strings.outputs.cache-key-kp }}-${{ hashFiles('**/vcpkg.json') }}
-
-
-    - name: 600. Windows Check DiskSpace 
+    - name: 600. Windows Check DiskSpace
       if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
       run: > 
         Get-PSDrive -PSProvider FileSystem | Select-Object Name, @{Name="Used (GB)";Expression={[math]::round($_.Used/1GB,2)}},
         @{Name="Free (GB)";Expression={[math]::round($_.Free/1GB,2)}}
-    
-    #- name: Print all environment Variables
-    #  run: >
-    #    Get-ChildItem Env: | Sort-Object Name
 
     - name: 650. Build
       # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
@@ -290,6 +307,7 @@ jobs:
       run: |
         $env:PATH="$env:PATH;${{ github.workspace }}\${{ steps.strings.outputs.build-sub-dir }}\src\autotype\test\${{ matrix.build_type }}"
         echo "PATH=$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
     - name: 710. Linux ONLY // ADD paths to TESTS and prepare GUI Tests, print environment
       if: ${{ startsWith( matrix.config.os  , 'ubuntu' ) }}
       run: |
