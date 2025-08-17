@@ -290,6 +290,7 @@ jobs:
         -DCMAKE_TOOLCHAIN_FILE=${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake 
         -DVCPKG_TARGET_TRIPLET=${{ matrix.config.vcpkg_triplet }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        -G Ninja
         ..
         
     - name: 560. LINUX ONLY // ***** Configure CMake
