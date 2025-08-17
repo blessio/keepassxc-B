@@ -228,6 +228,7 @@ jobs:
       with:
         path: ${{ env.VCPKG_ROOT }}
         repository: microsoft/vcpkg
+        fetch-depth: 0
 
     - name: 261. Bootstrap VCPKG MACOS
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
