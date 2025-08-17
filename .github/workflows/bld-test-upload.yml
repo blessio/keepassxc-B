@@ -186,8 +186,10 @@ jobs:
     - name: 175. PRINT Environment Variables ( 1 ) on Windows
       if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
       run: |
+        echo "===== ALL ENV START =====" 
         Get-ChildItem Env: | Sort-Object Name
-        cd "${{ github.workspace }}\${{ steps.strings.outputs.build-sub-dir }}\src\autotype\test\${{ matrix.build_type }}"
+        echo "===== ALL ENV END =====" 
+        echo "************* execute ls ****************"
         ls 
 
     - name: 176. PRINT Environment Variables ( 1 ) on NON-Windows
