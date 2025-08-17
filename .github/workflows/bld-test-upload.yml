@@ -61,6 +61,7 @@ jobs:
       run: |
         echo "build-sub-dir=build" >> "$GITHUB_OUTPUT" 
         echo "cache-key-kp=kp273x_${{ matrix.build_type }}_${{ matrix.config.os }}_${{ matrix.config.vcpkg_triplet }}" >> "$GITHUB_OUTPUT"
+        echo "cache-key-kp=kp273x_${{ matrix.build_type }}_${{ matrix.config.os }}_${{ matrix.config.vcpkg_triplet }}" >> "$GITHUB_ENV"
         echo "build-root-vcpkg-dir=_vpkg"  >> "$GITHUB_OUTPUT"
         echo "build-winsdk=10.0.26100" >> "$GITHUB_OUTPUT"
         echo "FORCE_JAVASCRIPT_ACTIONS_TO_NODE20=true"  >> "$GITHUB_OUTPUT"
@@ -290,6 +291,7 @@ jobs:
       run: |
         $env:PATH="$env:PATH;${{ github.workspace }}\${{ steps.strings.outputs.build-sub-dir }}\src\autotype\test\${{ matrix.build_type }}"
         echo "PATH=$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
     - name: 710. Linux ONLY // ADD paths to TESTS and prepare GUI Tests, print environment
       if: ${{ startsWith( matrix.config.os  , 'ubuntu' ) }}
       run: |
