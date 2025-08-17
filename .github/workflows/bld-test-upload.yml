@@ -85,17 +85,17 @@ jobs:
       if: ${{ startsWith( matrix.config.os , 'windows' ) }}
       shell: pwsh
       run: |   
-        "VCPKG_PREROOT=${{ github.workspace }}\${{ steps.strings.outputs.build-root-vcpkg-dir }}" | Out-File -FilePath $env:GITHUB_ENV -Append
-        "VCPKG_ROOT=${{ github.workspace }}\${{ steps.strings.outputs.build-root-vcpkg-dir }}\vcpkg" | Out-File -FilePath $env:GITHUB_ENV -Append
-        "VCPKG_INSTALLATION_ROOT=${{ github.workspace }}\${{ steps.strings.outputs.build-root-vcpkg-dir }}\vcpkg" | Out-File -FilePath $env:GITHUB_ENV -Append
+        "VCPKG_PREROOT=${{ github.workspace }} | Out-File -FilePath $env:GITHUB_ENV -Append
+        "VCPKG_ROOT=${{ github.workspace }}\${{ steps.strings.outputs.build-root-vcpkg-dir }}" | Out-File -FilePath $env:GITHUB_ENV -Append
+        "VCPKG_INSTALLATION_ROOT=${{ github.workspace }}\${{ steps.strings.outputs.build-root-vcpkg-dir }}" | Out-File -FilePath $env:GITHUB_ENV -Append
 
     - name: 112. MacOS ONLY // version and environment
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
       run: |
-        echo "VCPKG_PREROOT=${{ github.workspace }}/${{ steps.strings.outputs.build-root-vcpkg-dir }}" >> "$GITHUB_ENV"   
-        echo "VCPKG_ROOT=${{ github.workspace }}/${{ steps.strings.outputs.build-root-vcpkg-dir }}/vcpkg" >> "$GITHUB_ENV"
-        echo "VCPKG_INSTALLATION_ROOT=${{ github.workspace }}/${{ steps.strings.outputs.build-root-vcpkg-dir }}/vcpkg" >> "$GITHUB_ENV"
+        echo "VCPKG_PREROOT=${{ github.workspace }}" >> "$GITHUB_ENV"   
+        echo "VCPKG_ROOT=${{ github.workspace }}/${{ steps.strings.outputs.build-root-vcpkg-dir }}" >> "$GITHUB_ENV"
+        echo "VCPKG_INSTALLATION_ROOT=${{ github.workspace }}/${{ steps.strings.outputs.build-root-vcpkg-dir }}" >> "$GITHUB_ENV"
         echo "********************* xcode version ******************************"
         xcodebuild -version
         echo "*********************    sw_vers    ******************************"
@@ -226,15 +226,20 @@ jobs:
       if:  ${{ startsWith( matrix.config.os , 'macos' )  ||  startsWith( matrix.config.os , 'windows' ) }}
       uses: actions/checkout@v4
       with:
-        path: ${{ env.VCPKG_PREROOT }}
+        path: ${{ env.VCPKG_ROOT }}
         repository: microsoft/vcpkg
 
-    - name: 260. see what is fetched
-      if: ${{ startsWith( matrix.config.os , 'macos' )  || startsWith( matrix.config.os  , 'windows' ) }}
-      working-directory: ${{ env.VCPKG_PREROOT }}
+    - name: 261. Bootstrap VCPKG MACOS
+      if: ${{ startsWith( matrix.config.os , 'macos' ) }}
+      working-directory: ${{ env.VCPKG_ROOT }}
       run: |
-        ls
-        
+        ./bootstrap-vcpkg.sh
+
+    - name: 260. see what is fetched
+      if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
+      working-directory: ${{ env.VCPKG_ROOT }}
+      run: |
+        ./bootstrap-vcpkg.bat
 
     - name: 300. Windows AND MacOS  // VCPKG install build
       id: vcpkg # The vcpkg-action step must have the id vcpkg.
