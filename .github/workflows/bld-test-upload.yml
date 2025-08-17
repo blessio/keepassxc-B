@@ -85,7 +85,7 @@ jobs:
       if: ${{ startsWith( matrix.config.os , 'windows' ) }}
       shell: pwsh
       run: |   
-        "VCPKG_PREROOT=${{ github.workspace }} | Out-File -FilePath $env:GITHUB_ENV -Append
+        "VCPKG_PREROOT=${{ github.workspace }}" | Out-File -FilePath $env:GITHUB_ENV -Append
         "VCPKG_ROOT=${{ github.workspace }}\${{ steps.strings.outputs.build-root-vcpkg-dir }}" | Out-File -FilePath $env:GITHUB_ENV -Append
         "VCPKG_INSTALLATION_ROOT=${{ github.workspace }}\${{ steps.strings.outputs.build-root-vcpkg-dir }}" | Out-File -FilePath $env:GITHUB_ENV -Append
 
