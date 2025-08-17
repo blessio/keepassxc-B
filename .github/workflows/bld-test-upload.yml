@@ -76,16 +76,26 @@ jobs:
       run: |
         if [[ "$RUNNER_OS" == "Windows" ]]; then 
           echo "uuid=$(powershell -Command '[guid]::NewGuid().ToString()')" >> "$GITHUB_OUTPUT"
-          echo "VCPKG_ROOT=$HOME\${{ steps.strings.outputs.build-root-vcpkg-dir }}" >> "$GITHUB_ENV" 
+          # echo "VCPKG_ROOT=$HOME\${{ steps.strings.outputs.build-root-vcpkg-dir }}" >> "$GITHUB_ENV" 
         else
           echo "uuid=$(uuidgen)" >> "$GITHUB_OUTPUT"
-          echo "VCPKG_ROOT=$HOME/${{ steps.strings.outputs.build-root-vcpkg-dir }}" >> "$GITHUB_ENV"
+          # echo "VCPKG_ROOT=$HOME/${{ steps.strings.outputs.build-root-vcpkg-dir }}" >> "$GITHUB_ENV"
         fi
+
+    # PUT all Windows specific ENV here using poweshell to be native
+    - name: 111. Windows ONLY // version and environment
+      if: ${{ startsWith( matrix.config.os , 'windows' ) }}
+      shell: powershell
+      run: |   
+        echo "VCPKG_ROOT=$HOME\${{ steps.strings.outputs.build-root-vcpkg-dir }}" >> "$GITHUB_ENV"
+        echo "VCPKG_INSTALLATION_ROOT=$HOME\${{ steps.strings.outputs.build-root-vcpkg-dir }}" >> "$GITHUB_ENV"
 
     - name: 112. MacOS ONLY // version and environment
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
-      run: | 
+      run: |
+        echo "VCPKG_ROOT=$HOME/${{ steps.strings.outputs.build-root-vcpkg-dir }}" >> "$GITHUB_ENV"
+        echo "VCPKG_INSTALLATION_ROOT=$HOME/${{ steps.strings.outputs.build-root-vcpkg-dir }}" >> "$GITHUB_ENV"
         echo "********************* xcode version ******************************"
         xcodebuild -version
         echo "*********************    sw_vers    ******************************"
