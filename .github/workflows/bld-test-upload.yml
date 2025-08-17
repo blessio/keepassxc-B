@@ -60,8 +60,8 @@ jobs:
       shell: bash
       run: |
         echo "build-sub-dir=build" >> "$GITHUB_OUTPUT" 
-        echo "cache-key-kp=k273x_${{ matrix.build_type }}_${{ matrix.config.os }}_${{ matrix.config.vcpkg_triplet }}" >> "$GITHUB_OUTPUT"
-        echo "cache-key-kp=k273x_${{ matrix.build_type }}_${{ matrix.config.os }}_${{ matrix.config.vcpkg_triplet }}" >> "$GITHUB_ENV"
+        echo "cache-key-kp=kq273x_${{ matrix.build_type }}_${{ matrix.config.os }}_${{ matrix.config.vcpkg_triplet }}" >> "$GITHUB_OUTPUT"
+        echo "cache-key-kp=kq273x_${{ matrix.build_type }}_${{ matrix.config.os }}_${{ matrix.config.vcpkg_triplet }}" >> "$GITHUB_ENV"
         echo "build-root-vcpkg-dir=_vpkg"  >> "$GITHUB_OUTPUT"
         echo "build-winsdk=10.0.26100" >> "$GITHUB_OUTPUT"
         echo "FORCE_JAVASCRIPT_ACTIONS_TO_NODE20=true"  >> "$GITHUB_OUTPUT"
@@ -76,10 +76,10 @@ jobs:
       run: |
         if [[ "$RUNNER_OS" == "Windows" ]]; then 
           echo "uuid=$(powershell -Command '[guid]::NewGuid().ToString()')" >> "$GITHUB_OUTPUT"
-          echo "VCPKG_ROOT=${{ env.HOME }}\${{ steps.strings.outputs.build-root-vcpkg-dir }}" >> "$GITHUB_ENV" 
+          echo "VCPKG_ROOT=$HOME\${{ steps.strings.outputs.build-root-vcpkg-dir }}" >> "$GITHUB_ENV" 
         else
           echo "uuid=$(uuidgen)" >> "$GITHUB_OUTPUT"
-          echo "VCPKG_ROOT=${{ env.HOME }}/${{ steps.strings.outputs.build-root-vcpkg-dir }}" >> "$GITHUB_ENV"
+          echo "VCPKG_ROOT=$HOME/${{ steps.strings.outputs.build-root-vcpkg-dir }}" >> "$GITHUB_ENV"
         fi
 
     - name: 112. MacOS ONLY // version and environment
