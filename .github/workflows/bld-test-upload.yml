@@ -30,11 +30,7 @@ jobs:
         config:
         - os: windows-latest 
           vcpkg_triplet: x64-windows
-          github-binarycache: true   
-
-        # - os: windows-latest 
-        #  vcpkg_triplet: arm64-windows # 2025-01-05 This could not compile Qt5 yet
-        #  github-binarycache: true   
+          github-binarycache: true
 
         - os: ubuntu-latest
           vcpkg_triplet: x64-linux
@@ -242,7 +238,6 @@ jobs:
       run: |
         ./bootstrap-vcpkg.bat
 
-
     - name: 290 Cache vcpkg install
       uses: actions/cache@v4
       with:
@@ -250,21 +245,6 @@ jobs:
           ${{ env.VCPKG_ROOT }}/installed
         key: ${{ steps.strings.outputs.cache-key-kp }}-${{ hashFiles('**/vcpkg.json') }}
 
-
-    # - name: 300. Windows AND MacOS  // VCPKG install build
-    #  id: vcpkg # The vcpkg-action step must have the id vcpkg.
-    #  if:  ${{ startsWith( matrix.config.os , 'macos' )  ||  startsWith( matrix.config.os , 'windows' ) }}
-    #    uses: blessio/vcpkg-actionB@v7.2 # vbleo7.0
-    #    with:
-    #      manifest-dir: ${{ github.workspace }}           # Set to directory containing vcpkg.json
-                                                           # No verbose available extra-args:  ' --x-make '
-    #        triplet:      ${{matrix.config.vcpkg_triplet }} # x64-windows-release
-    #  token:        ${{ github.token }}
-    #  github-binarycache: false # This must be false for it to use the cache designed in the action
-    #  vcpkg-subdir: ${{steps.strings.outputs.build-root-vcpkg-dir}}
-    #  cache-key: ${{ steps.strings.outputs.cache-key-kp }}-${{ hashFiles('**/vcpkg.json') }} # "kp23x-${{ matrix.config.vcpkg_triplet }}"
-    #  fetch-depth: "0"
-    
     - name: 550. Windows ONLY // ***** Configure CMake
       if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
       # If manifest mode is not OFF it will always make a vcpkg install which nullifies the idea of caching
@@ -303,24 +283,11 @@ jobs:
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
         ..
     
-    # - name: 590. Save Cache on Windows and MacOS
-    #   if:  ${{ startsWith( matrix.config.os , 'macos' )  ||  startsWith( matrix.config.os , 'windows' ) }}  
-    #   uses: actions/cache/restore@v4
-    #   with:
-    #     path: |
-    #       ${{ github.workspace }}/${{ steps.strings.outputs.build-root-vcpkg-dir}}
-    #     key: ${{ steps.strings.outputs.cache-key-kp }}-${{ hashFiles('**/vcpkg.json') }}
-
-
-    - name: 600. Windows Check DiskSpace 
+    - name: 600. Windows Check DiskSpace
       if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
       run: > 
         Get-PSDrive -PSProvider FileSystem | Select-Object Name, @{Name="Used (GB)";Expression={[math]::round($_.Used/1GB,2)}},
         @{Name="Free (GB)";Expression={[math]::round($_.Free/1GB,2)}}
-    
-    #- name: Print all environment Variables
-    #  run: >
-    #    Get-ChildItem Env: | Sort-Object Name
 
     - name: 650. Build
       # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
