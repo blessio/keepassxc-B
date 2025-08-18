@@ -217,7 +217,6 @@ jobs:
     - name: 250. get the Source of the project from Git
       uses: actions/checkout@v4
 
-
     - name: 255. Clone vcpkg as recommended not by a command
       if:  ${{ startsWith( matrix.config.os , 'macos' )  ||  startsWith( matrix.config.os , 'windows' ) }}
       uses: actions/checkout@v4
@@ -225,6 +224,12 @@ jobs:
         path: ${{ env.VCPKG_ROOT }}
         repository: microsoft/vcpkg
         fetch-depth: 0
+
+    - name: 256. set-binarycache-variable
+      shell: bash
+      run: |
+        echo VCPKG_DEFAULT_BINARY_CACHE="${{ env.VCPKG_ROOT }}/vcpkg_cache" >> $GITHUB_ENV
+        mkdir -p "${{ env.VCPKG_ROOT }}/vcpkg_cache"
 
     - name: 261. Bootstrap VCPKG MACOS
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
@@ -242,7 +247,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: | 
-          ${{ env.VCPKG_ROOT }}/installed
+          ${{ env.VCPKG_ROOT }}/vcpkg_cache
         key: ${{ steps.strings.outputs.cache-key-kp }}-${{ hashFiles('**/vcpkg.json') }}
 
     - name: 550. Windows ONLY // ***** Configure CMake
