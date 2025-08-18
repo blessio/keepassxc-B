@@ -226,6 +226,7 @@ jobs:
         fetch-depth: 0
 
     - name: 256. set-binarycache-variable
+      if:  ${{ startsWith( matrix.config.os , 'macos' )  || startsWith( matrix.config.os  , 'windows' ) }}
       shell: bash
       run: |
         echo VCPKG_DEFAULT_BINARY_CACHE="${{ env.VCPKG_ROOT }}/vcpkg_cache" >> $GITHUB_ENV
