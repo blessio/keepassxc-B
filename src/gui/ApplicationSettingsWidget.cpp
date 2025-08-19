@@ -129,6 +129,8 @@ ApplicationSettingsWidget::ApplicationSettingsWidget(QWidget* parent)
     connect(m_generalUi->backupFilePathPicker, SIGNAL(pressed()), SLOT(selectBackupDirectory()));
     connect(m_generalUi->showExpiredEntriesOnDatabaseUnlockCheckBox, SIGNAL(toggled(bool)),
             SLOT(showExpiredEntriesOnDatabaseUnlockToggled(bool)));
+    connect(m_generalUi->autoTypeAskCheckBox, SIGNAL(toggled(bool)),
+            SLOT(autoTypeAskToggled(bool)));
 
     connect(m_secUi->clearClipboardCheckBox, SIGNAL(toggled(bool)),
             m_secUi->clearClipboardSpinBox, SLOT(setEnabled(bool)));
@@ -302,6 +304,9 @@ void ApplicationSettingsWidget::loadSettings()
     showExpiredEntriesOnDatabaseUnlockToggled(m_generalUi->showExpiredEntriesOnDatabaseUnlockCheckBox->isChecked());
 
     m_generalUi->autoTypeAskCheckBox->setChecked(config()->get(Config::Security_AutoTypeAsk).toBool());
+    m_generalUi->autoTypeSkipMainWindowConfirmationCheckBox->setChecked(
+        config()->get(Config::Security_AutoTypeSkipMainWindowConfirmation).toBool());
+    autoTypeAskToggled(m_generalUi->autoTypeAskCheckBox->isChecked());
     m_generalUi->autoTypeRelockDatabaseCheckBox->setChecked(config()->get(Config::Security_RelockAutoType).toBool());
 
     if (autoType()->isAvailable()) {
@@ -445,6 +450,8 @@ void ApplicationSettingsWidget::saveSettings()
                   m_generalUi->showExpiredEntriesOnDatabaseUnlockOffsetSpinBox->value());
 
     config()->set(Config::Security_AutoTypeAsk, m_generalUi->autoTypeAskCheckBox->isChecked());
+    config()->set(Config::Security_AutoTypeSkipMainWindowConfirmation,
+                  m_generalUi->autoTypeSkipMainWindowConfirmationCheckBox->isChecked());
     config()->set(Config::Security_RelockAutoType, m_generalUi->autoTypeRelockDatabaseCheckBox->isChecked());
 
     if (autoType()->isAvailable()) {
@@ -616,6 +623,11 @@ void ApplicationSettingsWidget::checkUpdatesToggled(bool checked)
 void ApplicationSettingsWidget::showExpiredEntriesOnDatabaseUnlockToggled(bool checked)
 {
     m_generalUi->showExpiredEntriesOnDatabaseUnlockOffsetSpinBox->setEnabled(checked);
+}
+
+void ApplicationSettingsWidget::autoTypeAskToggled(bool checked)
+{
+    m_generalUi->autoTypeSkipMainWindowConfirmationCheckBox->setEnabled(checked);
 }
 
 void ApplicationSettingsWidget::selectBackupDirectory()

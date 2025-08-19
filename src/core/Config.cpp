@@ -147,6 +147,7 @@ static const QHash<Config::ConfigKey, ConfigDirective> configStrings = {
     {Config::Security_HidePasswordPreviewPanel, {QS("Security/HidePasswordPreviewPanel"), Roaming, true}},
     {Config::Security_HideTotpPreviewPanel, {QS("Security/HideTotpPreviewPanel"), Roaming, false}},
     {Config::Security_AutoTypeAsk, {QS("Security/AutotypeAsk"), Roaming, true}},
+    {Config::Security_AutoTypeSkipMainWindowConfirmation, {QS("Security/AutoTypeSkipMainWindowConfirmation"), Roaming, false}},
     {Config::Security_IconDownloadFallback, {QS("Security/IconDownloadFallback"), Roaming, false}},
     {Config::Security_NoConfirmMoveEntryToRecycleBin,{QS("Security/NoConfirmMoveEntryToRecycleBin"), Roaming, true}},
     {Config::Security_EnableCopyOnDoubleClick,{QS("Security/EnableCopyOnDoubleClick"), Roaming, false}},

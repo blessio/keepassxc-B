@@ -56,7 +56,8 @@ Ctrl+F - Toggle database search&lt;br/&gt;
 Ctrl+1 - Type username&lt;br/&gt;
 Ctrl+2 - Type password&lt;br/&gt;
 Ctrl+3 - Type TOTP&lt;br/&gt;
-Ctrl+4 - Use Virtual Keyboard (Windows Only)&lt;/p&gt;</string>
+Ctrl+4 - Type URL&lt;br/&gt;
+Ctrl+5 - Use Virtual Keyboard (Windows Only)&lt;/p&gt;</string>
        </property>
        <property name="styleSheet">
         <string notr="true">QToolButton {
