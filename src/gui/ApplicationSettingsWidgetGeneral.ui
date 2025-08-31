@@ -1158,6 +1158,42 @@
         </widget>
        </item>
        <item>
+        <layout class="QHBoxLayout" name="autoTypeSkipMainWindowLayout">
+         <property name="spacing">
+          <number>0</number>
+         </property>
+         <item>
+          <spacer name="autoTypeSkipMainWindowSpacer">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Fixed</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>30</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="autoTypeSkipMainWindowConfirmationCheckBox">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="text">
+            <string>Skip confirmation for main window Auto-Type actions</string>
+           </property>
+           <property name="checked">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
         <widget class="QCheckBox" name="autoTypeHideExpiredEntryCheckBox">
          <property name="text">
           <string>Hide expired entries from Auto-Type</string>

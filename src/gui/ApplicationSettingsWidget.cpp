@@ -27,6 +27,7 @@
 
 #include "autotype/AutoType.h"
 #include "core/Translator.h"
+#include "gui/GuiTools.h"
 #include "gui/Icons.h"
 #include "gui/MainWindow.h"
 #include "gui/osutils/OSUtils.h"
@@ -60,28 +61,6 @@ public:
 private:
     QSharedPointer<ISettingsPage> settingsPage;
     QWidget* widget;
-};
-
-/**
- * Helper class to ignore mouse wheel events on non-focused widgets
- * NOTE: The widget must NOT have a focus policy of "WHEEL"
- */
-class MouseWheelEventFilter : public QObject
-{
-public:
-    explicit MouseWheelEventFilter(QObject* parent)
-        : QObject(parent){};
-
-protected:
-    bool eventFilter(QObject* obj, QEvent* event) override
-    {
-        const auto* widget = qobject_cast<QWidget*>(obj);
-        if (event->type() == QEvent::Wheel && widget && !widget->hasFocus()) {
-            event->ignore();
-            return true;
-        }
-        return QObject::eventFilter(obj, event);
-    }
 };
 
 ApplicationSettingsWidget::ApplicationSettingsWidget(QWidget* parent)
@@ -129,6 +108,8 @@ ApplicationSettingsWidget::ApplicationSettingsWidget(QWidget* parent)
     connect(m_generalUi->backupFilePathPicker, SIGNAL(pressed()), SLOT(selectBackupDirectory()));
     connect(m_generalUi->showExpiredEntriesOnDatabaseUnlockCheckBox, SIGNAL(toggled(bool)),
             SLOT(showExpiredEntriesOnDatabaseUnlockToggled(bool)));
+    connect(m_generalUi->autoTypeAskCheckBox, SIGNAL(toggled(bool)),
+            SLOT(autoTypeAskToggled(bool)));
 
     connect(m_secUi->clearClipboardCheckBox, SIGNAL(toggled(bool)),
             m_secUi->clearClipboardSpinBox, SLOT(setEnabled(bool)));
@@ -302,6 +283,9 @@ void ApplicationSettingsWidget::loadSettings()
     showExpiredEntriesOnDatabaseUnlockToggled(m_generalUi->showExpiredEntriesOnDatabaseUnlockCheckBox->isChecked());
 
     m_generalUi->autoTypeAskCheckBox->setChecked(config()->get(Config::Security_AutoTypeAsk).toBool());
+    m_generalUi->autoTypeSkipMainWindowConfirmationCheckBox->setChecked(
+        config()->get(Config::Security_AutoTypeSkipMainWindowConfirmation).toBool());
+    autoTypeAskToggled(m_generalUi->autoTypeAskCheckBox->isChecked());
     m_generalUi->autoTypeRelockDatabaseCheckBox->setChecked(config()->get(Config::Security_RelockAutoType).toBool());
 
     if (autoType()->isAvailable()) {
@@ -445,6 +429,8 @@ void ApplicationSettingsWidget::saveSettings()
                   m_generalUi->showExpiredEntriesOnDatabaseUnlockOffsetSpinBox->value());
 
     config()->set(Config::Security_AutoTypeAsk, m_generalUi->autoTypeAskCheckBox->isChecked());
+    config()->set(Config::Security_AutoTypeSkipMainWindowConfirmation,
+                  m_generalUi->autoTypeSkipMainWindowConfirmationCheckBox->isChecked());
     config()->set(Config::Security_RelockAutoType, m_generalUi->autoTypeRelockDatabaseCheckBox->isChecked());
 
     if (autoType()->isAvailable()) {
@@ -616,6 +602,11 @@ void ApplicationSettingsWidget::checkUpdatesToggled(bool checked)
 void ApplicationSettingsWidget::showExpiredEntriesOnDatabaseUnlockToggled(bool checked)
 {
     m_generalUi->showExpiredEntriesOnDatabaseUnlockOffsetSpinBox->setEnabled(checked);
+}
+
+void ApplicationSettingsWidget::autoTypeAskToggled(bool checked)
+{
+    m_generalUi->autoTypeSkipMainWindowConfirmationCheckBox->setEnabled(checked);
 }
 
 void ApplicationSettingsWidget::selectBackupDirectory()
