@@ -175,7 +175,7 @@ jobs:
         echo "************* execute ls ****************"
         ls 
 
-    - name: 176. PRINT Environment Variables ( 1 ) on NON-Windows
+    - name: 176. PRINT Environment Variables ( 2 ) on NON-Windows
       if: ${{ ! startsWith( matrix.config.os  , 'windows' ) }}
       run: |
         echo "Environment printed" 
@@ -226,7 +226,7 @@ jobs:
       with:
         path: | 
           ${{ env.VCPKG_ROOT }}/vcpkg_cache
-        key: ${{ steps.strings.outputs.cache-key-kp }}-${{ hashFiles('**/vcpkg.json') }}
+        key: ${{ steps.strings.outputs.cache-key-kp }}-${{ hashFiles('vcpkg*.json') }}
 
     - name: 550. Windows ONLY // ***** Configure CMake
       if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
