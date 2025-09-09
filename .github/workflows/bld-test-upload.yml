@@ -19,6 +19,12 @@ on:
   pull_request:
     branches: [ "devbleo*", "bleo*" ]
 
+concurrency:
+  # Group runs by the workflow name and the branch or PR number
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # wait in-progress runs for the same group
+  cancel-in-progress: false
+
 jobs:
   build: # BUILD JOB ############################################################################
     if: ${{ github.event_name != 'schedule' || github.ref == 'refs/heads/devbleo3' }}   
@@ -41,11 +47,9 @@ jobs:
         - os: macos-latest
           vcpkg_triplet: arm64-osx-dynamic-release
           github-binarycache: true
-          # python-bld-version: 3.13
         - os: macos-13
           vcpkg_triplet: x64-osx-dynamic-release
           github-binarycache: true
-          # python-bld-version: 3.11
 
     steps:
     ###################################
@@ -56,8 +60,8 @@ jobs:
       shell: bash
       run: |
         echo "build-sub-dir=build" >> "$GITHUB_OUTPUT" 
-        echo "cache-key-kp=kx_${{ matrix.build_type }}_${{ matrix.config.os }}_${{ matrix.config.vcpkg_triplet }}" >> "$GITHUB_OUTPUT"
-        echo "cache-key-kp=kq27_${{ matrix.build_type }}_${{ matrix.config.os }}_${{ matrix.config.vcpkg_triplet }}" >> "$GITHUB_ENV"
+        echo "cache-key-kp=k_${{ github.ref }}_${{ matrix.build_type }}_${{ matrix.config.os }}_${{ matrix.config.vcpkg_triplet }}" >> "$GITHUB_OUTPUT"
+        echo "cache-key-kp=k_${{ github.ref }}_${{ matrix.build_type }}_${{ matrix.config.os }}_${{ matrix.config.vcpkg_triplet }}" >> "$GITHUB_ENV"
         echo "build-root-vcpkg-dir=_v"  >> "$GITHUB_OUTPUT"
         echo "build-winsdk=10.0.26100" >> "$GITHUB_OUTPUT"
         echo "FORCE_JAVASCRIPT_ACTIONS_TO_NODE20=true"  >> "$GITHUB_OUTPUT"
@@ -223,8 +227,8 @@ jobs:
       run: |
         ./bootstrap-vcpkg.bat
 
-    - name: 290 Cache vcpkg install
-      uses: actions/cache@v4
+    - name: 290 Cache vcpkg install - files restore
+      uses: actions/cache/restore@v4
       with:
         path: | 
           ${{ env.VCPKG_ROOT }}/vcpkg_cache
