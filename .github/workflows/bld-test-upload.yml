@@ -56,7 +56,7 @@ jobs:
       shell: bash
       run: |
         echo "build-sub-dir=build" >> "$GITHUB_OUTPUT" 
-        echo "cache-key-kp=kq273x_${{ matrix.build_type }}_${{ matrix.config.os }}_${{ matrix.config.vcpkg_triplet }}" >> "$GITHUB_OUTPUT"
+        echo "cache-key-kp=kx_${{ matrix.build_type }}_${{ matrix.config.os }}_${{ matrix.config.vcpkg_triplet }}" >> "$GITHUB_OUTPUT"
         echo "cache-key-kp=kq27_${{ matrix.build_type }}_${{ matrix.config.os }}_${{ matrix.config.vcpkg_triplet }}" >> "$GITHUB_ENV"
         echo "build-root-vcpkg-dir=_v"  >> "$GITHUB_OUTPUT"
         echo "build-winsdk=10.0.26100" >> "$GITHUB_OUTPUT"
@@ -84,6 +84,7 @@ jobs:
         "VCPKG_PREROOT=${{ github.workspace }}" | Out-File -FilePath $env:GITHUB_ENV -Append
         "VCPKG_ROOT=${{ github.workspace }}\${{ steps.strings.outputs.build-root-vcpkg-dir }}" | Out-File -FilePath $env:GITHUB_ENV -Append
         "VCPKG_INSTALLATION_ROOT=${{ github.workspace }}\${{ steps.strings.outputs.build-root-vcpkg-dir }}" | Out-File -FilePath $env:GITHUB_ENV -Append
+        "VCPKG_SUBINSTALL=${{ github.workspace }}\${{ steps.strings.outputs.build-sub-dir }}\vcpkg_installed" | Out-File -FilePath $env:GITHUB_ENV -Append
 
     - name: 112. MacOS ONLY // version and environment
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
@@ -92,6 +93,7 @@ jobs:
         echo "VCPKG_PREROOT=${{ github.workspace }}" >> "$GITHUB_ENV"   
         echo "VCPKG_ROOT=${{ github.workspace }}/${{ steps.strings.outputs.build-root-vcpkg-dir }}" >> "$GITHUB_ENV"
         echo "VCPKG_INSTALLATION_ROOT=${{ github.workspace }}/${{ steps.strings.outputs.build-root-vcpkg-dir }}" >> "$GITHUB_ENV"
+        echo "VCPKG_SUBINSTALL=${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }}/vcpkg_installed" >> "$GITHUB_ENV"
         echo "********************* xcode version ******************************"
         xcodebuild -version
         echo "*********************    sw_vers    ******************************"
@@ -226,6 +228,7 @@ jobs:
       with:
         path: | 
           ${{ env.VCPKG_ROOT }}/vcpkg_cache
+          ${{ env.VCPKG_SUBINSTALL }}
         key: ${{ steps.strings.outputs.cache-key-kp }}-${{ hashFiles('vcpkg*.json') }}
 
     - name: 550. Windows ONLY // ***** Configure CMake
@@ -265,20 +268,21 @@ jobs:
         -DVCPKG_TARGET_TRIPLET=${{ matrix.config.vcpkg_triplet }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
         ..
-    
-    - name: 600. Windows Check DiskSpace
-      if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
-      run: > 
-        Get-PSDrive -PSProvider FileSystem | Select-Object Name, @{Name="Used (GB)";Expression={[math]::round($_.Used/1GB,2)}},
-        @{Name="Free (GB)";Expression={[math]::round($_.Free/1GB,2)}}
 
-    - name: Save updated cache
+    - name: 570. Save updated cache
       uses: actions/cache/save@v4
       if: always()
       with:
         path: |
           ${{ env.VCPKG_ROOT }}/vcpkg_cache
+          ${{ env.VCPKG_SUBINSTALL }}
         key: ${{ steps.strings.outputs.cache-key-kp }}-${{ hashFiles('vcpkg*.json') }}
+
+    - name: 600. Windows Check DiskSpace
+      if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
+      run: > 
+        Get-PSDrive -PSProvider FileSystem | Select-Object Name, @{Name="Used (GB)";Expression={[math]::round($_.Used/1GB,2)}},
+        @{Name="Free (GB)";Expression={[math]::round($_.Free/1GB,2)}}
 
     - name: 650. Build
       # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
