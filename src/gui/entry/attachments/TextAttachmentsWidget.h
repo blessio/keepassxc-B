@@ -43,15 +43,19 @@ public:
     void openAttachment(attachments::Attachment attachment, attachments::OpenMode mode);
     attachments::Attachment getAttachment() const;
 
-private:
-    void updateWidget();
-    void initWidget();
+private slots:
+    void updatePreviewWidget();
 
-    QScopedPointer<Ui::TextAttachmentsWidget> m_ui;
+private:
+    void initWidget();
+    void updateWidget();
+    bool isPreviewVisible() const;
+
     QPointer<QSplitter> m_splitter;
     QPointer<TextAttachmentsEditWidget> m_editWidget;
     QPointer<TextAttachmentsPreviewWidget> m_previewWidget;
     QPointer<QTimer> m_previewUpdateTimer;
+    bool m_previewVisible = false;
 
     attachments::Attachment m_attachment;
     attachments::OpenMode m_mode;
