@@ -272,6 +272,14 @@ jobs:
         Get-PSDrive -PSProvider FileSystem | Select-Object Name, @{Name="Used (GB)";Expression={[math]::round($_.Used/1GB,2)}},
         @{Name="Free (GB)";Expression={[math]::round($_.Free/1GB,2)}}
 
+    - name: Save updated cache
+      uses: actions/cache/save@v4
+      if: always()
+      with:
+        path: |
+          ${{ env.VCPKG_ROOT }}/vcpkg_cache
+        key: ${{ steps.strings.outputs.cache-key-kp }}-${{ hashFiles('vcpkg*.json') }}
+
     - name: 650. Build
       # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
       working-directory: ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }} 
