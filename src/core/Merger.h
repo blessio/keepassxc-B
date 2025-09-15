@@ -32,12 +32,51 @@ public:
     void setForcedMergeMode(Group::MergeMode mode);
     void resetForcedMergeMode();
     void setSkipDatabaseCustomData(bool state);
-    QStringList merge();
+
+    class Change
+    {
+    public:
+        enum class Type
+        {
+            Unspecified,
+            Added,
+            Modified,
+            Moved,
+            Deleted,
+            Metadata,
+        };
+
+        Change(Type type, QString details);
+        Change(Type type, const Group& group, QString details = "");
+        Change(Type type, const Entry& entry, QString details = "");
+        explicit Change(QString details = "");
+
+        [[nodiscard]] Type type() const;
+        [[nodiscard]] QString typeString() const;
+        [[nodiscard]] const QString& title() const;
+        [[nodiscard]] const QString& group() const;
+        [[nodiscard]] const QUuid& uuid() const;
+        [[nodiscard]] const QString& details() const;
+
+        [[nodiscard]] QString toString() const;
+        void merge();
+
+        bool operator==(const Change& other) const;
+        bool operator!=(const Change& other) const;
+
+    private:
+        Type m_type{Type::Unspecified};
+        QString m_title;
+        QString m_group;
+        QUuid m_uuid;
+        QString m_details;
+    };
+
+    using ChangeList = QList<Change>;
+
+    ChangeList merge(bool dryRun = false);
 
 private:
-    typedef QString Change;
-    typedef QStringList ChangeList;
-
     struct MergeContext
     {
         QPointer<const Database> m_sourceDb;
@@ -47,6 +86,7 @@ private:
         QPointer<const Group> m_sourceGroup;
         QPointer<Group> m_targetGroup;
     };
+
     ChangeList mergeGroup(const MergeContext& context);
     ChangeList mergeDeletions(const MergeContext& context);
     ChangeList mergeMetadata(const MergeContext& context);
@@ -68,6 +108,7 @@ private:
     MergeContext m_context;
     Group::MergeMode m_mode;
     bool m_skipCustomData = false;
+    bool m_dryRun = false;
 };
 
 #endif // KEEPASSXC_MERGER_H
