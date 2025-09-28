@@ -131,7 +131,16 @@ jobs:
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
       run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-      
+    
+    - name: 172.-2 
+      if:  ${{ startsWith( matrix.config.os , 'macos-13' ) }}
+      id: cache-homebrew
+      uses: actions/cache/restore@v4
+      with:
+        path: | 
+          /usr/local/Cellar
+        key: homebrew-${{ matrix.config.os }}-cellar
+
     - name: 172.-1 MACOS13 Only patch ca-certificates
       if: ${{ startsWith( matrix.config.os , 'macos-13' ) }}
       continue-on-error: true
@@ -143,6 +152,14 @@ jobs:
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
       run: brew install asciidoctor
+
+    - name: 570. Save updated cache
+      if:  ${{ startsWith( matrix.config.os , 'macos-13' ) && ( !(steps.cache-homebrew.outputs.cache-hit) ) && always() }}
+      uses: actions/cache/save@v4
+      with:
+        path: |
+          /usr/local/Cellar
+        key: homebrew-${{ matrix.config.os }}-cellar
 
     - name: 173.0 MACOS uninstall python BY FORCE so that the correct one can be (re)installed
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
@@ -235,6 +252,7 @@ jobs:
         ./bootstrap-vcpkg.bat
 
     - name: 290 Cache vcpkg install - files restore
+      id: cache-vcpkg
       uses: actions/cache/restore@v4
       with:
         path: | 
