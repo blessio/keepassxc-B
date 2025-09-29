@@ -147,13 +147,7 @@ jobs:
       run: |
         brew install ca-certificates || true
         brew install llvm || true
-        brew link llvm || true
-        echo "PATH=/usr/local/opt/llvm/bin:$PATH" >> $GITHUB_ENV
-        brew install ruby 
-        brew link ruby
-        echo "PKG_CONFIG_PATH=/usr/local/opt/ruby/lib/pkgconfig" >> $GITHUB_ENV
-        echo "LDFLAGS=-L/usr/local/opt/ruby/lib" >> $GITHUB_ENV
-        echo "CPPFLAGS=-I/usr/local/opt/ruby/include" >> $GITHUB_ENV
+        brew link --overwrite ruby
 
     - name: 172. MACOS Only cmake and asciidoctor
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
