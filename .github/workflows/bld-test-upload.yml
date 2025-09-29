@@ -141,7 +141,7 @@ jobs:
         path: /usr/local/Cellar
         key: homebrew-${{ matrix.config.os }}-cellar-12
 
-    - name: 172.-1 MACOS13 Only patch ca-certificates, llvm just because of ascii doctor takes more than 3 hrs on okd macos and seems not needed on later MacOS
+    - name: 172.-1 MACOS13 Only patch ca-certificates, llvm just because of ascii doctor takes more than 3 hrs on old macos and seems not needed on later MacOS
       if: ${{ startsWith( matrix.config.os , 'macos-13' ) }}
       continue-on-error: true
       run: |
@@ -151,7 +151,9 @@ jobs:
     - name: 172. MACOS Only cmake and asciidoctor
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
-      run: brew install asciidoctor
+      run: |
+        brew install asciidoctor 
+        brew link asciidoctor
 
     - name: 172.+1 Save updated cache Homebrew cellar on MacOS-13
       if:  ${{ startsWith( matrix.config.os , 'macos-13' ) && ( !(steps.cache-homebrew.outputs.cache-hit) ) }}
