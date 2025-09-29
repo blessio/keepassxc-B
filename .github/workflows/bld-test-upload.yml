@@ -152,6 +152,8 @@ jobs:
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
       run: |
+        brew install ruby 
+        brew link ruby
         brew install asciidoctor 
         brew link asciidoctor
 
