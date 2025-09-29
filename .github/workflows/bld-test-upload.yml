@@ -251,7 +251,7 @@ jobs:
         ./bootstrap-vcpkg.bat
 
     - name: 290 Cache vcpkg install - files restore
-      id: cache-vcpkg
+      id: cache_vcpkg1
       uses: actions/cache/restore@v4
       with:
         path: | 
@@ -299,7 +299,7 @@ jobs:
 
     - name: 570. Save updated cache
       uses: actions/cache/save@v4
-      if: always()
+      if: ${{ ( !(steps.cache_vcpkg1.outputs.cache-hit) ) && always() }}
       with:
         path: |
           ${{ env.VCPKG_ROOT }}/vcpkg_cache
