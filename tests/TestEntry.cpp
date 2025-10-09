@@ -445,6 +445,49 @@ void TestEntry::testResolveReferencePlaceholders()
              entry3->attributes()->value("AttributeNotes"));
 }
 
+void TestEntry::testResolveUuidPlaceholder()
+{
+    Database db;
+    auto* root = db.rootGroup();
+
+    auto* entry = new Entry();
+    entry->setGroup(root);
+    entry->setUuid(QUuid::createUuid());
+    entry->setTitle("Test Entry");
+    entry->setUsername("TestUser");
+    entry->setPassword("TestPass");
+    entry->setNotes("Test with UUID: {UUID}");
+
+    // Test that {UUID} placeholder resolves to the entry's UUID
+    QString expectedUuid = entry->uuidToHex();
+    QString resolvedNotes = entry->resolveMultiplePlaceholders(entry->notes());
+    QCOMPARE(resolvedNotes, QString("Test with UUID: %1").arg(expectedUuid));
+
+    // Test {UUID} placeholder directly
+    QCOMPARE(entry->resolveMultiplePlaceholders("{UUID}"), expectedUuid);
+
+    // Test case insensitivity
+    QCOMPARE(entry->resolveMultiplePlaceholders("{uuid}"), expectedUuid);
+    QCOMPARE(entry->resolveMultiplePlaceholders("{Uuid}"), expectedUuid);
+
+    // Test mixed case in text
+    QCOMPARE(entry->resolveMultiplePlaceholders("UUID is {UUID} here"), QString("UUID is %1 here").arg(expectedUuid));
+
+    // Test advanced attribute with {REF:U@I:{UUID}} - should resolve to the entry's own username
+    entry->attributes()->set("SelfReference", "{REF:U@I:{UUID}}");
+    QString attributeValue = entry->attributes()->value("SelfReference");
+    QString resolvedSelfRef = entry->resolveMultiplePlaceholders(attributeValue);
+
+    // Test the manual reference to confirm it works as before
+    QString manualReference = QString("{REF:U@I:%1}").arg(entry->uuidToHex());
+    entry->attributes()->set("ManualReference", manualReference);
+    QString resolvedManualRef = entry->resolveMultiplePlaceholders(entry->attributes()->value("ManualReference"));
+
+    // Test that both approaches work
+    QCOMPARE(resolvedManualRef, entry->username());
+    QCOMPARE(resolvedSelfRef, entry->username());
+}
+
 void TestEntry::testResolveNonIdPlaceholdersToUuid()
 {
     Database db;

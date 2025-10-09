@@ -1167,6 +1167,8 @@ QString Entry::resolvePlaceholderRecursive(const QString& placeholder, int maxDe
         return resolveMultiplePlaceholdersRecursive(notes(), maxDepth);
     case PlaceholderType::Url:
         return resolveMultiplePlaceholdersRecursive(url(), maxDepth);
+    case PlaceholderType::Uuid:
+        return uuidToHex();
     case PlaceholderType::DbDir: {
         QFileInfo fileInfo(database()->filePath());
         return fileInfo.absoluteDir().absolutePath();
@@ -1362,7 +1364,10 @@ QString Entry::resolveReferencePlaceholderRecursive(const QString& placeholder, 
 
     QString result;
     const QString searchIn = match.captured(EntryAttributes::SearchInGroupName);
-    const QString searchText = match.captured(EntryAttributes::SearchTextGroupName);
+    QString searchText = match.captured(EntryAttributes::SearchTextGroupName);
+
+    // Resolve placeholders in the search text (e.g., {UUID} -> actual UUID)
+    searchText = resolvePlaceholder(searchText);
 
     const EntryReferenceType searchInType = Entry::referenceType(searchIn);
 
@@ -1573,6 +1578,7 @@ Entry::PlaceholderType Entry::placeholderType(const QString& placeholder) const
         {QStringLiteral("{NOTES}"), PlaceholderType::Notes},
         {QStringLiteral("{TOTP}"), PlaceholderType::Totp},
         {QStringLiteral("{URL}"), PlaceholderType::Url},
+        {QStringLiteral("{UUID}"), PlaceholderType::Uuid},
         {QStringLiteral("{URL:RMVSCM}"), PlaceholderType::UrlWithoutScheme},
         {QStringLiteral("{URL:WITHOUTSCHEME}"), PlaceholderType::UrlWithoutScheme},
         {QStringLiteral("{URL:SCM}"), PlaceholderType::UrlScheme},
