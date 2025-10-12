@@ -133,6 +133,13 @@ jobs:
       continue-on-error: true
       run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     
+    - name: 172.-2 Restore cache Homebrew cellar on MacOS-13
+      if:  ${{ startsWith( matrix.config.os , 'macos' ) }}
+      id: cache-homebrew
+      uses: actions/cache/restore@v4
+      with:
+        path: /usr/local/Cellar
+        key: homebrew-${{ matrix.config.os }}-cellar-12
 
     - name: 172. MACOS Only asciidoctor
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
@@ -160,6 +167,32 @@ jobs:
       run: | 
         brew install python3 || brew reinstall python3
         brew install python-setuptools  
+
+    - name: Delete a specific cache via API so that an update can be forced - suggested by Gemini AI 2025-10-12
+      if: ${{ startsWith( matrix.config.os , 'macos' ) }}
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        CACHE_KEY: ${{ steps.cache-homebrew.outputs.cache-primary-key }}
+      run: |
+          # First, get the list of caches for this branch to find the cache ID
+          # We use jq to parse the JSON response and find the ID for our specific key
+          cache_id=$(gh api "repos/${{ github.repository }}/actions/caches?key=${CACHE_KEY}" | jq '.actions_caches[0].id')
+
+          if [[ -z "$cache_id" || "$cache_id" == "null" ]]; then
+            echo "Cache with key '$CACHE_KEY' not found."
+          else
+            echo "Found cache with key '$CACHE_KEY' and ID '$cache_id'. Deleting it."
+            # Now, issue the DELETE request using the found cache ID
+            gh api --method DELETE "repos/${{ github.repository }}/actions/caches/${cache_id}"
+            echo "Cache deleted."
+          fi
+
+    - name: 173.2.5Save updated cache Homebrew cellar on MacOS-13
+      if:  ${{ startsWith( matrix.config.os , 'macos' )  }}
+      uses: actions/cache/save@v4
+      with:
+        path: /usr/local/Cellar
+        key: homebrew-${{ matrix.config.os }}-cellar-12
 
     - name: 173.5 check python version
       continue-on-error: true
@@ -285,9 +318,27 @@ jobs:
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
         ..
 
+    - name: Delete a specific cache via API so that an update can be forced - suggested by Gemini AI 2025-10-12
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        CACHE_KEY: ${{ steps.cache_vcpkg1.outputs.cache-primary-key }}
+      run: |
+          # First, get the list of caches for this branch to find the cache ID
+          # We use jq to parse the JSON response and find the ID for our specific key
+          cache_id=$(gh api "repos/${{ github.repository }}/actions/caches?key=${CACHE_KEY}" | jq '.actions_caches[0].id')
+
+          if [[ -z "$cache_id" || "$cache_id" == "null" ]]; then
+            echo "Cache with key '$CACHE_KEY' not found."
+          else
+            echo "Found cache with key '$CACHE_KEY' and ID '$cache_id'. Deleting it."
+            # Now, issue the DELETE request using the found cache ID
+            gh api --method DELETE "repos/${{ github.repository }}/actions/caches/${cache_id}"
+            echo "Cache deleted."
+          fi
+
     - name: 570. Save updated cache
       uses: actions/cache/save@v4
-      if: ${{ ( !(steps.cache_vcpkg1.outputs.cache-hit) ) && always() }}
+      if: ${{ always() }}
       with:
         path: |
           ${{ env.VCPKG_ROOT }}/vcpkg_cache
