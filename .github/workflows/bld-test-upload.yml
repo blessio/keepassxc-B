@@ -27,6 +27,8 @@ concurrency:
 
 jobs:
   build: # BUILD JOB ############################################################################
+    permissions:
+      actions: write
     timeout-minutes: 600 # 10 hrs should be enough even for MacOS-13 with cold cache
     if: ${{ github.event_name != 'schedule' || github.ref == 'refs/heads/devbleo3' }}   
     runs-on: ${{ matrix.config.os }}
