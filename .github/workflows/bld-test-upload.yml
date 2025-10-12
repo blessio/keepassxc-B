@@ -135,7 +135,7 @@ jobs:
       continue-on-error: true
       run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     
-    - name: 172.-2 Restore cache Homebrew cellar on MacOS-13
+    - name: 172.-2 Restore cache Homebrew cellar on MacOS
       if:  ${{ startsWith( matrix.config.os , 'macos' ) }}
       id: cache-homebrew
       uses: actions/cache/restore@v4
@@ -189,11 +189,11 @@ jobs:
             echo "Cache deleted."
           fi
 
-    - name: 173.2.5Save updated cache Homebrew cellar on MacOS-13
+    - name: 173.2.5 Save updated cache Homebrew cellar on MacOS-13
       if:  ${{ startsWith( matrix.config.os , 'macos' )  }}
       uses: actions/cache/save@v4
       with:
-        path: /usr/local/Cellar
+        path: ${{ env.THECELLAR }} # path: /usr/local/Cellar
         key: homebrew-${{ matrix.config.os }}-cellar-12
 
     - name: 173.5 check python version
