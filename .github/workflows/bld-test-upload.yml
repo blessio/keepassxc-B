@@ -323,6 +323,7 @@ jobs:
         ..
 
     - name: Delete a specific cache via API so that an update can be forced - suggested by Gemini AI 2025-10-12
+      shell: bash
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         CACHE_KEY: ${{ steps.cache_vcpkg1.outputs.cache-primary-key }}
