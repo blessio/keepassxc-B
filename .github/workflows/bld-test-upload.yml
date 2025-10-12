@@ -134,12 +134,18 @@ jobs:
       run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     
 
-    - name: 172. MACOS Only cmake and asciidoctor
+    - name: 172. MACOS Only asciidoctor
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
       run: |
-        brew install asciidoctor 
-        brew link asciidoctor
+        if [[ "$BUILD_DOCS" == "ON" ]]; then 
+          echo "=== ASCIIDoctor installation may take more than 6 hrs ===" 
+          brew install asciidoctor 
+          brew link asciidoctor
+          echo "=========================================================" 
+        else
+          echo "ASCIIDoctor intentionally not installed" 
+        fi
 
     - name: 173.0 MACOS uninstall python BY FORCE so that the correct one can be (re)installed
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
