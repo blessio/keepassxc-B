@@ -100,6 +100,7 @@ jobs:
         echo "VCPKG_ROOT=${{ github.workspace }}/${{ steps.strings.outputs.build-root-vcpkg-dir }}" >> "$GITHUB_ENV"
         echo "VCPKG_INSTALLATION_ROOT=${{ github.workspace }}/${{ steps.strings.outputs.build-root-vcpkg-dir }}" >> "$GITHUB_ENV"
         echo "VCPKG_SUBINSTALL=${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }}/vcpkg_installed" >> "$GITHUB_ENV"
+        echo "THECELLAR=/opt/homebrew/Cellar" >> "$GITHUB_ENV"
         echo "********************* xcode version ******************************"
         xcodebuild -version
         echo "*********************    sw_vers    ******************************"
@@ -108,8 +109,9 @@ jobs:
     - name: 115. MacOS-13 ONLY // version and environment
       if: ${{ startsWith( matrix.config.os , 'macos-13' ) }}
       continue-on-error: true   # overwrite doc building --> on old mac it requires re-building the complete chain
-      run: |
+      run: | 
         echo "BUILD_DOCS=OFF" >> "$GITHUB_ENV"
+        echo "THECELLAR=/usr/local/Cellar" >> "$GITHUB_ENV"
 
     - name: 130. Windows Only // Set Up windows SDK and Ruby and the needed gem of asciidoctor 
       if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
@@ -138,7 +140,7 @@ jobs:
       id: cache-homebrew
       uses: actions/cache/restore@v4
       with:
-        path: /usr/local/Cellar
+        path: ${{ env.THECELLAR }} # /usr/local/Cellar
         key: homebrew-${{ matrix.config.os }}-cellar-12
 
     - name: 172. MACOS Only asciidoctor
