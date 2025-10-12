@@ -63,6 +63,7 @@ jobs:
         echo "build-sub-dir=build" >> "$GITHUB_OUTPUT" 
         echo "cache-key-kp=k_${{ github.ref }}_${{ matrix.build_type }}_${{ matrix.config.os }}_${{ matrix.config.vcpkg_triplet }}" >> "$GITHUB_OUTPUT"
         echo "cache-key-kp=k_${{ github.ref }}_${{ matrix.build_type }}_${{ matrix.config.os }}_${{ matrix.config.vcpkg_triplet }}" >> "$GITHUB_ENV"
+        echo "BUILD_DOCS=ON" >> "$GITHUB_ENV"
         echo "build-root-vcpkg-dir=_v"  >> "$GITHUB_OUTPUT"
         echo "build-winsdk=10.0.26100" >> "$GITHUB_OUTPUT"
         echo "FORCE_JAVASCRIPT_ACTIONS_TO_NODE20=true"  >> "$GITHUB_OUTPUT"
@@ -102,15 +103,14 @@ jobs:
         echo "********************* xcode version ******************************"
         xcodebuild -version
         echo "*********************    sw_vers    ******************************"
-        sw_vers 
-
-    # - name: 120. Windows ONLY // Install Winget so that it can use it to install SDK as needed
-    #  if: ${{ startsWith( matrix.config.os , 'windows' ) }}
-    #  uses: blessio/install-winget@PR05  # instead of Cyberboss/install-winget@v1 because the default "latest" is not working on latest runner windows images
-    #  with:
-    #    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    #    wget_release_id: '164835566'     # or this
+        sw_vers
  
+    - name: 115. MacOS-13 ONLY // version and environment
+      if: ${{ startsWith( matrix.config.os , 'macos-13' ) }}
+      continue-on-error: true   # overwrite doc building --> on old mac it requires re-building the complete chain
+      run: |
+        echo "BUILD_DOCS=OFF" >> "$GITHUB_ENV"
+
     - name: 130. Windows Only // Set Up windows SDK and Ruby and the needed gem of asciidoctor 
       if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
       run: | 
@@ -133,21 +133,6 @@ jobs:
       continue-on-error: true
       run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     
-    - name: 172.-2 Restore cache Homebrew cellar on MacOS-13 
-      if:  ${{ startsWith( matrix.config.os , 'macos-13' ) }}
-      id: cache-homebrew
-      uses: actions/cache/restore@v4
-      with:
-        path: /usr/local/Cellar
-        key: homebrew-${{ matrix.config.os }}-cellar-12
-
-    - name: 172.-1 MACOS13 Only patch ca-certificates, llvm just because of ascii doctor takes more than 3 hrs on old macos and seems not needed on later MacOS
-      if: ${{ startsWith( matrix.config.os , 'macos-13' ) }}
-      continue-on-error: true
-      run: |
-        brew install ca-certificates || true
-        brew install llvm || true
-        brew link --overwrite ruby
 
     - name: 172. MACOS Only cmake and asciidoctor
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
@@ -155,13 +140,6 @@ jobs:
       run: |
         brew install asciidoctor 
         brew link asciidoctor
-
-    - name: 172.+1 Save updated cache Homebrew cellar on MacOS-13
-      if:  ${{ startsWith( matrix.config.os , 'macos-13' ) && ( !(steps.cache-homebrew.outputs.cache-hit) ) }}
-      uses: actions/cache/save@v4
-      with:
-        path: /usr/local/Cellar
-        key: homebrew-${{ matrix.config.os }}-cellar-12
 
     - name: 173.0 MACOS uninstall python BY FORCE so that the correct one can be (re)installed
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
@@ -283,7 +261,7 @@ jobs:
         mkdir -p ${{ steps.strings.outputs.build-sub-dir }}  && 
         cd       ${{ steps.strings.outputs.build-sub-dir }}  &&
         cmake -DWITH_XC_ALL=ON -DWITH_GUI_TESTS=ON 
-        -DWITH_XC_DOCS=OFF
+        -DWITH_XC_DOCS=${{ env.BUILD_DOCS }} 
         -DVCPKG_MANIFEST_MODE=ON 
         -DCMAKE_TOOLCHAIN_FILE=${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake 
         -DVCPKG_TARGET_TRIPLET=${{ matrix.config.vcpkg_triplet }}
