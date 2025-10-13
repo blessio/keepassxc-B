@@ -110,7 +110,7 @@ jobs:
         echo "*********************    sw_vers    ******************************"
         sw_vers
  
-    - name: 115. MacOS-13 ONLY // version and environment
+    - name: 115. ***** MacOS-13 ONLY // version and environment
       if: ${{ startsWith( matrix.config.os , 'macos-13' ) }}
       continue-on-error: true   # overwrite doc building --> on old mac it requires re-building the complete chain
       run: | 
@@ -134,7 +134,7 @@ jobs:
         libkeyutils-dev zlib1g-dev libreadline-dev libpcsclite-dev libusb-1.0-0-dev 
         libxi-dev libxtst-dev  libqt5x11extras5-dev
     
-    - name: 172.-2 MACOS-13 Restore cache Homebrew cellar on MacOS
+    - name: 172.-2  *****  MACOS-13 Restore cache Homebrew cellar on MacOS
       if:  ${{ startsWith( matrix.config.os , 'macos-13' ) }}
       id: cache-homebrew
       uses: actions/cache/restore@v4
@@ -154,21 +154,21 @@ jobs:
           echo "ASCIIDoctor intentionally not installed" 
         fi
 
-    - name: 173.0 MACOS-13 ONLY uninstall python BY FORCE so that the correct one can be (re)installed
+    - name: 173.0 ***** MACOS-13 ONLY uninstall python BY FORCE so that the correct one can be (re)installed
       if: ${{ startsWith( matrix.config.os , 'macos-13' ) }}
       continue-on-error: true
       run: | 
         brew uninstall --ignore-dependencies python 
         brew uninstall --ignore-dependencies python3
 
-    - name: 173.2.1 MACOS-13  (re)install python
+    - name: 173.2.1 ***** MACOS-13  (re)install python
       if: ${{ startsWith( matrix.config.os , 'macos-13' ) }}
       continue-on-error: true
       run: | 
         brew install python3 || brew reinstall python3
         brew install python-setuptools  
 
-    - name: MACOS-13 Delete a specific cache via API so that an update can be forced - suggested by Gemini AI 2025-10-12
+    - name: 173.2.5 ***** MACOS-13 Delete a specific cache via API so that an update can be forced - suggested by Gemini AI 2025-10-12
       if: ${{ startsWith( matrix.config.os , 'macos-13' ) }}
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -187,7 +187,7 @@ jobs:
             echo "Cache deleted."
           fi
 
-    - name: 173.2.5 MacOS-13 Save updated cache Homebrew cellar on MacOS-13
+    - name: 173.2.5 ***** MacOS-13 Save updated cache Homebrew cellar on MacOS-13
       if:  ${{ startsWith( matrix.config.os , 'macos-13' )  }}
       uses: actions/cache/save@v4
       with:
