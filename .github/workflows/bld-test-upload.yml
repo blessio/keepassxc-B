@@ -152,7 +152,7 @@ jobs:
         if [[ "$BUILD_DOCS" == "ON" ]]; then 
           echo "=== ASCIIDoctor installation may take more than 6 hrs ===" 
           brew install asciidoctor 
-          brew link asciidoctor
+          # brew link asciidoctor
           echo "=========================================================" 
         else
           echo "ASCIIDoctor intentionally not installed" 
