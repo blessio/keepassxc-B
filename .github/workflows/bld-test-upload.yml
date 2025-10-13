@@ -40,7 +40,6 @@ jobs:
         - os: windows-latest 
           vcpkg_triplet: x64-windows
           github-binarycache: true
-
         - os: ubuntu-latest
           vcpkg_triplet: x64-linux
           github-binarycache: true
@@ -85,7 +84,7 @@ jobs:
         fi
 
     # PUT all Windows specific ENV here using poweshell to be native
-    - name: 111. Windows ONLY // version and environment
+    - name: 111. ++++++ Windows ONLY // version and environment
       if: ${{ startsWith( matrix.config.os , 'windows' ) }}
       shell: pwsh
       run: |   
@@ -94,7 +93,7 @@ jobs:
         "VCPKG_INSTALLATION_ROOT=${{ github.workspace }}\${{ steps.strings.outputs.build-root-vcpkg-dir }}" | Out-File -FilePath $env:GITHUB_ENV -Append
         "VCPKG_SUBINSTALL=${{ github.workspace }}\${{ steps.strings.outputs.build-sub-dir }}\vcpkg_installed" | Out-File -FilePath $env:GITHUB_ENV -Append
 
-    - name: 112. MacOS ONLY // version and environment
+    - name: 112. >>>>>>  MacOS ONLY // version and environment
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
       run: |
@@ -142,7 +141,7 @@ jobs:
         path: ${{ env.THECELLAR }} # /usr/local/Cellar
         key: homebrew-${{ matrix.config.os }}-cellar-12
 
-    - name: 172. MACOS Only asciidoctor
+    - name: 172.  >>>>>>  MACOS Only asciidoctor
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
       run: |
@@ -206,7 +205,7 @@ jobs:
         echo "*************** which python3 ****************"
         which python3
 
-    - name: 174. MACOS Only PKGs
+    - name: 174. >>>>>>  MACOS Only PKGs
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
       run: | 
@@ -224,7 +223,7 @@ jobs:
         echo "************* execute ls ****************"
         ls 
 
-    - name: 176. PRINT Environment Variables ( 2 ) on NON-Windows
+    - name: 176. >>>>>> ++++++ PRINT Environment Variables ( 2 ) on NON-Windows
       if: ${{ ! startsWith( matrix.config.os  , 'windows' ) }}
       run: |
         echo "Environment printed" 
@@ -234,7 +233,7 @@ jobs:
         echo "List of files and folders in buildtype subdir" 
         ls 
 
-    - name: 177. Read Environment
+    - name: 177. >>>>>> ++++++ Read Environment
       if:  ${{ startsWith( matrix.config.os , 'macos' )  || startsWith( matrix.config.os  , 'windows' ) }}
       run: |
         echo ${{ env.VCPKG_ROOT }}
@@ -243,7 +242,7 @@ jobs:
     - name: 250. get the Source of the project from Git
       uses: actions/checkout@v4
 
-    - name: 255. Clone vcpkg as recommended not by a command
+    - name: 255. >>>>>> ++++++ Clone vcpkg as recommended not by a command
       if:  ${{ startsWith( matrix.config.os , 'macos' )  ||  startsWith( matrix.config.os , 'windows' ) }}
       uses: actions/checkout@v4
       with:
@@ -251,26 +250,26 @@ jobs:
         repository: microsoft/vcpkg
         fetch-depth: 0
 
-    - name: 256. set-binarycache-variable
+    - name: 256. >>>>>> ++++++ set-binarycache-variable
       if:  ${{ startsWith( matrix.config.os , 'macos' )  || startsWith( matrix.config.os  , 'windows' ) }}
       shell: bash
       run: |
         echo VCPKG_DEFAULT_BINARY_CACHE="${{ env.VCPKG_ROOT }}/vcpkg_cache" >> $GITHUB_ENV
         mkdir -p "${{ env.VCPKG_ROOT }}/vcpkg_cache"
 
-    - name: 261. Bootstrap VCPKG MACOS
+    - name: 261. >>>>>> ++++++ Bootstrap VCPKG MACOS
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       working-directory: ${{ env.VCPKG_ROOT }}
       run: |
         ./bootstrap-vcpkg.sh
 
-    - name: 260. see what is fetched
+    - name: 260. ++++++ see what is fetched
       if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
       working-directory: ${{ env.VCPKG_ROOT }}
       run: |
         ./bootstrap-vcpkg.bat
 
-    - name: 290 Cache vcpkg install - files restore
+    - name: 290. Cache vcpkg install - files restore
       id: cache_vcpkg1
       uses: actions/cache/restore@v4
       with:
@@ -279,7 +278,7 @@ jobs:
           ${{ env.VCPKG_SUBINSTALL }}
         key: ${{ steps.strings.outputs.cache-key-kp }}-${{ hashFiles('vcpkg*.json') }}
 
-    - name: 550. Windows ONLY // ***** Configure CMake
+    - name: 550. ++++++ Windows ONLY // ***** Configure CMake
       if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
       # If manifest mode is not OFF it will always make a vcpkg install which nullifies the idea of caching
       run: >
@@ -293,7 +292,7 @@ jobs:
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
         ..
 
-    - name: 555. MacOS ONLY // ***** Configure CMake
+    - name: 555. >>>>>> MacOS ONLY // ***** Configure CMake
       if: ${{ startsWith( matrix.config.os  , 'macos' ) }}
       # If manifest mode is not OFF it will always make a vcpkg install which nullifies the idea of caching
       run: >
@@ -308,7 +307,7 @@ jobs:
         -G Ninja
         ..
         
-    - name: 560. LINUX ONLY // ***** Configure CMake
+    - name: 560. LINUX ONLY // Configure CMake
       if: ${{ startsWith( matrix.config.os  , 'ubuntu' ) }}
       run: >
         mkdir -p ${{ steps.strings.outputs.build-sub-dir }}  && 
@@ -318,7 +317,7 @@ jobs:
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
         ..
 
-    - name: Delete a specific cache via API so that an update can be forced - suggested by Gemini AI 2025-10-12
+    - name: 565. Delete a specific cache via API so that an update can be forced - suggested by Gemini AI 2025-10-12
       shell: bash
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -346,7 +345,7 @@ jobs:
           ${{ env.VCPKG_SUBINSTALL }}
         key: ${{ steps.strings.outputs.cache-key-kp }}-${{ hashFiles('vcpkg*.json') }}
 
-    - name: 600. Windows Check DiskSpace
+    - name: 600. ++++++ Windows Check DiskSpace
       if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
       run: > 
         Get-PSDrive -PSProvider FileSystem | Select-Object Name, @{Name="Used (GB)";Expression={[math]::round($_.Used/1GB,2)}},
@@ -359,7 +358,7 @@ jobs:
         cmake --build . --config ${{ matrix.build_type }}  
 
     # Prep for the tests
-    - name: 700. Windows Only // ADD paths to some special DLLs needed for the testing 
+    - name: 700. ++++++ Windows Only // ADD paths to some special DLLs needed for the testing 
       if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
       run: |
         $env:PATH="$env:PATH;${{ github.workspace }}\${{ steps.strings.outputs.build-sub-dir }}\src\autotype\test\${{ matrix.build_type }}"
@@ -416,7 +415,7 @@ jobs:
         --config ${{ matrix.build_type }}  
         --prefix ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }}/_install  -v 
   
-    - name: 770. WINDOWS ONLY // Upload build Executables 
+    - name: 770. ++++++ WINDOWS ONLY // Upload build Executables 
       if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
       id: a-wexecutables
       uses: actions/upload-artifact@v4
@@ -425,7 +424,7 @@ jobs:
         path: |
           ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }}/src/${{ matrix.build_type }} 
 
-    - name: 780. NON-WINDOWS // Upload build Executables 
+    - name: 780. ++++++ NON-WINDOWS // Upload build Executables 
       if: ${{ ! startsWith( matrix.config.os  , 'windows' ) }}
       id: a-executables
       uses: actions/upload-artifact@v4
