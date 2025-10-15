@@ -65,6 +65,7 @@ jobs:
         echo "cache-key-kp=k_${{ github.ref }}_${{ matrix.build_type }}_${{ matrix.config.os }}_${{ matrix.config.vcpkg_triplet }}" >> "$GITHUB_OUTPUT"
         echo "cache-key-kp=k_${{ github.ref }}_${{ matrix.build_type }}_${{ matrix.config.os }}_${{ matrix.config.vcpkg_triplet }}" >> "$GITHUB_ENV"
         echo "BUILD_DOCS=ON" >> "$GITHUB_ENV"
+        echo "VCPKG_CLEAN_AFTER_BUILD=buildtrees,downloads" >> "$GITHUB_ENV"
         echo "build-root-vcpkg-dir=_v"  >> "$GITHUB_OUTPUT"
         echo "build-winsdk=10.0.26100" >> "$GITHUB_OUTPUT"
         echo "FORCE_JAVASCRIPT_ACTIONS_TO_NODE20=true"  >> "$GITHUB_OUTPUT"
