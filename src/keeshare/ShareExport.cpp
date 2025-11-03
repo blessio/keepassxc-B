@@ -56,9 +56,9 @@ namespace
             // but those cases with high probability constructed examples and very rare in real usage
             const auto* sourceReference = sourceDb->rootGroup()->findEntryByUuid(targetEntry->uuid());
             const auto resolvedValue = sourceReference->resolveMultiplePlaceholders(standardValue);
-            targetEntry->setUpdateTimeinfo(false);
+            targetEntry->beginUpdate();
             targetEntry->attributes()->set(attribute, resolvedValue, targetEntry->attributes()->isProtected(attribute));
-            targetEntry->setUpdateTimeinfo(true);
+            targetEntry->endUpdate();
         }
     }
 

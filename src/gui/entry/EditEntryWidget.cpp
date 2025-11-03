@@ -38,6 +38,7 @@
 #include "core/EntryAttributes.h"
 #include "core/Group.h"
 #include "core/Metadata.h"
+#include "core/PasswordGenerator.h"
 #include "core/TimeDelta.h"
 #ifdef WITH_XC_SSHAGENT
 #include "sshagent/OpenSSHKey.h"
@@ -947,6 +948,12 @@ void EditEntryWidget::loadEntry(Entry* entry,
 
     // Force the user to Save/Discard new entries
     showApplyButton(!m_create);
+
+    // Set an initial password for new entries if the option is enabled
+    if (create && config()->get(Config::AutoGeneratePasswordForNewEntries).toBool()) {
+        PasswordGenerator generator;
+        m_mainUi->passwordEdit->setText(generator.generatePassword());
+    }
 
     setModified(false);
 }

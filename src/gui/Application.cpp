@@ -20,6 +20,7 @@
 #include "Application.h"
 
 #include "core/Bootstrap.h"
+#include "core/Tools.h"
 #include "gui/MainWindow.h"
 #include "gui/MessageBox.h"
 #include "gui/osutils/OSUtils.h"
@@ -31,6 +32,7 @@
 #include <QLocalSocket>
 #include <QLockFile>
 #include <QPixmapCache>
+#include <QRegularExpression>
 #include <QSocketNotifier>
 #include <QStandardPaths>
 
@@ -63,20 +65,19 @@ Application::Application(int& argc, char** argv)
     registerUnixSignals();
 #endif
 
-    QString userName = qgetenv("USER");
-    if (userName.isEmpty()) {
-        userName = qgetenv("USERNAME");
-    }
-    QString identifier = "keepassxc";
-    if (!userName.isEmpty()) {
-        identifier += "-" + userName;
+    // Build identifier
+    auto identifier = QStringLiteral("keepassxc");
+    auto username = Tools::cleanUsername();
+    if (!username.isEmpty()) {
+        identifier += QChar('-') + username;
     }
 #ifdef QT_DEBUG
-    // In DEBUG mode don't interfere with Release instances
-    identifier += "-DEBUG";
+    // In DEBUG mode don’t interfere with Release instances
+    identifier += QStringLiteral("-DEBUG");
 #endif
-    QString lockName = identifier + ".lock";
-    m_socketName = identifier + ".socket";
+
+    QString lockName = identifier + QStringLiteral(".lock");
+    m_socketName = identifier + QStringLiteral(".socket");
 
     // According to documentation we should use RuntimeLocation on *nixes, but even Qt doesn't respect
     // this and creates sockets in TempLocation, so let's be consistent.

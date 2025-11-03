@@ -555,6 +555,13 @@ void DatabaseWidget::copyTotp()
     if (!currentEntry) {
         return;
     }
+
+    // If the entry has no TOTP set, open the setup dialog first
+    if (!currentEntry->hasValidTotp()) {
+        setupTotp();
+        return;
+    }
+
     setClipboardTextAndMinimize(currentEntry->totp());
 }
 
@@ -1576,12 +1583,21 @@ void DatabaseWidget::entryActivationSignalReceived(Entry* entry, EntryModel::Mod
     // case EntryModel::Attachments:
     //    break;
     case EntryModel::Url:
-        if (!entry->url().isEmpty() && config()->get(Config::OpenURLOnDoubleClick).toBool()) {
-            openUrlForEntry(entry);
-            break;
+        if (!entry->url().isEmpty()) {
+            switch (config()->get(Config::URLDoubleClickAction).toInt()) {
+            case 2: // Edit entry
+                switchToEntryEdit(entry);
+                break;
+            case 1: // Copy entry URL to clipboard
+                setClipboardTextAndMinimize(entry->resolveMultiplePlaceholders(entry->url()));
+                break;
+            case 0: // Open entry URL in browser (default)
+            default:
+                openUrlForEntry(entry);
+                break;
+            }
         }
-        // Note, order matters here. We want to fall into the default case.
-        [[fallthrough]];
+        break;
     default:
         switchToEntryEdit(entry);
     }

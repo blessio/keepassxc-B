@@ -93,6 +93,10 @@ MainWindow::MainWindow()
 
     m_ui->setupUi(this);
 
+#ifdef Q_OS_MACOS
+    macUtils()->configureWindowAndHelpMenus(this, m_ui->menuHelp);
+#endif
+
 #if defined(Q_OS_UNIX) && !defined(Q_OS_MACOS) && !defined(QT_NO_DBUS)
     new MainWindowAdaptor(this);
     QDBusConnection dbus = QDBusConnection::sessionBus();
@@ -1000,7 +1004,7 @@ void MainWindow::updateMenuActionState()
     m_ui->actionEntryAutoTypeTOTP->setVisible(singleEntrySelected && dbWidget->currentEntryHasTotp());
     m_ui->actionEntryOpenUrl->setEnabled(singleEntryOrEditing && dbWidget->currentEntryHasUrl());
     m_ui->actionEntryTotp->setEnabled(singleEntrySelected && dbWidget->currentEntryHasTotp());
-    m_ui->actionEntryCopyTotp->setEnabled(singleEntrySelected && dbWidget->currentEntryHasTotp());
+    m_ui->actionEntryCopyTotp->setEnabled(singleEntrySelected);
     m_ui->actionEntryCopyPasswordTotp->setEnabled(singleEntrySelected && dbWidget->currentEntryHasTotp());
     m_ui->actionEntrySetupTotp->setEnabled(singleEntrySelected);
     m_ui->actionEntryTotpQRCode->setEnabled(singleEntrySelected && dbWidget->currentEntryHasTotp());

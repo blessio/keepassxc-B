@@ -228,6 +228,16 @@ void TestImports::testBitwarden()
     QCOMPARE(entry->attribute("KP2A_URL_2"), QStringLiteral("https://gmail.com"));
     // Check TOTP
     QVERIFY(entry->hasTotp());
+    // Check Modified and Created timestamps
+    QCOMPARE(entry->timeInfo().lastModificationTime(),
+             QDateTime::fromString(QStringLiteral("2024-12-25T12:00:00Z"), Qt::ISODate));
+    QCOMPARE(entry->timeInfo().creationTime(),
+             QDateTime::fromString(QStringLiteral("2024-12-01T12:00:00Z"), Qt::ISODate));
+    // Check Password History
+    QCOMPARE(entry->historyItems().size(), 1);
+    QCOMPARE(entry->historyItems().first()->password(), QStringLiteral("oldpassword"));
+    QCOMPARE(entry->historyItems().first()->timeInfo().lastModificationTime(),
+             QDateTime::fromString(QStringLiteral("2024-12-01T12:00:00Z"), Qt::ISODate));
     // NOTE: Bitwarden does not export attachments
     // NOTE: Bitwarden does not export expiration dates
 

@@ -18,6 +18,8 @@
 
 #import "AppKitImpl.h"
 #import <QWindow>
+#import <QMenu>
+#import <QMenuBar>
 #import <Cocoa/Cocoa.h>
 #if __clang_major__ >= 13 && MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_VERSION_12_3
 #import <ScreenCaptureKit/ScreenCaptureKit.h>
@@ -184,7 +186,7 @@
 //
 // Check if screen recording is enabled, may show an popup asking for permissions
 //
-- (bool) enableScreenRecording 
+- (bool) enableScreenRecording
 {
 #if __clang_major__ >= 13 && MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_VERSION_12_3
     if (@available(macOS 12.3, *)) {
@@ -192,7 +194,7 @@
         dispatch_semaphore_t sema = dispatch_semaphore_create(0);
 
         // Attempt to use SCShareableContent to check for screen recording permission
-        [SCShareableContent getShareableContentWithCompletionHandler:^(SCShareableContent * _Nullable content, 
+        [SCShareableContent getShareableContentWithCompletionHandler:^(SCShareableContent * _Nullable content,
                                                                         NSError * _Nullable error) {
             Q_UNUSED(error);
             if (content) {
@@ -231,7 +233,28 @@
     [window setSharingType: state ? NSWindowSharingNone : NSWindowSharingReadOnly];
 }
 
+- (void) configureWindowAndHelpMenus:(QMainWindow*) mainWindow helpMenu:(QMenu*) helpMenu
+{
+    QMenu *qtWindowMenu = new QMenu(AppKit::tr("Window"));
+    NSMenu *nsWindowMenu = qtWindowMenu->toNSMenu();
+
+    QString minimizeStr = AppKit::tr("Minimize");
+    [nsWindowMenu addItemWithTitle:minimizeStr.toNSString() action:@selector(performMiniaturize:) keyEquivalent:@""];
+    QString zoomStr = AppKit::tr("Zoom");
+    [nsWindowMenu addItemWithTitle:zoomStr.toNSString() action:@selector(performZoom:) keyEquivalent:@""];
+    [nsWindowMenu addItem:[NSMenuItem separatorItem]];
+    QString bringAllToFrontStr = AppKit::tr("Bring All to Front");
+    [nsWindowMenu addItemWithTitle:bringAllToFrontStr.toNSString() action:@selector(arrangeInFront:) keyEquivalent:@""];
+
+    NSApp.windowsMenu = nsWindowMenu;
+
+    mainWindow->menuBar()->insertMenu(helpMenu->menuAction(), qtWindowMenu);
+
+    NSApp.helpMenu = helpMenu->toNSMenu();
+}
+
 @end
+
 
 //
 // ------------------------- C++ Trampolines -------------------------
@@ -311,4 +334,9 @@ void AppKit::setWindowSecurity(QWindow* window, bool state)
 {
     auto view = reinterpret_cast<NSView*>(window->winId());
     [static_cast<id>(self) setWindowSecurity:view.window state:state];
+}
+
+void AppKit::configureWindowAndHelpMenus(QMainWindow* window, QMenu* helpMenu)
+{
+    [static_cast<id>(self) configureWindowAndHelpMenus:window helpMenu:helpMenu];
 }
