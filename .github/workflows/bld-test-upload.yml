@@ -153,6 +153,8 @@ jobs:
         else
           echo "ASCIIDoctor intentionally not installed" 
         fi
+        # should not be needed after fix of https://github.com/microsoft/vcpkg/issues/48125
+        brew install autoconf autoconf-archive automake libtool
 
     - name: 173.0 ***** MACOS-13 ONLY uninstall python BY FORCE so that the correct one can be (re)installed
       if: ${{ startsWith( matrix.config.os , 'macos-13' ) }}
