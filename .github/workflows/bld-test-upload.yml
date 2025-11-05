@@ -133,9 +133,9 @@ jobs:
     - name: 150. LINUX Only // Prepare Linux packages that are needed
       if: ${{ startsWith( matrix.config.os , 'ubuntu' ) }}
       run: > 
-        echo "*********************   SYSTEM VERSION   ******************************"
-        cat /etc/os-release
-        echo "********************* END SYSTEM VERSION ******************************"
+        echo "*********************   SYSTEM VERSION   ******************************" &&
+        cat /etc/os-release &&
+        echo "********************* END SYSTEM VERSION ******************************" && 
         sudo apt update -y && 
         sudo apt install -y build-essential cmake g++ asciidoctor &&
         sudo apt install -y qtbase5-dev qtbase5-private-dev qttools5-dev qttools5-dev-tools  
