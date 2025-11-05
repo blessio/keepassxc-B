@@ -88,7 +88,10 @@ jobs:
     - name: 111. ++++++ Windows ONLY // version and environment
       if: ${{ startsWith( matrix.config.os , 'windows' ) }}
       shell: pwsh
-      run: |   
+      run: | 
+        echo "*********************   SYSTEM VERSION   ******************************"
+        systeminfo
+        echo "********************* END SYSTEM VERSION ******************************"
         "VCPKG_PREROOT=${{ github.workspace }}" | Out-File -FilePath $env:GITHUB_ENV -Append
         "VCPKG_ROOT=${{ github.workspace }}\${{ steps.strings.outputs.build-root-vcpkg-dir }}" | Out-File -FilePath $env:GITHUB_ENV -Append
         "VCPKG_INSTALLATION_ROOT=${{ github.workspace }}\${{ steps.strings.outputs.build-root-vcpkg-dir }}" | Out-File -FilePath $env:GITHUB_ENV -Append
@@ -98,6 +101,9 @@ jobs:
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
       run: |
+        echo "*********************   SYSTEM VERSION   ******************************"
+        sw_vers
+        echo "********************* END SYSTEM VERSION ******************************"
         echo "VCPKG_PREROOT=${{ github.workspace }}" >> "$GITHUB_ENV"   
         echo "VCPKG_ROOT=${{ github.workspace }}/${{ steps.strings.outputs.build-root-vcpkg-dir }}" >> "$GITHUB_ENV"
         echo "VCPKG_INSTALLATION_ROOT=${{ github.workspace }}/${{ steps.strings.outputs.build-root-vcpkg-dir }}" >> "$GITHUB_ENV"
@@ -127,6 +133,9 @@ jobs:
     - name: 150. LINUX Only // Prepare Linux packages that are needed
       if: ${{ startsWith( matrix.config.os , 'ubuntu' ) }}
       run: > 
+        echo "*********************   SYSTEM VERSION   ******************************"
+        cat /etc/os-release
+        echo "********************* END SYSTEM VERSION ******************************"
         sudo apt update -y && 
         sudo apt install -y build-essential cmake g++ asciidoctor &&
         sudo apt install -y qtbase5-dev qtbase5-private-dev qttools5-dev qttools5-dev-tools  
