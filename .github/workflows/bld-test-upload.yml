@@ -421,8 +421,7 @@ jobs:
         
     - name: 760. Install RUN on any host with bash
       working-directory: ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }} 
-      # Execute tests defined by the CMake configuration. Note that --build-config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
-      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
+      # use cmake install to prepare the installable version of the build so that it can be used to upload as artifacts
       shell: bash
       continue-on-error: true
       run: > 
