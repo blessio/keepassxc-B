@@ -466,7 +466,7 @@ jobs:
         ANTIVIRUS_SCAN_REPORT_URL=$(echo $ANTIVIRUS_SCAN_REQ | jq -r '.data.links.self')
         echo ***URL= $ANTIVIRUS_SCAN_REPORT_URL
         echo "ANTIVIRUS_SCAN_REPORT_URL=$ANTIVIRUS_SCAN_REPORT_URL" >> $GITHUB_OUTPUT
-        echo" >> $GITHUB_OUTPUT"
+        echo "****************************************************************"
         echo "BIN_DOWNLD=${{ env.BIN_DOWNLOADS }}"                                               >> $GITHUB_OUTPUT
         echo "Submitted files for antivirus scan wait a min before picking the json result report ..."
         sleep 30  # wait for VT to process the file
