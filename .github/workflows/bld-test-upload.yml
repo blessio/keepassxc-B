@@ -458,13 +458,14 @@ jobs:
         GH_EVTRIGGER: ${{ secrets.AV_WRKFLOW_TRIGGER }}
       run: |
         echo "BIN_DOWNLD=${{ env.BIN_DOWNLOADS }}"   >> $GITHUB_OUTPUT
+        # https://docs.github.com/en/rest/actions/workflows?apiVersion=2022-11-28#create-a-workflow-dispatch-event
         curl -L \
           --request POST \
           --header "Accept: application/vnd.github+json" \
           --header "Authorization: Bearer $GH_EVTRIGGER" \
           --header "X-GitHub-Api-Version: 2022-11-28"    \
           --url "https://api.github.com/repos/blessio/KeepasXC-B/actions/workflows/AntivirusOnUrl.yml" \
-          --data '{"ref":"main","inputs":{"url2scan":${{ env.BIN_DOWNLOADS }} }}'
+          --data '{"ref":"bleo05_02.01","inputs":{"url2scan":${{ env.BIN_DOWNLOADS }} }}'
           
         
     - name: 790. Upload build Test Result Logs

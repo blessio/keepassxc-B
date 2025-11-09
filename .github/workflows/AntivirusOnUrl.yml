@@ -6,7 +6,7 @@
 # Used the starter here:
 # BUILDS KeepasXC 
 #################################################
-name: Antivirus-on-URL
+name: AntivirusOnUrl
 
 on:
   workflow_dispatch:
