@@ -128,6 +128,7 @@ jobs:
       run: | 
         winget install --source winget --exact --id Microsoft.WindowsSDK.${{ steps.strings.outputs.build-winsdk }} --silent
         winget install RubyInstallerTeam.Ruby.3.2 --accept-package-agreements --accept-source-agreements
+        winget install jqlang.jq # needed later for antivirus scan
         gem install asciidoctor
         
     - name: 150. LINUX Only // Prepare Linux packages that are needed
@@ -462,9 +463,14 @@ jobs:
       working-directory: ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }} 
       shell: bash
       continue-on-error: true
+      env:
+        VT_API_KEY: ${{ secrets.VT_API_KEY }}
+        BIN_DOWNLOADS: ${{ steps.a-wexecutables.outputs.artifact-url }}${{ steps.a-executables.outputs.artifact-url }}
       run: |
         echo "### ${{ steps.strings.outputs.bld-humanreadable-str }}" >> $GITHUB_STEP_SUMMARY
-        echo " - Download built files from: ${{ steps.a-wexecutables.outputs.artifact-url }} ${{ steps.a-executables.outputs.artifact-url }}" >> $GITHUB_STEP_SUMMARY
+        # echo "BIN_DOWNLOADS='${{ steps.a-wexecutables.outputs.artifact-url }}${{ steps.a-executables.outputs.artifact-url }}'" >> $GITHUB_ENV
+        echo " - Download built files from: ${{ env.BIN_DOWNLOADS }}" >> $GITHUB_STEP_SUMMARY
+        echo $(curl -s --request POST --url "https://www.virustotal.com/api/v3/urls" --header "x-apikey: $VT_API_KEY" --form "url=${{ env.BIN_DOWNLOADS }}" | jq -r '.id') >> $GITHUB_STEP_SUMMARY 
         if [ -f ctest-pass2-results-of-failedonly.txt ]; then
           echo -e " - 🟡 Some test(s) **failed**. Namely: " >> $GITHUB_STEP_SUMMARY
           # echo all lines from file ctest-pass2-results-of-failedonly.txt starting from the line that contains the string "The following tests FAILED:"
