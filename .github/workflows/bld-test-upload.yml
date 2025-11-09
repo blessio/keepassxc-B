@@ -460,11 +460,11 @@ jobs:
         echo "ANTIVIRUS_SCAN_REQ=$(curl -s --request POST --url "https://www.virustotal.com/api/v3/urls" --header "x-apikey: $VT_API_KEY" --form "url=${{ env.BIN_DOWNLOADS }}") >> $GITHUB_OUTPUT
         echo "ANTIVIRUS_SCAN_ID=$(echo $ANTIVIRUS_SCAN_REQ | jq -r '.data.id')" >> $GITHUB_OUTPUT
         echo "ANTIVIRUS_SCAN_REPORT_URL=$(echo $ANTIVIRUS_SCAN_REQ | jq -r '.data.links.self')" >> $GITHUB_OUTPUT
-        echo "BIN_DOWNLD=$BIN_DOWNLOADS" >> $GITHUB_OUTPUT
+        echo "BIN_DOWNLD=${{ env.BIN_DOWNLOADS }}" >> $GITHUB_OUTPUT
         echo "Submitted files for antivirus scan wait a min before picking the json result report ..."
         sleep 30  # wait for VT to process the file
-        echo "ANTIVIRUS_SCAN_RES=$(curl -s --request GET --url 'https://www.virustotal.com/api/v3/analyses/$ANTIVIRUS_SCAN_ID' --header 'accept: application/json' 'x-apikey: $VT_API_KEY')" >> $GITHUB_OUTPUT
-        echo "$ANTIVIRUS_SCAN_RES" >> ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }}/antivirus-scan-result.json
+        # echo "ANTIVIRUS_SCAN_RES=$(curl -s --request GET --url "https://www.virustotal.com/api/v3/analyses/$ANTIVIRUS_SCAN_ID" --header 'accept: application/json' "x-apikey: $VT_API_KEY" ) " >> $GITHUB_OUTPUT
+        # echo "$ANTIVIRUS_SCAN_RES" >> ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }}/antivirus-scan-result.json
 
     - name: 790. Upload build Test Result Logs
       id: a-TestLog
