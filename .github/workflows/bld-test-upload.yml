@@ -470,7 +470,8 @@ jobs:
         echo "BIN_DOWNLD=${{ env.BIN_DOWNLOADS }}"                                               >> $GITHUB_OUTPUT
         echo "Submitted files for antivirus scan wait a min before picking the json result report ..."
         sleep 30  # wait for VT to process the file
-        ANTIVIRUS_SCAN_RES=$(curl -s --request GET --url "https://www.virustotal.com/api/v3/analyses/$ANTIVIRUS_SCAN_ID" \
+        ANTIVIRUS_SCAN_RES=$(curl -s --request GET                                 \
+             --url "https://www.virustotal.com/api/v3/analyses/$ANTIVIRUS_SCAN_ID" \
              --header 'accept: application/json' "x-apikey: $VT_API_KEY" )
         echo *****************
         echo $ANTIVIRUS_SCAN_ID
@@ -496,7 +497,7 @@ jobs:
       run: |
         echo "### ${{ steps.strings.outputs.bld-humanreadable-str }}" >> $GITHUB_STEP_SUMMARY
         echo " - Download built files from: ${{ steps.ANTIVIRUS_SCAN.outputs.BIN_DOWNLD }}" >>  $GITHUB_STEP_SUMMARY
-        echo "You can check detailed antivirus scan report here: ${{ steps.ANTIVIRUS_SCAN.outputs.ANTIVIRUS_SCAN_REPORT_URL }}" >> $GITHUB_STEP_SUMMARY 
+        echo "You can check detailed antivirus scan report downloaded with test reports. >> $GITHUB_STEP_SUMMARY 
         if [ -f ctest-pass2-results-of-failedonly.txt ]; then
           echo -e " - 🟡 Some test(s) **failed**. Namely: " >> $GITHUB_STEP_SUMMARY
           # echo all lines from file ctest-pass2-results-of-failedonly.txt starting from the line that contains the string "The following tests FAILED:"
