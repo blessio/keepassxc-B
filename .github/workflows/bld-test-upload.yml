@@ -473,10 +473,11 @@ jobs:
         ANTIVIRUS_SCAN_RES=$(curl -s --request GET                                 \
              --url "https://www.virustotal.com/api/v3/analyses/$ANTIVIRUS_SCAN_ID" \
              --header 'accept: application/json' "x-apikey: $VT_API_KEY" )
-        echo *****************
-        echo $ANTIVIRUS_SCAN_ID
-        echo *****************
-        echo "$ANTIVIRUS_SCAN_RES" > ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }}/antivirus-scan-result.json
+        echo "********************************************************"
+        echo ***SCANRES=$ANTIVIRUS_SCAN_RES
+        echo "********************************************************"
+        echo $ANTIVIRUS_SCAN_RES > ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }}/antivirus-scan-result.json
+        echo "ANTIVIRUS_SCAN_RES=$ANTIVIRUS_SCAN_RES"  >> GITHUB_OUTPUT
         
     - name: 790. Upload build Test Result Logs
       id: a-TestLog
@@ -497,7 +498,7 @@ jobs:
       run: |
         echo "### ${{ steps.strings.outputs.bld-humanreadable-str }}" >> $GITHUB_STEP_SUMMARY
         echo " - Download built files from: ${{ steps.ANTIVIRUS_SCAN.outputs.BIN_DOWNLD }}" >>  $GITHUB_STEP_SUMMARY
-        echo "You can check detailed antivirus scan report downloaded with test reports. >> $GITHUB_STEP_SUMMARY 
+        echo "You can check detailed antivirus scan report downloaded with test reports." >> $GITHUB_STEP_SUMMARY 
         if [ -f ctest-pass2-results-of-failedonly.txt ]; then
           echo -e " - 🟡 Some test(s) **failed**. Namely: " >> $GITHUB_STEP_SUMMARY
           # echo all lines from file ctest-pass2-results-of-failedonly.txt starting from the line that contains the string "The following tests FAILED:"
