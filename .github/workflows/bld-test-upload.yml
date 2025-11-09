@@ -505,7 +505,7 @@ jobs:
                     echo "Status is: COMPLETED!"
                     echo "-----------------------"
                     echo "Final JSON Report:"
-                    echo "$RESPONSE" | jq . # Pretty-print the final JSON
+                    echo "$RESPONSE" | jq .  >  ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }}/antivirus-scan-result.json  # Pretty-print the final JSON
                     break # Exits the 'while true' loop
                     ;;
                 
@@ -532,15 +532,11 @@ jobs:
         done
         echo "" # Newline
         echo "Polling finished."
-        ANTIVIRUS_SCAN_RES=$(curl -sS --request GET                                 \
-             --url "https://www.virustotal.com/api/v3/analyses/$ANTIVIRUS_SCAN_ID" \
-             --header 'accept: application/json' "x-apikey: $VT_API_KEY" )
+        ANTIVIRUS_SCAN_RES=( echo "$RESPONSE" | jq .  )
         echo "********************************************************"
-        echo ***SCANRES=$ANTIVIRUS_SCAN_RES
+        echo ***SCANRES="$ANTIVIRUS_SCAN_RES"
         echo "********************************************************"
-
-        echo $ANTIVIRUS_SCAN_RES > ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }}/antivirus-scan-result.json
-        echo "ANTIVIRUS_SCAN_RES=$ANTIVIRUS_SCAN_RES"  >> GITHUB_OUTPUT
+        echo "ANTIVIRUS_SCAN_RES=$RESPONSE"  >> GITHUB_OUTPUT
         
     - name: 790. Upload build Test Result Logs
       id: a-TestLog
