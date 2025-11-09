@@ -448,7 +448,7 @@ jobs:
         path: |
           ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }}/_install
 
-    - name: 785.ANTIVIRUS SCAN 
+    - name: 785.ANTIVIRUS SCAN - THERE MAY BE MALWARE IN BUILT BINARIES because of the wide variety of 3rd party libraries used over VCPKG
       working-directory: ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }} 
       shell: bash
       id: ANTIVIRUS_SCAN
@@ -463,7 +463,7 @@ jobs:
         echo "BIN_DOWNLD=$BIN_DOWNLOADS" >> $GITHUB_OUTPUT
         echo "Submitted files for antivirus scan wait a min before picking the json result report ..."
         sleep 30  # wait for VT to process the file
-        echo "ANTIVIRUS_SCAN_RES=$(curl -s --request GET --url 'https://www.virustotal.com/api/v3/analyses/$ANTIVIRUS_SCAN_ID --header 'accept: application/json' 'x-apikey: $VT_API_KEY')" >> $GITHUB_OUTPUT
+        echo "ANTIVIRUS_SCAN_RES=$(curl -s --request GET --url 'https://www.virustotal.com/api/v3/analyses/$ANTIVIRUS_SCAN_ID' --header 'accept: application/json' 'x-apikey: $VT_API_KEY')" >> $GITHUB_OUTPUT
         echo "$ANTIVIRUS_SCAN_RES" >> ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }}/antivirus-scan-result.json
 
     - name: 790. Upload build Test Result Logs
