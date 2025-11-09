@@ -455,7 +455,7 @@ jobs:
       continue-on-error: true
       env:
         BIN_DOWNLOADS: ${{ steps.a-wexecutables.outputs.artifact-url }}${{ steps.a-executables.outputs.artifact-url }}
-        GH_EVTRIGGER: ${{ secrets.WRKFLOW_TRIGGER }}
+        GH_EVTRIGGER: ${{ secrets.AV_WRKFLOW_TRIGGER }}
       run: |
         echo "BIN_DOWNLD=${{ env.BIN_DOWNLOADS }}"   >> $GITHUB_OUTPUT
         curl -L \
