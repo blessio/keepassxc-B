@@ -19,6 +19,10 @@ on:
         description: 'URL to CRAW'
         required: true
         #default: '1.0.0'
+      submitted_by:
+        description: 'Submitted by'
+        required: false
+        default: 'unknown'
 
 jobs:
   AntivirusOnUrl:
@@ -33,6 +37,10 @@ jobs:
           VT_API_KEY: ${{ secrets.VT_API_KEY }}
           BIN_DOWNLOADS: ${{ github.event.inputs.url2scan }}
         run: |
+          echo "### Starting ANTIVIRUS SCAN on URL: ${{ env.BIN_DOWNLOADS }}"
+          echo "   SUBMITTED by ${{ github.event.inputs.submitted_by }} "
+          echo "   ****************************************************************"
+
           ANTIVIRUS_SCAN_REQ=$(curl --request POST --url "https://www.virustotal.com/api/v3/urls"        \
             --header 'accept: application/json' --header 'content-type: application/x-www-form-urlencoded' \
             --header "x-apikey: $VT_API_KEY" --data url="${{ env.BIN_DOWNLOADS }}" )
