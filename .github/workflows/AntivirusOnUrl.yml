@@ -125,10 +125,10 @@ jobs:
 
 
           # Count any results that are NOT "clean" or "unrated"
-          DIRTY_COUNT=$(echo "$ANTIVIRUS_SCAN_RES" | jq -r '.data.attributes.results[].result | select(. != "clean" and . != "unrated")' report.json | wc -l)
-
-          if [ "$DIRTY_COUNT" -gt 0 ]; then
-              echo "Warning: Found $DIRTY_COUNT results that are not clean!"
+          ALL_CLEAN=$(echo "$ANTIVIRUS_SCAN_RES" | jq -r '[.data.attributes.results[].result] | all(. == "clean" or . == "unrated")')
+         
+          if [ "$ALL_CLEAN" = "false" ]; then
+              echo "Warning: Found results that are not clean!"
               exit 1 ### see json for errors
           else
               echo "All results are 'clean' or 'unrated'."
