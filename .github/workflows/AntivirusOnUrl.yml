@@ -33,7 +33,7 @@ jobs:
         if: ${{ github.event.inputs.url2scan != '' }}
         shell: bash
         id: ANTIVIRUS_SCAN
-        continue-on-error: true
+        continue-on-error: false
         env:
           VT_API_KEY: ${{ secrets.VT_API_KEY }}
           BIN_DOWNLOADS: ${{ github.event.inputs.url2scan }}
@@ -122,4 +122,15 @@ jobs:
           echo ***SCANRES= "$ANTIVIRUS_SCAN_RES"
           echo "********************************************************"
           echo "ANTIVIRUS_SCAN_RES=$RESPONSE"  >> GITHUB_OUTPUT
+
+
+          # Count any results that are NOT "clean" or "unrated"
+          DIRTY_COUNT=$(echo "$ANTIVIRUS_SCAN_RES" | jq -r '.data.attributes.results[].result | select(. != "clean" and . != "unrated")' report.json | wc -l)
+
+          if [ "$DIRTY_COUNT" -gt 0 ]; then
+              echo "Warning: Found $DIRTY_COUNT results that are not clean!"
+              exit 1 ### see json for errors
+          else
+              echo "All results are 'clean' or 'unrated'."
+          fi
 
