@@ -18,7 +18,7 @@ on:
       url2scan:
         description: 'URL to CRAW'
         required: true
-        #default: '1.0.0'
+        default: ''
       submitted_by:
         description: 'Submitted by'
         required: false
@@ -30,6 +30,7 @@ jobs:
     steps:
  
       - name: 785.ANTIVIRUS SCAN - THERE MAY BE MALWARE IN BUILT BINARIES because of the wide variety of 3rd party libraries used over VCPKG
+        if: ${{ github.event.inputs.url2scan != '' }}
         shell: bash
         id: ANTIVIRUS_SCAN
         continue-on-error: true
