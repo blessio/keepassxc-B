@@ -466,7 +466,7 @@ jobs:
                     -H "Authorization: Bearer $GH_EVTRIGGER" \
                     -H "X-GitHub-Api-Version: 2022-11-28" \
                     "https://api.github.com/repos/${{ github.repository }}/actions/workflows/AntivirusOnUrl.yml/dispatches" \
-                    -d '{"branch":"bleo05_02.01","inputs":{"url2scan": "${{ env.BIN_DOWNLOADS }}"}}' \
+                    -d '{"ref":${{ github.ref_name }},"inputs":{"url2scan": "${{ env.BIN_DOWNLOADS }}"}}' \
                   )
         echo "$RESPONSE" | jq . 
 
