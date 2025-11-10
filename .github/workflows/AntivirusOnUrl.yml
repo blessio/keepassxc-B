@@ -9,9 +9,8 @@
 name: AntivirusOnUrl
 
 on:
-  schedule:
-    - cron: 7 3 * * FRI
-    # runs every Friday 3:07AM 
+  push:
+    branches: [ "devbleo*", "bleo*" ]
     
   workflow_dispatch:
     # You can define inputs that the 'curl' command can pass
