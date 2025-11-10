@@ -116,8 +116,9 @@ jobs:
           done
           echo "" # Newline
           echo "Polling finished."
-          ANTIVIRUS_SCAN_RES=( echo "$RESPONSE" | jq .  )
+          ANTIVIRUS_SCAN_RES=$( echo "$RESPONSE" | jq .  )
           echo "********************************************************"
-          echo ***SCANRES="$ANTIVIRUS_SCAN_RES"
+          echo ***SCANRES= "$ANTIVIRUS_SCAN_RES"
           echo "********************************************************"
           echo "ANTIVIRUS_SCAN_RES=$RESPONSE"  >> GITHUB_OUTPUT
+
