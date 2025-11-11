@@ -127,10 +127,20 @@ jobs:
           # Count any results that are NOT "clean" or "unrated"
           ALL_CLEAN=$(echo "$ANTIVIRUS_SCAN_RES" | jq -r '[.data.attributes.results[].result] | all(. == "clean" or . == "unrated")')
          
+          
+          echo "### ANTIVIRUS SCAN on URL: ${{ env.BIN_DOWNLOADS }} finished" >> $GITHUB_STEP_SUMMARY
+          echo "       SUBMITTED by ${{ github.event.inputs.submitted_by }} " >> $GITHUB_STEP_SUMMARY
+
           if [ "$ALL_CLEAN" = "false" ]; then
               echo "Warning: Found results that are not clean!"
+              echo -e " - 🔴 Some THREADS DETECTED. See detailed json included in log" >> $GITHUB_STEP_SUMMARY
               exit 1 ### see json for errors
           else
-              echo "All results are 'clean' or 'unrated'."
+              echo "All results are 'clean' or 'unrated'." >> $GITHUB_STEP_SUMMARY
+              echo -e " - 🟢  NO THREADS DETECTED " >> $GITHUB_STEP_SUMMARY
           fi
+
+      # - 🟢 represents a green circle.
+      # - 🟡 represents a yellow circle.
+      # - 🔴 represents a red circle.
 
