@@ -194,9 +194,6 @@ MainWindow::MainWindow()
         databaseLockButton->setPopupMode(QToolButton::MenuButtonPopup);
     }
 
-    restoreGeometry(config()->get(Config::GUI_MainWindowGeometry).toByteArray());
-    restoreState(config()->get(Config::GUI_MainWindowState).toByteArray());
-
     connect(m_ui->tabWidget, &DatabaseTabWidget::databaseLocked, this, &MainWindow::databaseLocked);
     connect(m_ui->tabWidget, &DatabaseTabWidget::databaseUnlocked, this, &MainWindow::databaseUnlocked);
     connect(m_ui->tabWidget, &DatabaseTabWidget::activeDatabaseChanged, this, &MainWindow::activeDatabaseChanged);
@@ -642,12 +639,13 @@ MainWindow::MainWindow()
     auto* hidePreRelWarn = new QAction(tr("Don't show again for this version"), m_ui->globalMessageWidget);
     m_ui->globalMessageWidget->addAction(hidePreRelWarn);
     auto hidePreRelWarnConn = QSharedPointer<QMetaObject::Connection>::create();
-    *hidePreRelWarnConn = connect(m_ui->globalMessageWidget, &KMessageWidget::hideAnimationFinished, [=] {
-        m_ui->globalMessageWidget->removeAction(hidePreRelWarn);
-        disconnect(*hidePreRelWarnConn);
-        hidePreRelWarn->deleteLater();
-    });
-    connect(hidePreRelWarn, &QAction::triggered, [=] {
+    *hidePreRelWarnConn = connect(
+        m_ui->globalMessageWidget, &KMessageWidget::hideAnimationFinished, [this, hidePreRelWarn, hidePreRelWarnConn] {
+            m_ui->globalMessageWidget->removeAction(hidePreRelWarn);
+            disconnect(*hidePreRelWarnConn);
+            hidePreRelWarn->deleteLater();
+        });
+    connect(hidePreRelWarn, &QAction::triggered, [this] {
         m_ui->globalMessageWidget->animatedHide();
         config()->set(Config::Messages_HidePreReleaseWarning, KEEPASSXC_VERSION);
     });
@@ -1382,6 +1380,12 @@ void MainWindow::showEvent(QShowEvent* event)
     // Qt Hack - Prevent white flicker when showing window
     QTimer::singleShot(50, this, [=] { setProperty("windowOpacity", 1.0); });
 #endif
+
+    // Restore geometry and window state only on the first showEvent to prevent issues with minimized tray startup
+    if (!m_windowInformationRestored) {
+        restoreWindowInformation();
+        m_windowInformationRestored = true;
+    }
 }
 
 void MainWindow::hideEvent(QHideEvent* event)
@@ -1537,6 +1541,12 @@ void MainWindow::saveWindowInformation()
         config()->set(Config::GUI_MainWindowGeometry, saveGeometry());
         config()->set(Config::GUI_MainWindowState, saveState());
     }
+}
+
+void MainWindow::restoreWindowInformation()
+{
+    restoreGeometry(config()->get(Config::GUI_MainWindowGeometry).toByteArray());
+    restoreState(config()->get(Config::GUI_MainWindowState).toByteArray());
 }
 
 bool MainWindow::saveLastDatabases()
