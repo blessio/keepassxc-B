@@ -296,13 +296,12 @@ jobs:
 
     - name: 550. ++++++ Windows ONLY // ***** Configure CMake
       if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
-      # If manifest mode is not OFF it will always make a vcpkg install which nullifies the idea of caching
       run: >
         New-Item -Path  ${{ steps.strings.outputs.build-sub-dir }} -ItemType Directory -Force    && 
         cd              ${{ steps.strings.outputs.build-sub-dir }} &&
         cmake -DWITH_XC_ALL=ON -DWITH_GUI_TESTS=ON 
         -DVCPKG_MANIFEST_MODE=ON 
-        -DCMAKE_SYSTEM_VERSION=${{ steps.strings.outputs.build-winsdk }} 
+        -DCMAKE_SYSTEM_VERSION="${{ steps.strings.outputs.build-winsdk }}" 
         -DCMAKE_TOOLCHAIN_FILE=${{ env.VCPKG_ROOT }}\scripts\buildsystems\vcpkg.cmake 
         -DVCPKG_TARGET_TRIPLET=${{ matrix.config.vcpkg_triplet}}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
