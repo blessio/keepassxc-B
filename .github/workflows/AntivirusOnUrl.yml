@@ -133,11 +133,11 @@ jobs:
 
           if [ "$ALL_CLEAN" = "false" ]; then
               echo "Warning: Found results that are not clean!"
-              echo -e " - 🔴 Some THREADS DETECTED. See detailed json included in log" >> $GITHUB_STEP_SUMMARY
+              echo -e " - 🔴 Some THREATS DETECTED. See detailed json included in log" >> $GITHUB_STEP_SUMMARY
               exit 1 ### see json for errors
           else
               echo "All results are 'clean' or 'unrated'." >> $GITHUB_STEP_SUMMARY
-              echo -e " - 🟢  NO THREADS DETECTED " >> $GITHUB_STEP_SUMMARY
+              echo -e " - 🟢  NO THREATS DETECTED " >> $GITHUB_STEP_SUMMARY
           fi
 
       # - 🟢 represents a green circle.
