@@ -53,6 +53,13 @@ jobs:
           vcpkg_triplet: x64-osx-dynamic-release
           github-binarycache: true
 
+    env:
+      THECELLAR: "UNDEFINED THECELLAR"
+      VCPKG_ROOT: "UNDEFINED VCPKG_ROOT"
+      VCPKG_PREROOT: "UNDEFINED VCPKG_PREROOT"
+      VCPKG_SUBINSTALL: "UNDEFINED VCPKG_SUBINSTALL"
+      BUILD_DOCS: "ON" # By default build docs
+
     steps:
     ###################################
       
@@ -69,7 +76,7 @@ jobs:
         echo "build-root-vcpkg-dir=_v"  >> "$GITHUB_OUTPUT"
         echo "build-winsdk=10.0.26100" >> "$GITHUB_OUTPUT"
         echo "FORCE_JAVASCRIPT_ACTIONS_TO_NODE20=true"  >> "$GITHUB_OUTPUT"
-        echo "bld-var-str=${{ matrix.build_type }}-BLD_ON_${{ matrix.config.os }}_${{  matrix.config.vcpkg_triplet }}_${{ steps.generate-uuid.outputs.uuid }}" >> "$GITHUB_OUTPUT"
+        echo "bld-var-str=${{ matrix.build_type }}-BLD_ON_${{ matrix.config.os }}_${{  matrix.config.vcpkg_triplet }}" >> "$GITHUB_OUTPUT"
         echo "bld-humanreadable-str=${{ matrix.config.vcpkg_triplet }} (built on: ${{ matrix.config.os }} of type: ${{ matrix.build_type }})" >> "$GITHUB_OUTPUT"
         echo "TRIPLET IS ${{ matrix.config.vcpkg_triplet }}"
         echo "Running on ${{ matrix.config.os }}"
