@@ -127,8 +127,11 @@ jobs:
       if: ${{ startsWith( matrix.config.os , 'macos-13' ) }}
       continue-on-error: true   # overwrite doc building --> on old mac it requires re-building the complete chain
       run: | 
+        # overwrite the environment variables from modern MacOS to make it work on old MacOS
         echo "BUILD_DOCS=OFF" >> "$GITHUB_ENV"
         echo "THECELLAR=/usr/local/Cellar" >> "$GITHUB_ENV"
+        # install the needed tools "manually"
+        brew install autoconf autoconf-archive automake libtool
 
     - name: 130. Windows Only // Set Up windows SDK and Ruby and the needed gem of asciidoctor 
       if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
