@@ -49,7 +49,7 @@ jobs:
         - os: macos-latest
           vcpkg_triplet: arm64-osx-dynamic-release
           github-binarycache: true
-        - os: macos-13
+        - os: macos-15-intel
           vcpkg_triplet: x64-osx-dynamic-release
           github-binarycache: true
 
@@ -124,7 +124,7 @@ jobs:
         sw_vers
  
     - name: 115. ***** MacOS-13 ONLY // version and environment
-      if: ${{ startsWith( matrix.config.os , 'macos-13' ) }}
+      if: ${{ startsWith( matrix.config.os , 'macos-15' ) }}
       continue-on-error: true   # overwrite doc building --> on old mac it requires re-building the complete chain
       run: | 
         # overwrite the environment variables from modern MacOS to make it work on old MacOS
@@ -155,19 +155,19 @@ jobs:
         libxi-dev libxtst-dev  libqt5x11extras5-dev
     
     - name: 172.-2  *****  MACOS-13 Restore cache Homebrew cellar on MacOS
-      if:  ${{ startsWith( matrix.config.os , 'macos-13' ) }}
+      if:  ${{ startsWith( matrix.config.os , 'macos-15' ) }}
       id: cache-homebrew
       uses: actions/cache/restore@v4
       with:
         path: ${{ env.THECELLAR }} # /usr/local/Cellar
-        key: homebrew-${{ matrix.config.os }}-cellar-12
+        key: homebrew-${{ matrix.config.os }}-cellar-15
 
     - name: 172.  >>>>>>  MACOS Only asciidoctor and other patch PKGs
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
       run: |
         if [[ "$BUILD_DOCS" == "ON" ]]; then 
-          echo "=== ASCIIDoctor installation may take more than 6 hrs on MacOS-13 ===" 
+          echo "=== ASCIIDoctor installation may take more than 6 hrs on MacOS-13 OR 15 ===" 
           brew install asciidoctor || brew link asciidoctor
           echo "=========================================================" 
         else
@@ -179,22 +179,22 @@ jobs:
         echo " **********************************************************************************************"
         brew install autoconf autoconf-archive automake libtool
 
-    - name: 173.0 ***** MACOS-13 ONLY uninstall python BY FORCE so that the correct one can be (re)installed
-      if: ${{ startsWith( matrix.config.os , 'macos-13' ) }}
+    - name: 173.0 ***** MACOS-13 OR 15 ONLY uninstall python BY FORCE so that the correct one can be (re)installed
+      if: ${{ startsWith( matrix.config.os , 'macos-15' ) }}
       continue-on-error: true
       run: | 
         brew uninstall --ignore-dependencies python 
         brew uninstall --ignore-dependencies python3
 
-    - name: 173.2.1 ***** MACOS-13  (re)install python
-      if: ${{ startsWith( matrix.config.os , 'macos-13' ) }}
+    - name: 173.2.1 ***** MACOS-13 OR 15 (re)install python
+      if: ${{ startsWith( matrix.config.os , 'macos-15' ) }}
       continue-on-error: true
       run: | 
         brew install python3 || brew reinstall python3
         brew install python-setuptools  
 
-    - name: 173.2.5 ***** MACOS-13 Delete a specific cache via API so that an update can be forced - suggested by Gemini AI 2025-10-12
-      if: ${{ startsWith( matrix.config.os , 'macos-13' ) }}
+    - name: 173.2.5 ***** MACOS-13 OR 15 Delete a specific cache via API so that an update can be forced - suggested by Gemini AI 2025-10-12
+      if: ${{ startsWith( matrix.config.os , 'macos-15' ) }}
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         CACHE_KEY: ${{ steps.cache-homebrew.outputs.cache-primary-key }}
@@ -213,11 +213,11 @@ jobs:
           fi
 
     - name: 173.2.5 ***** MacOS-13 Save updated cache Homebrew cellar on MacOS-13
-      if:  ${{ startsWith( matrix.config.os , 'macos-13' )  }}
+      if:  ${{ startsWith( matrix.config.os , 'macos-15' )  }}
       uses: actions/cache/save@v4
       with:
         path: ${{ env.THECELLAR }} # path: /usr/local/Cellar
-        key: homebrew-${{ matrix.config.os }}-cellar-12
+        key: homebrew-${{ matrix.config.os }}-cellar-15
 
     - name: 173.5 check python version
       continue-on-error: true
