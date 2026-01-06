@@ -15,9 +15,9 @@ on:
     - cron: 7 3 * * FRI
     # runs every Friday 3:07AM 
   push:
-    branches: [ "devbleo*", "bleo*" ]
+    branches: [ "dev*", devbleo*", "bleo*" ]
   pull_request:
-    branches: [ "devbleo*", "bleo*" ]
+    branches: [ "dev*", "devbleo*", "bleo*" ]
 
 concurrency:
   # Group runs by the workflow name and the branch or PR number
