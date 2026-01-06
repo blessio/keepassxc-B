@@ -1,0 +1,520 @@
+#################################################
+# File: .github/workflows/bld-test-upload.yml
+# Copyright: 2024 - 2025, Owner of blessio.com
+# License: MIT
+#################################################
+# Used the starter here:
+# See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-single-platform.yml
+# BUILDS KeepasXC 
+#################################################
+
+name: BLD AND TEST MatrixBased-WIN64-UBUNTU-MacOS
+
+on:
+  schedule:
+    - cron: 7 3 * * FRI
+    # runs every Friday 3:07AM 
+  push:
+    branches: [ "devbleo*", "bleo*" ]
+  pull_request:
+    branches: [ "devbleo*", "bleo*" ]
+
+concurrency:
+  # Group runs by the workflow name and the branch or PR number
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # wait in-progress runs for the same group
+  cancel-in-progress: false
+
+jobs:
+  build: # BUILD JOB ############################################################################
+    permissions:
+      actions: write
+    timeout-minutes: 600 # 10 hrs should be enough even for MacOS-13 with cold cache
+    if: ${{ github.event_name != 'schedule' || github.ref == 'refs/heads/devbleo3' }}   
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        build_type: [RelWithDebInfo] # [RelWithDebInfo,Release,Debug] practically only this one is needed
+        config:
+        - os: windows-latest 
+          vcpkg_triplet: x64-windows
+          github-binarycache: true
+        - os: ubuntu-latest
+          vcpkg_triplet: x64-linux
+          github-binarycache: true
+        - os: ubuntu-24.04
+          vcpkg_triplet: x64-linux
+          github-binarycache: true   
+        - os: macos-latest
+          vcpkg_triplet: arm64-osx-dynamic-release
+          github-binarycache: true
+        - os: macos-15-intel
+          vcpkg_triplet: x64-osx-dynamic-release
+          github-binarycache: true
+
+    env:
+      THECELLAR: "UNDEFINED THECELLAR"
+      VCPKG_ROOT: "UNDEFINED VCPKG_ROOT"
+      VCPKG_PREROOT: "UNDEFINED VCPKG_PREROOT"
+      VCPKG_SUBINSTALL: "UNDEFINED VCPKG_SUBINSTALL"
+      BUILD_DOCS: "ON" # By default build docs
+
+    steps:
+    ###################################
+      
+    - name: 100. Set reusable strings and Environment for actions
+      # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
+      id: strings
+      shell: bash
+      run: |
+        echo "build-sub-dir=build" >> "$GITHUB_OUTPUT" 
+        echo "cache-key-kp=k_${{ github.ref }}_${{ matrix.build_type }}_${{ matrix.config.os }}_${{ matrix.config.vcpkg_triplet }}" >> "$GITHUB_OUTPUT"
+        echo "cache-key-kp=k_${{ github.ref }}_${{ matrix.build_type }}_${{ matrix.config.os }}_${{ matrix.config.vcpkg_triplet }}" >> "$GITHUB_ENV"
+        echo "BUILD_DOCS=ON" >> "$GITHUB_ENV"
+        echo "VCPKG_CLEAN_AFTER_BUILD=buildtrees,downloads" >> "$GITHUB_ENV"
+        echo "build-root-vcpkg-dir=_v"  >> "$GITHUB_OUTPUT"
+        echo "build-winsdk=10.0.26100" >> "$GITHUB_OUTPUT"
+        echo "FORCE_JAVASCRIPT_ACTIONS_TO_NODE20=true"  >> "$GITHUB_OUTPUT"
+        echo "bld-var-str=${{ matrix.build_type }}-BLD_ON_${{ matrix.config.os }}_${{  matrix.config.vcpkg_triplet }}" >> "$GITHUB_OUTPUT"
+        echo "bld-humanreadable-str=${{ matrix.config.vcpkg_triplet }} (built on: ${{ matrix.config.os }} of type: ${{ matrix.build_type }})" >> "$GITHUB_OUTPUT"
+        echo "TRIPLET IS ${{ matrix.config.vcpkg_triplet }}"
+        echo "Running on ${{ matrix.config.os }}"
+
+    - name: 110. Generate UUID and specific environment variables
+      id: generate-uuid
+      shell: bash
+      run: |
+        if [[ "$RUNNER_OS" == "Windows" ]]; then 
+          echo "uuid=$(powershell -Command '[guid]::NewGuid().ToString()')" >> "$GITHUB_OUTPUT" 
+        else
+          echo "uuid=$(uuidgen)" >> "$GITHUB_OUTPUT"
+        fi
+
+    # PUT all Windows specific ENV here using poweshell to be native
+    - name: 111. ++++++ Windows ONLY // version and environment
+      if: ${{ startsWith( matrix.config.os , 'windows' ) }}
+      shell: pwsh
+      run: | 
+        echo "*********************   SYSTEM VERSION   ******************************"
+        systeminfo
+        echo "********************* END SYSTEM VERSION ******************************"
+        "VCPKG_PREROOT=${{ github.workspace }}" | Out-File -FilePath $env:GITHUB_ENV -Append
+        "VCPKG_ROOT=${{ github.workspace }}\${{ steps.strings.outputs.build-root-vcpkg-dir }}" | Out-File -FilePath $env:GITHUB_ENV -Append
+        "VCPKG_INSTALLATION_ROOT=${{ github.workspace }}\${{ steps.strings.outputs.build-root-vcpkg-dir }}" | Out-File -FilePath $env:GITHUB_ENV -Append
+        "VCPKG_SUBINSTALL=${{ github.workspace }}\${{ steps.strings.outputs.build-sub-dir }}\vcpkg_installed" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+    - name: 112. >>>>>>  MacOS ONLY // version and environment
+      if: ${{ startsWith( matrix.config.os , 'macos' ) }}
+      continue-on-error: true
+      run: |
+        echo "*********************   SYSTEM VERSION   ******************************"
+        sw_vers
+        echo "********************* END SYSTEM VERSION ******************************"
+        echo "VCPKG_PREROOT=${{ github.workspace }}" >> "$GITHUB_ENV"   
+        echo "VCPKG_ROOT=${{ github.workspace }}/${{ steps.strings.outputs.build-root-vcpkg-dir }}" >> "$GITHUB_ENV"
+        echo "VCPKG_INSTALLATION_ROOT=${{ github.workspace }}/${{ steps.strings.outputs.build-root-vcpkg-dir }}" >> "$GITHUB_ENV"
+        echo "VCPKG_SUBINSTALL=${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }}/vcpkg_installed" >> "$GITHUB_ENV"
+        echo "THECELLAR=/opt/homebrew/Cellar" >> "$GITHUB_ENV"
+        # Install Homebrew - even if it is already installed to make sure it is the latest version
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" 
+        echo "********************* xcode version ******************************"
+        xcodebuild -version
+        echo "*********************    sw_vers    ******************************"
+        sw_vers
+ 
+    - name: 115. ***** MacOS-13 ONLY // version and environment
+      if: ${{ startsWith( matrix.config.os , 'macos-15' ) }}
+      continue-on-error: true   # overwrite doc building --> on old mac it requires re-building the complete chain
+      run: | 
+        # overwrite the environment variables from modern MacOS to make it work on old MacOS
+        echo "BUILD_DOCS=OFF" >> "$GITHUB_ENV"
+        echo "THECELLAR=/usr/local/Cellar" >> "$GITHUB_ENV"
+        # install the needed tools "manually"
+        brew install autoconf autoconf-archive automake libtool
+
+    - name: 130. Windows Only // Set Up windows SDK and Ruby and the needed gem of asciidoctor 
+      if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
+      run: | 
+        winget install --source winget --exact --id Microsoft.WindowsSDK.${{ steps.strings.outputs.build-winsdk }} --silent
+        winget install RubyInstallerTeam.Ruby.3.2 --accept-package-agreements --accept-source-agreements
+        winget install jqlang.jq # needed later for antivirus scan
+        gem install asciidoctor
+        
+    - name: 150. LINUX Only // Prepare Linux packages that are needed
+      if: ${{ startsWith( matrix.config.os , 'ubuntu' ) }}
+      run: > 
+        echo "*********************   SYSTEM VERSION   ******************************" &&
+        cat /etc/os-release &&
+        echo "********************* END SYSTEM VERSION ******************************" && 
+        sudo apt update -y && 
+        sudo apt install -y build-essential cmake g++ asciidoctor &&
+        sudo apt install -y qtbase5-dev qtbase5-private-dev qttools5-dev qttools5-dev-tools  
+        libqt5svg5-dev libargon2-dev libminizip-dev libbotan-2-dev libqrencode-dev 
+        libkeyutils-dev zlib1g-dev libreadline-dev libpcsclite-dev libusb-1.0-0-dev 
+        libxi-dev libxtst-dev  libqt5x11extras5-dev
+    
+    - name: 172.-2  *****  MACOS-13 Restore cache Homebrew cellar on MacOS
+      if:  ${{ startsWith( matrix.config.os , 'macos-15' ) }}
+      id: cache-homebrew
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{ env.THECELLAR }} # /usr/local/Cellar
+        key: homebrew-${{ matrix.config.os }}-cellar-15
+
+    - name: 172.  >>>>>>  MACOS Only asciidoctor and other patch PKGs
+      if: ${{ startsWith( matrix.config.os , 'macos' ) }}
+      continue-on-error: true
+      run: |
+        if [[ "$BUILD_DOCS" == "ON" ]]; then 
+          echo "=== ASCIIDoctor installation may take more than 6 hrs on MacOS-13 OR 15 ===" 
+          brew install asciidoctor || brew link asciidoctor
+          echo "=========================================================" 
+        else
+          echo "ASCIIDoctor intentionally not installed" 
+        fi
+        echo "  "
+        echo " **********************************************************************************************"
+        echo " *** NOTE: should not be needed after fix of https://github.com/microsoft/vcpkg/issues/48125   "
+        echo " **********************************************************************************************"
+        brew install autoconf autoconf-archive automake libtool
+
+    - name: 173.0 ***** MACOS-13 OR 15 ONLY uninstall python BY FORCE so that the correct one can be (re)installed
+      if: ${{ startsWith( matrix.config.os , 'macos-15' ) }}
+      continue-on-error: true
+      run: | 
+        brew uninstall --ignore-dependencies python 
+        brew uninstall --ignore-dependencies python3
+
+    - name: 173.2.1 ***** MACOS-13 OR 15 (re)install python
+      if: ${{ startsWith( matrix.config.os , 'macos-15' ) }}
+      continue-on-error: true
+      run: | 
+        brew install python3 || brew reinstall python3
+        brew install python-setuptools  
+
+    - name: 173.2.5 ***** MACOS-13 OR 15 Delete a specific cache via API so that an update can be forced - suggested by Gemini AI 2025-10-12
+      if: ${{ startsWith( matrix.config.os , 'macos-15' ) }}
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        CACHE_KEY: ${{ steps.cache-homebrew.outputs.cache-primary-key }}
+      run: |
+          # First, get the list of caches for this branch to find the cache ID
+          # We use jq to parse the JSON response and find the ID for our specific key
+          cache_id=$(gh api "repos/${{ github.repository }}/actions/caches?key=${CACHE_KEY}" | jq '.actions_caches[0].id')
+
+          if [[ -z "$cache_id" || "$cache_id" == "null" ]]; then
+            echo "Cache with key '$CACHE_KEY' not found."
+          else
+            echo "Found cache with key '$CACHE_KEY' and ID '$cache_id'. Deleting it."
+            # Now, issue the DELETE request using the found cache ID
+            gh api --method DELETE "repos/${{ github.repository }}/actions/caches/${cache_id}"
+            echo "Cache deleted."
+          fi
+
+    - name: 173.2.5 ***** MacOS-13 Save updated cache Homebrew cellar on MacOS-13
+      if:  ${{ startsWith( matrix.config.os , 'macos-15' )  }}
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ env.THECELLAR }} # path: /usr/local/Cellar
+        key: homebrew-${{ matrix.config.os }}-cellar-15
+
+    - name: 173.5 check python version
+      continue-on-error: true
+      run: | 
+        python --version
+        echo "*************** which python ****************"
+        which python
+
+        echo "*************** 3 ****************"
+        python3 --version 
+        echo "*************** which python3 ****************"
+        which python3
+
+    - name: 174. >>>>>>  MACOS Only PKGs
+      if: ${{ startsWith( matrix.config.os , 'macos' ) }}
+      continue-on-error: true
+      run: | 
+        # brew install pkg-config vcpkg || (true)
+        brew install pkg-config || (true)
+        echo "**********************************   bre link --overwrite vcpkg "
+        # brew link --overwrite vcpkg
+
+    - name: 175. PRINT Environment Variables ( 1 ) on Windows
+      if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
+      run: |
+        echo "===== ALL ENV START =====" 
+        Get-ChildItem Env: | Sort-Object Name
+        echo "===== ALL ENV END =====" 
+        echo "************* execute ls ****************"
+        ls 
+
+    - name: 176. >>>>>> ++++++ PRINT Environment Variables ( 2 ) on NON-Windows
+      if: ${{ ! startsWith( matrix.config.os  , 'windows' ) }}
+      run: |
+        echo "Environment printed" 
+        echo "===== ALL ENV START =====" 
+        printenv | sort 
+        echo "===== ALL ENV END   =====" 
+        echo "List of files and folders in buildtype subdir" 
+        ls 
+
+    - name: 177. >>>>>> ++++++ Read Environment
+      if:  ${{ startsWith( matrix.config.os , 'macos' )  || startsWith( matrix.config.os  , 'windows' ) }}
+      run: |
+        echo ${{ env.VCPKG_ROOT }}
+        echo ${{ env.VCPKG_PREROOT }}
+
+    - name: 250. get the Source of the project from Git
+      uses: actions/checkout@v4
+
+    - name: 255. >>>>>> ++++++ Clone vcpkg as recommended not by a command
+      if:  ${{ startsWith( matrix.config.os , 'macos' )  ||  startsWith( matrix.config.os , 'windows' ) }}
+      uses: actions/checkout@v4
+      with:
+        path: ${{ env.VCPKG_ROOT }}
+        repository: microsoft/vcpkg
+        fetch-depth: 0
+
+    - name: 256. >>>>>> ++++++ set-binarycache-variable
+      if:  ${{ startsWith( matrix.config.os , 'macos' )  || startsWith( matrix.config.os  , 'windows' ) }}
+      shell: bash
+      run: |
+        echo VCPKG_DEFAULT_BINARY_CACHE="${{ env.VCPKG_ROOT }}/vcpkg_cache" >> $GITHUB_ENV
+        mkdir -p "${{ env.VCPKG_ROOT }}/vcpkg_cache"
+
+    - name: 261. >>>>>> ++++++ Bootstrap VCPKG MACOS
+      if: ${{ startsWith( matrix.config.os , 'macos' ) }}
+      working-directory: ${{ env.VCPKG_ROOT }}
+      run: |
+        ./bootstrap-vcpkg.sh
+
+    - name: 260. ++++++ see what is fetched
+      if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
+      working-directory: ${{ env.VCPKG_ROOT }}
+      run: |
+        ./bootstrap-vcpkg.bat
+
+    - name: 290. Cache vcpkg install - files restore
+      id: cache_vcpkg1
+      uses: actions/cache/restore@v4
+      with:
+        path: | 
+          ${{ env.VCPKG_ROOT }}/vcpkg_cache
+          ${{ env.VCPKG_SUBINSTALL }}
+        key: ${{ steps.strings.outputs.cache-key-kp }}-${{ hashFiles('vcpkg*.json') }}
+
+    - name: 550. ++++++ Windows ONLY // ***** Configure CMake
+      if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
+      run: >
+        New-Item -Path  ${{ steps.strings.outputs.build-sub-dir }} -ItemType Directory -Force    && 
+        cd              ${{ steps.strings.outputs.build-sub-dir }} &&
+        cmake -DWITH_XC_ALL=ON -DWITH_GUI_TESTS=ON 
+        -DVCPKG_MANIFEST_MODE=ON 
+        -DCMAKE_SYSTEM_VERSION="${{ steps.strings.outputs.build-winsdk }}" 
+        -DCMAKE_TOOLCHAIN_FILE=${{ env.VCPKG_ROOT }}\scripts\buildsystems\vcpkg.cmake 
+        -DVCPKG_TARGET_TRIPLET=${{ matrix.config.vcpkg_triplet}}
+        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        ..
+
+    - name: 555. >>>>>> MacOS ONLY // ***** Configure CMake
+      if: ${{ startsWith( matrix.config.os  , 'macos' ) }}
+      # If manifest mode is not OFF it will always make a vcpkg install which nullifies the idea of caching
+      run: >
+        mkdir -p ${{ steps.strings.outputs.build-sub-dir }}  && 
+        cd       ${{ steps.strings.outputs.build-sub-dir }}  &&
+        cmake -DWITH_XC_ALL=ON -DWITH_GUI_TESTS=ON 
+        -DWITH_XC_DOCS=${{ env.BUILD_DOCS }} 
+        -DVCPKG_MANIFEST_MODE=ON 
+        -DCMAKE_TOOLCHAIN_FILE=${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake 
+        -DVCPKG_TARGET_TRIPLET=${{ matrix.config.vcpkg_triplet }}
+        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        -G Ninja
+        ..
+        
+    - name: 560. LINUX ONLY // Configure CMake
+      if: ${{ startsWith( matrix.config.os  , 'ubuntu' ) }}
+      run: >
+        mkdir -p ${{ steps.strings.outputs.build-sub-dir }}  && 
+        cd       ${{ steps.strings.outputs.build-sub-dir }}  &&
+        cmake -DWITH_XC_ALL=ON -DWITH_GUI_TESTS=ON 
+        -DVCPKG_TARGET_TRIPLET=${{ matrix.config.vcpkg_triplet }}
+        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        ..
+
+    - name: 565. Delete a specific cache via API so that an update can be forced - suggested by Gemini AI 2025-10-12
+      shell: bash
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        CACHE_KEY: ${{ steps.cache_vcpkg1.outputs.cache-primary-key }}
+      run: |
+          # First, get the list of caches for this branch to find the cache ID
+          # We use jq to parse the JSON response and find the ID for our specific key
+          cache_id=$(gh api "repos/${{ github.repository }}/actions/caches?key=${CACHE_KEY}" | jq '.actions_caches[0].id')
+
+          if [[ -z "$cache_id" || "$cache_id" == "null" ]]; then
+            echo "Cache with key '$CACHE_KEY' not found."
+          else
+            echo "Found cache with key '$CACHE_KEY' and ID '$cache_id'. Deleting it."
+            # Now, issue the DELETE request using the found cache ID
+            gh api --method DELETE "repos/${{ github.repository }}/actions/caches/${cache_id}"
+            echo "Cache deleted."
+          fi
+
+    - name: 570. Save updated cache
+      uses: actions/cache/save@v4
+      if: ${{ always() }}
+      with:
+        path: |
+          ${{ env.VCPKG_ROOT }}/vcpkg_cache
+          ${{ env.VCPKG_SUBINSTALL }}
+        key: ${{ steps.strings.outputs.cache-key-kp }}-${{ hashFiles('vcpkg*.json') }}
+
+    - name: 600. ++++++ Windows Check DiskSpace
+      if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
+      run: > 
+        Get-PSDrive -PSProvider FileSystem | Select-Object Name, @{Name="Used (GB)";Expression={[math]::round($_.Used/1GB,2)}},
+        @{Name="Free (GB)";Expression={[math]::round($_.Free/1GB,2)}}
+
+    - name: 650. Build
+      # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
+      working-directory: ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }} 
+      run: |
+        cmake --build . --config ${{ matrix.build_type }}  
+
+    # Prep for the tests
+    - name: 700. ++++++ Windows Only // ADD paths to some special DLLs needed for the testing 
+      if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
+      run: |
+        $env:PATH="$env:PATH;${{ github.workspace }}\${{ steps.strings.outputs.build-sub-dir }}\src\autotype\test\${{ matrix.build_type }}"
+        echo "PATH=$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+    - name: 710. Linux ONLY // ADD paths to TESTS and prepare GUI Tests, print environment
+      if: ${{ startsWith( matrix.config.os  , 'ubuntu' ) }}
+      run: |
+        # echo "export PATH=$PATH:${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }}/src/autotype/test/${{ matrix.build_type }}" >> ~/.bashrc
+        echo "PATH=$PATH:${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }}/src/autotype/test/${{ matrix.build_type }}" >> $GITHUB_ENV
+        # sudo apt-get install xvfb # is already installed on GitHUB Linux runner
+        Xvfb :99 -ac &
+        # echo "export DISPLAY=:99" >> ~/.bashrc
+        echo "DISPLAY=:99" >> $GITHUB_ENV
+        
+    - name: 730. PRINT Environment Variables on Windows
+      if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
+      run: |
+        Get-ChildItem Env: | Sort-Object Name
+        cd "${{ github.workspace }}\${{ steps.strings.outputs.build-sub-dir }}\src\autotype\test\${{ matrix.build_type }}"
+        ls 
+
+    - name: 731. PRINT Environment Variables on NON-Windows
+      if: ${{ ! startsWith( matrix.config.os  , 'windows' ) }}
+      run: |
+        echo "Environment printed" 
+        echo "===== ALL ENV START =====" 
+        printenv | sort 
+        echo "===== ALL ENV END   =====" 
+        echo "List of files and folders in buildtype subdir" 
+        ls 
+    # END OF PREP for TEST
+
+    - name: 750. AUTOMATIC TESTS
+      working-directory: ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }} 
+      # Execute tests defined by the CMake configuration. Note that --build-config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
+      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
+      shell: bash
+      continue-on-error: true
+      run: > # this sequence is executed so that the result can be both parsed in a later step (step_summary) and visible in the step itself
+        ctest --build-config ${{ matrix.build_type }} > ctest-pass1.txt && 
+        cat ctest-pass1.txt ||
+        ctest --build-config ${{ matrix.build_type }} --rerun-failed --output-on-failure > ctest-pass2-results-of-failedonly.txt ||
+        cat  ctest-pass1.txt  ctest-pass2-results-of-failedonly.txt
+        
+    - name: 760. Install RUN on any host with bash
+      working-directory: ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }} 
+      # use cmake install to prepare the installable version of the build so that it can be used to upload as artifacts
+      shell: bash
+      continue-on-error: true
+      run: > 
+        cmake --install  ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }} 
+        --config ${{ matrix.build_type }}  
+        --prefix ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }}/_install  -v 
+  
+    - name: 770. ++++++ WINDOWS ONLY // Upload build Executables 
+      if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
+      id: a-wexecutables
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-win-executables-${{ steps.strings.outputs.bld-var-str }}
+        path: |
+          ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }}/src/${{ matrix.build_type }} 
+
+    - name: 780. ++++++ NON-WINDOWS // Upload build Executables 
+      if: ${{ ! startsWith( matrix.config.os  , 'windows' ) }}
+      id: a-executables
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-non-win-executables-${{ steps.strings.outputs.bld-var-str }}
+        path: |
+          ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }}/_install
+
+    - name: 785.ANTIVIRUS SCAN TRIGGER - THERE MAY BE MALWARE IN BUILT BINARIES because of the wide variety of 3rd party libraries used over VCPKG
+      working-directory: ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }} 
+      shell: bash
+      id: ANTIVIRUS_SCAN
+      continue-on-error: true
+      env:
+        BIN_DOWNLOADS: ${{ steps.a-wexecutables.outputs.artifact-url }}${{ steps.a-executables.outputs.artifact-url }}
+        GH_EVTRIGGER: ${{ secrets.AV_WRKFLOW_TRIGGER }}
+      run: |
+        echo "BIN_DOWNLD=${{ env.BIN_DOWNLOADS }}"   >> $GITHUB_OUTPUT
+        # https://docs.github.com/en/rest/actions/workflows?apiVersion=2022-11-28#create-a-workflow-dispatch-event
+
+        RESPONSE=$( curl -L \
+                    -X POST \
+                    -H "Accept: application/vnd.github+json" \
+                    -H "Authorization: Bearer $GH_EVTRIGGER" \
+                    -H "X-GitHub-Api-Version: 2022-11-28"    \
+                    "https://api.github.com/repos/${{ github.repository }}/actions/workflows/AntivirusOnUrl.yml/dispatches"                                                    \
+                    -d '{"ref":"${{ github.ref_name }}","inputs":{"url2scan":"${{ env.BIN_DOWNLOADS }}","submitted_by":"${{ steps.strings.outputs.bld-humanreadable-str }}"}}' \
+                 )
+        echo "### response from triggering Antivirus scan workflow is: (may be empty) "
+        echo "$RESPONSE" | jq .
+
+    - name: 790. Upload build Test Result Logs
+      id: a-TestLog
+      uses: actions/upload-artifact@v4
+      with:
+        name: Test-Logs ${{ steps.strings.outputs.bld-var-str }}
+        if-no-files-found: ignore # Last file will be present only if there are failed tests
+        path: |
+          ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }}/Testing/Temporary
+          ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }}/ctest-pass1.txt
+          ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }}/ctest-pass2-results-of-failedonly.txt 
+          ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }}/antivirus-scan-result.json
+          
+    - name: 800. SUMMARY PAGE UPDATE
+      working-directory: ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }} 
+      shell: bash
+      continue-on-error: true
+      run: |
+        echo "### ${{ steps.strings.outputs.bld-humanreadable-str }}" >> $GITHUB_STEP_SUMMARY
+        echo " - Download built files from: ${{ steps.ANTIVIRUS_SCAN.outputs.BIN_DOWNLD }}" >>  $GITHUB_STEP_SUMMARY
+        echo "You can check detailed antivirus scan report downloaded with test reports." >> $GITHUB_STEP_SUMMARY 
+        if [ -f ctest-pass2-results-of-failedonly.txt ]; then
+          echo -e " - 🟡 Some test(s) **failed**. Namely: " >> $GITHUB_STEP_SUMMARY
+          # echo all lines from file ctest-pass2-results-of-failedonly.txt starting from the line that contains the string "The following tests FAILED:"
+          awk '/The following tests FAILED:/ {flag=1; next} /Errors while running CTest/ {flag=0} flag {print "    " $0}' ctest-pass2-results-of-failedonly.txt >> $GITHUB_STEP_SUMMARY            
+          echo "    Download the test results to check why. Look into \`ctest-pass2-results-of-failedonly.txt\` file in Test-Result logs, which  " >> $GITHUB_STEP_SUMMARY
+        else
+          echo -e " - 🟢 All tests **passed**. Test-Result logs " >> $GITHUB_STEP_SUMMARY
+        fi
+        echo -e "are here: ${{ steps.a-TestLog.outputs.artifact-url }}." >> $GITHUB_STEP_SUMMARY
+      
+      # - `\u26A0` represents the warning emoji  ⚠️.
+      # - `\u2705` represents the check mark emoji ✅.
+      # - `\u274C` represents the cross mark emoji `❌`. 
+      # - 🟢 represents a green circle.
+      # - 🟡 represents a yellow circle.
+      # - 🔴 represents a red circle.
+
+
