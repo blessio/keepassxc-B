@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2023 KeePassXC Team <team@keepassxc.org>
+ *  Copyright (C) 2026 KeePassXC Team <team@keepassxc.org>
  *  Copyright (C) 2010 Felix Geyer <debfx@fobos.de>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -982,6 +982,9 @@ void EditEntryWidget::setForms(Entry* entry, bool restore)
         m_mainUi->notesEdit->setFont(Font::defaultFont());
     }
 
+    m_mainUi->notesEdit->setTabStopDistance(
+        QFontMetrics(m_mainUi->notesEdit->font()).horizontalAdvance(QString(4, ' ')));
+
     m_advancedUi->attachmentsWidget->setReadOnly(m_history);
     m_advancedUi->addAttributeButton->setEnabled(!m_history);
     m_advancedUi->editAttributeButton->setEnabled(false);
@@ -1003,6 +1006,7 @@ void EditEntryWidget::setForms(Entry* entry, bool restore)
     m_autoTypeUi->windowSequenceEdit->setReadOnly(m_history);
     m_historyWidget->setEnabled(!m_history);
 
+    m_mainUi->urlEdit->setEntry(entry);
     m_mainUi->titleEdit->setText(entry->title());
     m_mainUi->usernameComboBox->lineEdit()->setText(entry->username());
     m_mainUi->urlEdit->setText(entry->url());
@@ -1573,7 +1577,7 @@ void EditEntryWidget::updateAutoTypeEnabled()
     m_autoTypeUi->inheritSequenceButton->setEnabled(!m_history && autoTypeEnabled);
     m_autoTypeUi->customSequenceButton->setEnabled(!m_history && autoTypeEnabled);
     m_autoTypeUi->sequenceEdit->setEnabled(autoTypeEnabled && m_autoTypeUi->customSequenceButton->isChecked());
-    m_autoTypeUi->openHelpButton->setEnabled(autoTypeEnabled && m_autoTypeUi->customSequenceButton->isChecked());
+    m_autoTypeUi->openHelpButton->setEnabled(autoTypeEnabled);
 
     m_autoTypeUi->assocView->setEnabled(autoTypeEnabled);
     m_autoTypeUi->assocAddButton->setEnabled(!m_history);
