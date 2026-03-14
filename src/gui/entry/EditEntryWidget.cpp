@@ -350,25 +350,31 @@ void EditEntryWidget::updateBrowser()
         return;
     }
 
+    auto changeValue = [&](const QString& option, const bool newValue) {
+        // If value is false and no customData exists, make no edits
+        if (!m_customData->hasKey(option) && !newValue) {
+            return;
+        }
+
+        // If customData exists, set the value
+        m_customData->set(option, (newValue ? TRUE_STR : FALSE_STR));
+    };
+
     // Only update the custom data if no group level settings are used (checkbox is enabled)
     if (m_browserUi->hideEntryCheckbox->isEnabled()) {
-        auto hide = m_browserUi->hideEntryCheckbox->isChecked();
-        m_customData->set(BrowserService::OPTION_HIDE_ENTRY, (hide ? TRUE_STR : FALSE_STR));
+        changeValue(BrowserService::OPTION_HIDE_ENTRY, m_browserUi->hideEntryCheckbox->isChecked());
     }
 
     if (m_browserUi->skipAutoSubmitCheckbox->isEnabled()) {
-        auto skip = m_browserUi->skipAutoSubmitCheckbox->isChecked();
-        m_customData->set(BrowserService::OPTION_SKIP_AUTO_SUBMIT, (skip ? TRUE_STR : FALSE_STR));
+        changeValue(BrowserService::OPTION_SKIP_AUTO_SUBMIT, m_browserUi->skipAutoSubmitCheckbox->isChecked());
     }
 
     if (m_browserUi->onlyHttpAuthCheckbox->isEnabled()) {
-        auto onlyHttpAuth = m_browserUi->onlyHttpAuthCheckbox->isChecked();
-        m_customData->set(BrowserService::OPTION_ONLY_HTTP_AUTH, (onlyHttpAuth ? TRUE_STR : FALSE_STR));
+        changeValue(BrowserService::OPTION_ONLY_HTTP_AUTH, m_browserUi->onlyHttpAuthCheckbox->isChecked());
     }
 
     if (m_browserUi->notHttpAuthCheckbox->isEnabled()) {
-        auto notHttpAuth = m_browserUi->notHttpAuthCheckbox->isChecked();
-        m_customData->set(BrowserService::OPTION_NOT_HTTP_AUTH, (notHttpAuth ? TRUE_STR : FALSE_STR));
+        changeValue(BrowserService::OPTION_NOT_HTTP_AUTH, m_browserUi->notHttpAuthCheckbox->isChecked());
     }
 }
 
@@ -1080,55 +1086,26 @@ void EditEntryWidget::setForms(Entry* entry, bool restore)
             setupBrowser();
         }
 
-        auto hideEntriesCheckBoxEnabled = true;
-        auto skipAutoSubmitCheckBoxEnabled = true;
-        auto onlyHttpAuthCheckBoxEnabled = true;
-        auto notHttpAuthCheckBoxEnabled = true;
-        auto hideEntries = false;
-        auto skipAutoSubmit = false;
-        auto onlyHttpAuth = false;
-        auto notHttpAuth = false;
-
         const auto group = m_entry->group();
-        if (group) {
-            hideEntries = group->resolveCustomDataTriState(BrowserService::OPTION_HIDE_ENTRY) == Group::Enable;
-            skipAutoSubmit = group->resolveCustomDataTriState(BrowserService::OPTION_SKIP_AUTO_SUBMIT) == Group::Enable;
-            onlyHttpAuth = group->resolveCustomDataTriState(BrowserService::OPTION_ONLY_HTTP_AUTH) == Group::Enable;
-            notHttpAuth = group->resolveCustomDataTriState(BrowserService::OPTION_NOT_HTTP_AUTH) == Group::Enable;
+        m_browserUi->messageWidget->showMessage(
+            tr("Some Browser Integration settings are overridden by group settings."), MessageWidget::Information);
+        m_browserUi->messageWidget->setVisible(false);
 
-            hideEntriesCheckBoxEnabled =
-                group->resolveCustomDataTriState(BrowserService::OPTION_HIDE_ENTRY) == Group::Inherit;
-            skipAutoSubmitCheckBoxEnabled =
-                group->resolveCustomDataTriState(BrowserService::OPTION_SKIP_AUTO_SUBMIT) == Group::Inherit;
-            onlyHttpAuthCheckBoxEnabled =
-                group->resolveCustomDataTriState(BrowserService::OPTION_ONLY_HTTP_AUTH) == Group::Inherit;
-            notHttpAuthCheckBoxEnabled =
-                group->resolveCustomDataTriState(BrowserService::OPTION_NOT_HTTP_AUTH) == Group::Inherit;
-        }
+        auto updateCheckBoxValue = [&](QCheckBox* checkBox, const QString& option) {
+            const auto optionEnabledInGroup = group ? group->resolveBrowserOptionEnabled(option) : false;
+            const auto optionInherited = group ? group->resolveCustomDataTriState(option) == Group::Inherit : true;
 
-        // Show information about group level settings
-        if (!hideEntriesCheckBoxEnabled || !skipAutoSubmitCheckBoxEnabled || !onlyHttpAuthCheckBoxEnabled
-            || !notHttpAuthCheckBoxEnabled) {
-            m_browserUi->messageWidget->showMessage(
-                tr("Some Browser Integration settings are overridden by group settings."), MessageWidget::Information);
-            m_browserUi->messageWidget->setVisible(true);
-        }
+            if (!optionInherited) {
+                m_browserUi->messageWidget->setVisible(true);
+            }
 
-        // Disable checkboxes based on group level settings
-        updateBrowserIntegrationCheckbox(
-            m_browserUi->hideEntryCheckbox, hideEntriesCheckBoxEnabled, hideEntries, BrowserService::OPTION_HIDE_ENTRY);
-        updateBrowserIntegrationCheckbox(m_browserUi->skipAutoSubmitCheckbox,
-                                         skipAutoSubmitCheckBoxEnabled,
-                                         skipAutoSubmit,
-                                         BrowserService::OPTION_SKIP_AUTO_SUBMIT);
-        updateBrowserIntegrationCheckbox(m_browserUi->onlyHttpAuthCheckbox,
-                                         onlyHttpAuthCheckBoxEnabled,
-                                         onlyHttpAuth,
-                                         BrowserService::OPTION_ONLY_HTTP_AUTH);
-        updateBrowserIntegrationCheckbox(m_browserUi->notHttpAuthCheckbox,
-                                         notHttpAuthCheckBoxEnabled,
-                                         notHttpAuth,
-                                         BrowserService::OPTION_NOT_HTTP_AUTH);
+            updateBrowserIntegrationCheckbox(checkBox, optionInherited, optionEnabledInGroup, option);
+        };
+
+        updateCheckBoxValue(m_browserUi->hideEntryCheckbox, BrowserService::OPTION_HIDE_ENTRY);
+        updateCheckBoxValue(m_browserUi->skipAutoSubmitCheckbox, BrowserService::OPTION_SKIP_AUTO_SUBMIT);
+        updateCheckBoxValue(m_browserUi->onlyHttpAuthCheckbox, BrowserService::OPTION_ONLY_HTTP_AUTH);
+        updateCheckBoxValue(m_browserUi->notHttpAuthCheckbox, BrowserService::OPTION_NOT_HTTP_AUTH);
 
         m_browserUi->addURLButton->setEnabled(!m_history);
         m_browserUi->removeURLButton->setEnabled(false);
