@@ -972,6 +972,7 @@ class BuildSrc(Command):
             tmp_comp = tmp_export.with_suffix('.tar.xz')
             with lzma.open(tmp_comp, 'wb', preset=6) as f:
                 f.write(tmp_export.read_bytes())
+            output_file.parent.mkdir(parents=True, exist_ok=True)
             tmp_comp.rename(output_file)
 
 
