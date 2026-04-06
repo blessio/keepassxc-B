@@ -157,7 +157,7 @@ jobs:
     - name: 172.-2  *****  MACOS-13 Restore cache Homebrew cellar on MacOS
       if:  ${{ startsWith( matrix.config.os , 'macos-15' ) }}
       id: cache-homebrew
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@v5
       with:
         path: ${{ env.THECELLAR }} # /usr/local/Cellar
         key: homebrew-${{ matrix.config.os }}-cellar-15
@@ -214,7 +214,7 @@ jobs:
 
     - name: 173.2.5 ***** MacOS-13 Save updated cache Homebrew cellar on MacOS-13
       if:  ${{ startsWith( matrix.config.os , 'macos-15' )  }}
-      uses: actions/cache/save@v4
+      uses: actions/cache/save@v5
       with:
         path: ${{ env.THECELLAR }} # path: /usr/local/Cellar
         key: homebrew-${{ matrix.config.os }}-cellar-15
@@ -266,11 +266,11 @@ jobs:
         echo ${{ env.VCPKG_PREROOT }}
 
     - name: 250. get the Source of the project from Git
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: 255. >>>>>> ++++++ Clone vcpkg as recommended not by a command
       if:  ${{ startsWith( matrix.config.os , 'macos' )  ||  startsWith( matrix.config.os , 'windows' ) }}
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         path: ${{ env.VCPKG_ROOT }}
         repository: microsoft/vcpkg
@@ -297,7 +297,7 @@ jobs:
 
     - name: 290. Cache vcpkg install - files restore
       id: cache_vcpkg1
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@v5
       with:
         path: | 
           ${{ env.VCPKG_ROOT }}/vcpkg_cache
@@ -362,7 +362,7 @@ jobs:
           fi
 
     - name: 570. Save updated cache
-      uses: actions/cache/save@v4
+      uses: actions/cache/save@v5
       if: ${{ always() }}
       with:
         path: |
@@ -442,7 +442,7 @@ jobs:
     - name: 770. ++++++ WINDOWS ONLY // Upload build Executables 
       if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
       id: a-wexecutables
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: build-win-executables-${{ steps.strings.outputs.bld-var-str }}
         path: |
@@ -451,7 +451,7 @@ jobs:
     - name: 780. ++++++ NON-WINDOWS // Upload build Executables 
       if: ${{ ! startsWith( matrix.config.os  , 'windows' ) }}
       id: a-executables
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: build-non-win-executables-${{ steps.strings.outputs.bld-var-str }}
         path: |
@@ -482,7 +482,7 @@ jobs:
 
     - name: 790. Upload build Test Result Logs
       id: a-TestLog
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: Test-Logs ${{ steps.strings.outputs.bld-var-str }}
         if-no-files-found: ignore # Last file will be present only if there are failed tests
