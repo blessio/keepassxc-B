@@ -163,12 +163,6 @@ jobs:
         path: ${{ env.THECELLAR }} # /usr/local/Cellar
         key: homebrew-${{ matrix.config.os }}-cellar-15
 
-    - name: 172.-3  *****  Install qt6
-      uses: jurplel/install-qt-action@v4
-      with:
-        version: '6.x'
-        cache: true  # speeds up subsequent runs
-
     - name: 172.  >>>>>>  MACOS Only asciidoctor and other patch PKGs
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
       continue-on-error: true
@@ -237,6 +231,12 @@ jobs:
         python3 --version
         echo "*************** which python3 ****************"
         which python3
+
+    - name: 172.-3  *****  Install qt6
+      uses: jurplel/install-qt-action@v4
+      with:
+        version: '6.x'
+        cache: true  # speeds up subsequent runs
 
     - name: 174. >>>>>>  MACOS Only PKGs
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
