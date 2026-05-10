@@ -326,9 +326,31 @@ else()
 endif()
 
 if(WIN32)
+
+    # Additional search paths for Windows if not building/running in Visual Studio environment (e.g. commandline or VSCode)
+    # 1.Resolve the ambiguity of using two names for one architecture
+    if(CMAKE_SYSTEM_PROCESSOR STREQUAL "AMD64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "x64")
+        set(ARCH_DIR "x64")
+    else()
+       set(ARCH_DIR "${CMAKE_SYSTEM_PROCESSOR}")
+    endif()
+    # 2. Locate Windows SDK Paths
+    if (CMAKE_WINDOWS_KITS_10_DIR)
+        # set(WINSDKROOTC_INCLUDE "${CMAKE_WINDOWS_KITS_10_DIR}/Include/${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION}/um")
+        set(WINSDKROOTC_LIB     "${CMAKE_WINDOWS_KITS_10_DIR}/LIB/${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION}/um/${ARCH_DIR}")
+    else()
+        # set(WINSDKROOTC_INCLUDE "$ENV{ProgramFiles\(x86\)}/Windows Kits/10/Include/${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION}/um")
+        set(WINSDKROOTC_LIB     "$ENV{ProgramFiles\(x86\)}/Windows Kits/10/LIB/${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION}/um/${ARCH_DIR}")
+    endif()
+
+
     # Determine if we can link against the Windows SDK, used for Windows Hello support
-    find_library(WINSDK WindowsApp.lib)
-    
+    find_library(WINSDK WindowsApp.lib
+       HINTS
+         ${CMAKE_C_IMPLICIT_LINK_DIRECTORIES}
+         ${WINSDKROOTC_LIB}
+    )
+
     # MSVC specific options
     if(MSVC OR CMAKE_COMPILER_IS_CLANG_MSVC)
         if(MSVC_TOOLSET_VERSION LESS 142)
@@ -464,7 +486,7 @@ if(BOTAN_VERSION VERSION_GREATER_EQUAL "3.0.0")
     set(WITH_BOTAN3 TRUE)
 elseif(BOTAN_VERSION VERSION_LESS "2.19.1")
     # Check for minimum Botan version
-    message(FATAL_ERROR "Botan 2.19.1 or higher is required")   
+    message(FATAL_ERROR "Botan 2.19.1 or higher is required")
 endif()
 include_directories(SYSTEM ${BOTAN_INCLUDE_DIR})
 
