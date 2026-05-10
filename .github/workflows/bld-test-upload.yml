@@ -144,13 +144,13 @@ jobs:
     - name: 150. LINUX Only // Prepare Linux packages that are needed
       if: ${{ startsWith( matrix.config.os , 'ubuntu' ) }}
         # sudo apt install -y qtbase5-private-dev qttools5-dev qttools5-dev-tools libqt5svg5-dev
+        # # sudo apt install -y qt6-base-dev libqt6dbus6 qt6-base-private-dev libgl1-mesa-dev libdbus-1-dev  &&
       run: >
         echo "*********************   SYSTEM VERSION   ******************************" &&
         cat /etc/os-release &&
         echo "********************* END SYSTEM VERSION ******************************" &&
         sudo apt update -y &&
         sudo apt install -y build-essential cmake g++ asciidoctor &&
-        sudo apt install -y qt6-base-dev libdbus-1-dev libgl1-mesa-dev &&
         sudo apt install -y libargon2-dev libminizip-dev libbotan-2-dev libqrencode-dev &&
         sudo apt install -y libkeyutils-dev zlib1g-dev libreadline-dev libpcsclite-dev libusb-1.0-0-dev &&
         sudo apt install -y libxi-dev libxtst-dev  libqt5x11extras5-dev
@@ -232,11 +232,10 @@ jobs:
         echo "*************** which python3 ****************"
         which python3
 
-    - name: 172.-3  *****  Install qt6
+
+    - name: 173.7 QT install default version is
       uses: jurplel/install-qt-action@v4
-      with:
-        version: '6.x'
-        cache: true  # speeds up subsequent runs
+      # leave default version intentionally
 
     - name: 174. >>>>>>  MACOS Only PKGs
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}
@@ -247,6 +246,7 @@ jobs:
         echo "**********************************   bre link --overwrite vcpkg "
         # brew link --overwrite vcpkg
         # brew install qt6
+        # echo "CMAKE_PREFIX_PATH=$(brew --prefix qt6)" >> $GITHUB_ENV
 
     - name: 175. PRINT Environment Variables ( 1 ) on Windows
       if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
