@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2025 KeePassXC Team <team@keepassxc.org>
  *  Copyright (C) 2010 Felix Geyer <debfx@fobos.de>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -34,7 +35,7 @@ bool SymmetricCipher::init(Mode mode, Direction direction, const QByteArray& key
     try {
         auto botanMode = modeToString(mode);
         auto botanDirection =
-#ifdef WITH_XC_BOTAN3
+#ifdef WITH_BOTAN3
             (direction == SymmetricCipher::Encrypt ? Botan::Cipher_Dir::Encryption : Botan::Cipher_Dir::Decryption);
 #else
             (direction == SymmetricCipher::Encrypt ? Botan::Cipher_Dir::ENCRYPTION : Botan::Cipher_Dir::DECRYPTION);
@@ -65,7 +66,7 @@ bool SymmetricCipher::init(Mode mode, Direction direction, const QByteArray& key
 
 bool SymmetricCipher::isInitialized() const
 {
-    return m_cipher;
+    return !m_cipher.isNull();
 }
 
 bool SymmetricCipher::process(char* data, int len)

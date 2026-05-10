@@ -210,15 +210,13 @@ int main(int argc, char** argv)
     parser.addOption(debugInfoOption);
     parser.addHelpOption();
     parser.addVersionOption();
-    // TODO : use the setOptionsAfterPositionalArgumentsMode (Qt 5.6) function
-    // when available. Until then, options passed to sub-commands won't be
-    // recognized by this parser.
+    // TODO : use the setOptionsAfterPositionalArgumentsMode function.
+    // Until then, options passed to sub-commands won't be recognized by this parser.
     parser.parse(arguments);
 
     if (parser.positionalArguments().empty()) {
         if (parser.isSet("version")) {
-            // Switch to parser.showVersion() when available (QT 5.4).
-            out << KEEPASSXC_VERSION << Qt::endl;
+            parser.showVersion();
             return EXIT_SUCCESS;
         }
 

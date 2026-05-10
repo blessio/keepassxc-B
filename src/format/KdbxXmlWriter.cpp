@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2017 KeePassXC Team <team@keepassxc.org>
+ *  Copyright (C) 2026 KeePassXC Team <team@keepassxc.org>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -55,7 +55,6 @@ void KdbxXmlWriter::writeDatabase(QIODevice* device,
 
     m_xml.setAutoFormatting(true);
     m_xml.setAutoFormattingIndent(-1); // 1 tab
-    m_xml.setCodec("UTF-8");
 
     if (m_kdbxVersion < KeePass2::FILE_VERSION_4) {
         fillBinaryIdxMap();
@@ -79,8 +78,9 @@ void KdbxXmlWriter::writeDatabase(QIODevice* device,
 void KdbxXmlWriter::writeDatabase(const QString& filename, Database* db)
 {
     QFile file(filename);
-    file.open(QIODevice::WriteOnly | QIODevice::Truncate);
-    writeDatabase(&file, db);
+    if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        writeDatabase(&file, db);
+    }
 }
 
 bool KdbxXmlWriter::hasError()
@@ -109,7 +109,6 @@ void KdbxXmlWriter::fillBinaryIdxMap()
         for (const QString& key : attachmentKeys) {
             QByteArray data = entry->attachments()->value(key);
             CryptoHash hash(CryptoHash::Sha256);
-#ifdef WITH_XC_KEESHARE
             // Namespace KeeShare attachments so they don't get deduplicated together with attachments
             // from other databases. Prevents potential filesize side channels.
             auto group = entry->group();
@@ -121,7 +120,6 @@ void KdbxXmlWriter::fillBinaryIdxMap()
             } else {
                 hash.addData(m_db->uuid().toByteArray());
             }
-#endif
             hash.addData(data);
 
             const auto hashResult = hash.result();

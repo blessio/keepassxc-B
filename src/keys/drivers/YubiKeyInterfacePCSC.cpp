@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2021 KeePassXC Team <team@keepassxc.org>
+ *  Copyright (C) 2025 KeePassXC Team <team@keepassxc.org>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -39,6 +39,13 @@ typedef uint32_t RETVAL;
 #else
 typedef unsigned long SCUINT;
 typedef long RETVAL;
+#endif
+
+// Use the ANSI functions on Windows to align with Linux/macOS
+#ifdef Q_OS_WIN
+#define SCardListReaders SCardListReadersA
+#define SCardStatus SCardStatusA
+#define SCardConnect SCardConnectA
 #endif
 
 // This namescape contains static wrappers for the smart card API

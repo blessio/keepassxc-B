@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2025 KeePassXC Team <team@keepassxc.org>
+ *  Copyright (C) 2026 KeePassXC Team <team@keepassxc.org>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  */
 
 #include "UrlTools.h"
-#if defined(WITH_XC_NETWORKING) || defined(WITH_XC_BROWSER)
+#if defined(KPXC_FEATURE_NETWORK) || defined(KPXC_FEATURE_BROWSER)
 #include <QHostAddress>
 #include <QNetworkCookie>
 #include <QNetworkCookieJar>
@@ -42,7 +42,7 @@ QUrl UrlTools::convertVariantToUrl(const QVariant& var) const
     return url;
 }
 
-#if defined(WITH_XC_NETWORKING) || defined(WITH_XC_BROWSER)
+#if defined(KPXC_FEATURE_NETWORK) || defined(KPXC_FEATURE_BROWSER)
 QUrl UrlTools::getRedirectTarget(QNetworkReply* reply) const
 {
     QVariant var = reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
@@ -191,7 +191,7 @@ bool UrlTools::isUrlValid(const QString& urlField, bool looseComparison) const
         return false;
     }
 
-#if defined(WITH_XC_NETWORKING) || defined(WITH_XC_BROWSER)
+#if defined(KPXC_FEATURE_BROWSER)
     // Prevent TLD wildcards
     if (looseComparison && url.contains(UrlTools::URL_WILDCARD)) {
         const auto tld = getTopLevelDomainFromUrl(url);

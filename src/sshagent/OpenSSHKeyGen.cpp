@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2021 KeePassXC Team <team@keepassxc.org>
+ *  Copyright (C) 2026 KeePassXC Team <team@keepassxc.org>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,9 +21,15 @@
 #include "config-keepassx.h"
 #include "crypto/Random.h"
 
+#include <botan/bigint.h>
+#include <botan/ec_group.h>
 #include <botan/ecdsa.h>
 #include <botan/ed25519.h>
 #include <botan/rsa.h>
+#include <botan/version.h>
+#if BOTAN_VERSION_CODE >= BOTAN_VERSION_CODE_FOR(3, 11, 0)
+#include <botan/ec_group.h>
+#endif
 
 namespace OpenSSHKeyGen
 {
@@ -77,7 +83,7 @@ namespace OpenSSHKeyGen
             key.setPrivateData(privateData);
             key.setComment("id_rsa");
             return true;
-        } catch (std::exception& e) {
+        } catch (const std::exception&) {
             return false;
         }
     }
@@ -108,7 +114,7 @@ namespace OpenSSHKeyGen
             key.setPrivateData(privateData);
             key.setComment("id_ecdsa");
             return true;
-        } catch (std::exception& e) {
+        } catch (const std::exception&) {
             return false;
         }
     }
@@ -127,7 +133,7 @@ namespace OpenSSHKeyGen
             QByteArray privateData;
             BinaryStream privateStream(&privateData);
             vectorToStream(ed25519Key.get_public_key(), privateStream);
-#ifdef WITH_XC_BOTAN3
+#ifdef WITH_BOTAN3
             vectorToStream(ed25519Key.raw_private_key_bits(), privateStream);
 #else
             vectorToStream(ed25519Key.get_private_key(), privateStream);
@@ -139,7 +145,7 @@ namespace OpenSSHKeyGen
             key.setPrivateData(privateData);
             key.setComment("id_ed25519");
             return true;
-        } catch (std::exception& e) {
+        } catch (const std::exception&) {
             return false;
         }
     }

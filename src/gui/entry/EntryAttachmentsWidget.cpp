@@ -27,7 +27,7 @@
 #include <QLineEdit>
 #include <QMenu>
 #include <QMimeData>
-#include <QRegExp>
+#include <QRegularExpression>
 #include <QStandardPaths>
 #include <QTemporaryFile>
 
@@ -368,7 +368,7 @@ void EntryAttachmentsWidget::saveSelectedAttachments()
     QStringList errors;
     for (const QModelIndex& index : indexes) {
         QString attachmentKey = m_attachmentsModel->keyByIndex(index);
-        const QString fileNameSanitized = attachmentKey.replace(QRegExp("[/\\\\]"), "");
+        const QString fileNameSanitized = attachmentKey.replace(QRegularExpression("[/\\\\]"), "");
         const QString attachmentPath = saveDir.absoluteFilePath(fileNameSanitized);
 
         if (QFileInfo::exists(attachmentPath)) {

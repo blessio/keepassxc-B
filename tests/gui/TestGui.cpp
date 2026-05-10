@@ -1,6 +1,6 @@
 /*
+ *  Copyright (C) 2026 KeePassXC Team <team@keepassxc.org>
  *  Copyright (C) 2010 Felix Geyer <debfx@fobos.de>
- *  Copyright (C) 2020 KeePassXC Team <team@keepassxc.org>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -353,7 +353,7 @@ void TestGui::testMergeDatabase()
     QSignalSpy dbMergeSpy(m_dbWidget.data(), SIGNAL(databaseMerged(QSharedPointer<Database>)));
     QApplication::processEvents();
 
-    // set file to merge from
+    // Set file to merge from
     fileDialog()->setNextFileName(QString(KEEPASSX_TEST_DATA_DIR).append("/MergeDatabase.kdbx"));
     triggerAction("actionDatabaseMerge");
 
@@ -364,9 +364,21 @@ void TestGui::testMergeDatabase()
     QTest::keyClicks(editPasswordMerge, "a");
     QTest::keyClick(editPasswordMerge, Qt::Key_Enter);
 
-    // confirm merge in confirmation dialog
-    QTRY_VERIFY(QApplication::focusWindow()->title().contains("Merge"));
-    QTest::keyClick(QApplication::focusWidget(), Qt::Key_Enter);
+    // Confirm merge in confirmation dialog
+    auto focusedWindow = QApplication::topLevelWindows().last();
+    QVERIFY(focusedWindow);
+    QTRY_VERIFY(focusedWindow->title().contains("Merge"));
+
+    auto topLevelWidgets = QApplication::topLevelWidgets();
+    QWidget* mergeDialog = nullptr;
+    for (auto* widget : topLevelWidgets) {
+        if (widget && widget->objectName() == "MergeDialog") {
+            mergeDialog = widget;
+        }
+    }
+
+    QVERIFY(mergeDialog);
+    QTest::keyClick(mergeDialog, Qt::Key_Enter);
 
     QTRY_COMPARE(dbMergeSpy.count(), 1);
     QTRY_VERIFY(m_tabWidget->tabText(m_tabWidget->currentIndex()).contains("*"));
@@ -540,12 +552,15 @@ void TestGui::testAutoreloadDatabase()
     MessageBox::setNextAnswer(MessageBox::Yes);
     // Overwrite the current database with the temp data
     QVERIFY(m_dbFile.copyFromFile(QString(KEEPASSX_TEST_DATA_DIR).append("/MergeDatabase.kdbx")));
+    QApplication::processEvents();
 
     QTRY_VERIFY(m_db != m_dbWidget->database());
     m_db = m_dbWidget->database();
 
     // the General group contains one entry from the new db data
-    QCOMPARE(m_db->rootGroup()->findChildByName("General")->entries().size(), 1);
+    auto generalGroup = m_db->rootGroup()->findChildByName("General");
+    QVERIFY(generalGroup);
+    QCOMPARE(generalGroup->entries().size(), 1);
     QVERIFY(!m_tabWidget->tabText(m_tabWidget->currentIndex()).endsWith("*"));
 
     // Reset the state
@@ -558,9 +573,12 @@ void TestGui::testAutoreloadDatabase()
     MessageBox::setNextAnswer(MessageBox::No);
     // Overwrite the current database with the temp data
     QVERIFY(m_dbFile.copyFromFile(QString(KEEPASSX_TEST_DATA_DIR).append("/MergeDatabase.kdbx")));
+    QApplication::processEvents();
 
     // Ensure the merge did not take place
-    QCOMPARE(m_db->rootGroup()->findChildByName("General")->entries().size(), 0);
+    generalGroup = m_db->rootGroup()->findChildByName("General");
+    QVERIFY(generalGroup);
+    QCOMPARE(generalGroup->entries().size(), 0);
     QTRY_VERIFY(m_tabWidget->tabText(m_tabWidget->currentIndex()).endsWith("*"));
 
     // Reset the state
@@ -577,11 +595,14 @@ void TestGui::testAutoreloadDatabase()
     MessageBox::setNextAnswer(MessageBox::Merge);
     // Overwrite the current database with the temp data
     QVERIFY(m_dbFile.copyFromFile(QString(KEEPASSX_TEST_DATA_DIR).append("/MergeDatabase.kdbx")));
+    QApplication::processEvents();
 
     QTRY_VERIFY(m_db != m_dbWidget->database());
     m_db = m_dbWidget->database();
 
-    QCOMPARE(m_db->rootGroup()->findChildByName("General")->entries().size(), 1);
+    generalGroup = m_db->rootGroup()->findChildByName("General");
+    QVERIFY(generalGroup);
+    QCOMPARE(generalGroup->entries().size(), 1);
     QTRY_VERIFY(m_tabWidget->tabText(m_tabWidget->currentIndex()).endsWith("*"));
 }
 
@@ -681,8 +702,8 @@ void TestGui::testEditEntry()
 
     // Test entry colors (simulate choosing a color)
     editEntryWidget->switchToPage(EditEntryWidget::Page::Advanced);
-    auto fgColor = QString("#FF0000");
-    auto bgColor = QString("#0000FF");
+    auto fgColor = QColor(255, 0, 0);
+    auto bgColor = QColor(0, 0, 255);
     // Set foreground color
     auto colorButton = editEntryWidget->findChild<QPushButton*>("fgColorButton");
     auto colorCheckBox = editEntryWidget->findChild<QCheckBox*>("fgColorCheckBox");
@@ -716,9 +737,9 @@ void TestGui::testEditEntry()
     // Confirm edit was made
     QCOMPARE(m_dbWidget->currentMode(), DatabaseWidget::Mode::ViewMode);
     QCOMPARE(entry->title(), QString("Sample Entry_test"));
-    QCOMPARE(entry->foregroundColor().toUpper(), fgColor.toUpper());
+    QCOMPARE(entry->foregroundColor().toUpper(), fgColor.name().toUpper());
     QCOMPARE(entryItem.data(Qt::ForegroundRole), QVariant(fgColor));
-    QCOMPARE(entry->backgroundColor().toUpper(), bgColor.toUpper());
+    QCOMPARE(entry->backgroundColor().toUpper(), bgColor.name().toUpper());
     QCOMPARE(entryItem.data(Qt::BackgroundRole), QVariant(bgColor));
     QCOMPARE(entry->historyItems().size(), ++editCount);
 
@@ -1088,6 +1109,17 @@ void TestGui::testTotp()
 
     auto* editEntryWidget = m_dbWidget->findChild<EditEntryWidget*>("editEntryWidget");
     editEntryWidget->switchToPage(EditEntryWidget::Page::Advanced);
+    QApplication::processEvents();
+    // Find the "TOTP Seed" attribute in the list view
+    auto* attrListView = editEntryWidget->findChild<QListView*>("attributesView");
+    auto index = attrListView->model()->index(0, 0);
+    for (auto i = 0; i < attrListView->model()->rowCount(); ++i) {
+        index = attrListView->model()->index(i, 0);
+        if (attrListView->model()->data(index).toString().compare("TOTP Seed") == 0) {
+            break;
+        }
+    }
+    attrListView->setCurrentIndex(index);
     auto* attrTextEdit = editEntryWidget->findChild<QPlainTextEdit*>("attributesEdit");
     QTest::mouseClick(editEntryWidget->findChild<QAbstractButton*>("revealAttributeButton"), Qt::LeftButton);
     QCOMPARE(attrTextEdit->toPlainText(), expectedFinalSeed);
@@ -2135,7 +2167,7 @@ void TestGui::testShortcutConfig()
     ActionCollection::instance()->addAction(a);
     QVERIFY(ActionCollection::instance()->actions().contains(a));
 
-    const QKeySequence seq(Qt::CTRL + Qt::SHIFT + Qt::ALT + Qt::Key_N);
+    const QKeySequence seq(Qt::CTRL | Qt::SHIFT | Qt::ALT | Qt::Key_N);
     ActionCollection::instance()->setDefaultShortcut(a, seq);
     QCOMPARE(ActionCollection::instance()->defaultShortcut(a), seq);
 
@@ -2146,7 +2178,7 @@ void TestGui::testShortcutConfig()
     QVERIFY(v);
 
     // Change shortcut and save
-    const QKeySequence newSeq(Qt::CTRL + Qt::SHIFT + Qt::ALT + Qt::Key_M);
+    const QKeySequence newSeq(Qt::CTRL | Qt::SHIFT | Qt::ALT | Qt::Key_M);
     a->setShortcut(newSeq);
     QVERIFY(a->shortcut() != ActionCollection::instance()->defaultShortcut(a));
     ActionCollection::instance()->saveShortcuts();

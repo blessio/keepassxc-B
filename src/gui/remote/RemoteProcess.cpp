@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2023 KeePassXC Team <team@keepassxc.org>
+ *  Copyright (C) 2026 KeePassXC Team <team@keepassxc.org>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -37,15 +37,11 @@ void RemoteProcess::setTempFileLocation(const QString& tempFile)
 void RemoteProcess::start(const QString& command)
 {
     const QString commandResolved = resolveTemplateVariables(command);
-#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
     QStringList cmdList = QProcess::splitCommand(commandResolved);
     if (!cmdList.isEmpty()) {
         const QString program = cmdList.takeFirst();
         m_process->start(program, cmdList);
     }
-#else
-    m_process->start(resolveTemplateVariables(commandResolved));
-#endif
 
     m_process->waitForStarted();
 }

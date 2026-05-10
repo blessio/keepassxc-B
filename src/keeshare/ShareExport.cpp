@@ -25,9 +25,9 @@
 #include "keeshare/KeeShare.h"
 #include "keys/PasswordKey.h"
 
+#include <../minizip/zip.h>
 #include <QBuffer>
 #include <botan/pubkey.h>
-#include <minizip/zip.h>
 
 // Compatibility with minizip-ng
 #ifdef MZ_VERSION_BUILD

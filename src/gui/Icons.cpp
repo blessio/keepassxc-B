@@ -24,16 +24,15 @@
 #include <QPaintDevice>
 #include <QPainter>
 
+#include <algorithm>
+
 #include "config-keepassx.h"
 #include "core/Config.h"
 #include "core/Database.h"
 #include "gui/DatabaseIcons.h"
 #include "gui/MainWindow.h"
 #include "gui/osutils/OSUtils.h"
-
-#ifdef WITH_XC_KEESHARE
 #include "keeshare/KeeShare.h"
-#endif
 
 class AdaptiveIconEngine : public QIconEngine
 {
@@ -265,12 +264,9 @@ QPixmap Icons::groupIconPixmap(const Group* group, IconSize size)
 
     if (group->isExpired()) {
         icon = databaseIcons()->applyBadge(icon, DatabaseIcons::Badges::Expired);
-    }
-#ifdef WITH_XC_KEESHARE
-    else if (KeeShare::isShared(group)) {
+    } else if (KeeShare::isShared(group)) {
         icon = KeeShare::indicatorBadge(group, icon);
     }
-#endif
 
     return icon;
 }
@@ -281,14 +277,9 @@ QString Icons::imageFormatsFilter()
     QStringList formatsStringList;
 
     for (const QByteArray& format : formats) {
-        bool codePointClean = true;
-        for (char codePoint : format) {
-            if (!QChar(codePoint).isLetterOrNumber()) {
-                codePointClean = false;
-                break;
-            }
-        }
-        if (codePointClean) {
+        if (std::all_of(format.cbegin(), format.cend(), [](char codePoint) -> bool {
+                return QChar(codePoint).isLetterOrNumber();
+            })) {
             formatsStringList.append("*." + QString::fromLatin1(format).toLower());
         }
     }

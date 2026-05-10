@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2020 KeePassXC Team <team@keepassxc.org>
+ *  Copyright (C) 2026 KeePassXC Team <team@keepassxc.org>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@
 #include "sshagent/OpenSSHKeyGen.h"
 #include "sshagent/SSHAgent.h"
 
+#include <QElapsedTimer>
 #include <QTest>
 
 QTEST_GUILESS_MAIN(TestSSHAgent)
@@ -30,6 +31,7 @@ QTEST_GUILESS_MAIN(TestSSHAgent)
 void TestSSHAgent::initTestCase()
 {
     QVERIFY(Crypto::init());
+    QLocale::setDefault(QLocale::c());
 
     // Create temporary config file
     Config::createConfigFromFile(TemporaryFile::createTempConfigFile(), {});

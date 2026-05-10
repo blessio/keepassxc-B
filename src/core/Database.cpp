@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2018 KeePassXC Team <team@keepassxc.org>
+ *  Copyright (C) 2026 KeePassXC Team <team@keepassxc.org>
  *  Copyright (C) 2010 Felix Geyer <debfx@fobos.de>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -33,6 +33,8 @@
 #include <QSaveFile>
 #include <QTemporaryFile>
 #include <QTimer>
+
+#include <algorithm>
 
 #ifdef Q_OS_WIN
 #include <Windows.h>
@@ -336,7 +338,7 @@ bool Database::saveAs(const QString& filePath, SaveAction action, const QString&
 
 #ifdef Q_OS_WIN
         if (isHidden) {
-            SetFileAttributes(realFilePath.toStdString().c_str(), FILE_ATTRIBUTE_HIDDEN);
+            SetFileAttributes(realFilePath.toStdWString().c_str(), FILE_ATTRIBUTE_HIDDEN);
         }
 #endif
         m_ignoreFileChangesUntilSaved = false;
@@ -520,7 +522,9 @@ bool Database::import(const QString& xmlExportPath, QString* error)
 {
     KdbxXmlReader reader(KeePass2::FILE_VERSION_4);
     QFile file(xmlExportPath);
-    file.open(QIODevice::ReadOnly);
+    if (!file.open(QIODevice::ReadOnly)) {
+        return false;
+    }
 
     reader.readDatabase(&file, this);
 
@@ -749,22 +753,14 @@ const QList<DeletedObject>& Database::deletedObjects() const
 
 bool Database::containsDeletedObject(const QUuid& uuid) const
 {
-    for (const DeletedObject& currentObject : m_deletedObjects) {
-        if (currentObject.uuid == uuid) {
-            return true;
-        }
-    }
-    return false;
+    return std::any_of(m_deletedObjects.cbegin(),
+                       m_deletedObjects.cend(),
+                       [&uuid](const DeletedObject& object) -> bool { return object.uuid == uuid; });
 }
 
 bool Database::containsDeletedObject(const DeletedObject& object) const
 {
-    for (const DeletedObject& currentObject : m_deletedObjects) {
-        if (currentObject.uuid == object.uuid) {
-            return true;
-        }
-    }
-    return false;
+    return containsDeletedObject(object.uuid);
 }
 
 void Database::setDeletedObjects(const QList<DeletedObject>& delObjs)
