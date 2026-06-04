@@ -27,6 +27,7 @@
 #include <QProcessEnvironment>
 #include <QScopeGuard>
 #include <QSet>
+#include <QStandardPaths>
 #include <QTemporaryFile>
 #include <QUrl>
 
