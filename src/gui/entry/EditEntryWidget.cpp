@@ -40,6 +40,7 @@
 #include "core/Metadata.h"
 #include "core/PasswordGenerator.h"
 #include "core/TimeDelta.h"
+#include "gui/PasswordWidget.h"
 #ifdef KPXC_FEATURE_SSHAGENT
 #include "sshagent/OpenSSHKey.h"
 #include "sshagent/OpenSSHKeyGenDialog.h"
@@ -138,6 +139,16 @@ EditEntryWidget::EditEntryWidget(QWidget* parent)
     m_editWidgetProperties->setCustomData(m_customData.data());
 
     m_mainUi->passwordEdit->setQualityVisible(true);
+
+    connect(m_mainUi->passwordEdit,
+            &PasswordWidget::requestPlaceholderResolution,
+            this,
+            [this](const QString& rawText, QString& resolvedText) {
+                if (m_entry) {
+                    // Dereferencing the password of the entry
+                    resolvedText = m_entry->resolveMultiplePlaceholders(rawText);
+                }
+            });
 }
 
 EditEntryWidget::~EditEntryWidget() = default;
@@ -962,6 +973,11 @@ void EditEntryWidget::loadEntry(Entry* entry,
     // Set an initial password for new entries if the option is enabled
     if (create && config()->get(Config::AutoGeneratePasswordForNewEntries).toBool()) {
         PasswordGenerator generator;
+        generator.loadSettingsFromConfig();
+        if (!generator.isValid()) {
+            qWarning() << "Password generator config settings are invalid, using default settings.";
+            generator.reset();
+        }
         m_mainUi->passwordEdit->setText(generator.generatePassword());
     }
 

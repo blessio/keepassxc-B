@@ -15,8 +15,8 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef KEEPASSX_AUTOTYPEPLATFORMPLUGIN_H
-#define KEEPASSX_AUTOTYPEPLATFORMPLUGIN_H
+#ifndef KEEPASSXC_AUTOTYPEPLATFORM_H
+#define KEEPASSXC_AUTOTYPEPLATFORM_H
 
 #include <QWidget>
 
@@ -26,25 +26,30 @@ class AutoTypePlatformInterface
 {
 public:
     virtual ~AutoTypePlatformInterface() = default;
+
     virtual bool isAvailable() = 0;
     virtual QStringList windowTitles() = 0;
     virtual WId activeWindow() = 0;
     virtual QString activeWindowTitle() = 0;
     virtual bool raiseWindow(WId window) = 0;
-    virtual void unload()
+    virtual bool hasWindowAccess()
+    {
+        return true;
+    }
+
+    virtual void prepareAutoType()
+    {
+    }
+    virtual void finishAutoType()
     {
     }
 
-    virtual AutoTypeExecutor* createExecutor() = 0;
+    virtual AutoTypeExecutor& executor() const = 0;
 
 #if defined(Q_OS_MACOS)
     virtual bool hideOwnWindow() = 0;
     virtual bool raiseOwnWindow() = 0;
 #endif
-
-    // implementations should also provide a globalShortcutTriggered() signal
 };
 
-Q_DECLARE_INTERFACE(AutoTypePlatformInterface, "org.keepassx.AutoTypePlatformInterface/1")
-
-#endif // KEEPASSX_AUTOTYPEPLATFORMPLUGIN_H
+#endif // KEEPASSXC_AUTOTYPEPLATFORM_H

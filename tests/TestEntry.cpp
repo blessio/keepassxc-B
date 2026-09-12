@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2018 KeePassXC Team <team@keepassxc.org>
+ *  Copyright (C) 2026 KeePassXC Team <team@keepassxc.org>
  *  Copyright (C) 2013 Felix Geyer <debfx@fobos.de>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -46,6 +46,30 @@ void TestEntry::testHistoryItemDeletion()
     entry->removeHistoryItems(historyEntriesToRemove);
     QCOMPARE(entry->historyItems().size(), 0);
     QVERIFY(historyEntry.isNull());
+}
+
+void TestEntry::testHistoryItemCustomData()
+{
+    QScopedPointer<Entry> entry(new Entry());
+    entry->setUuid(QUuid::createUuid());
+    entry->setTitle("Original Title");
+    entry->customData()->set("CustomKey", "CustomValue");
+
+    entry->beginUpdate();
+    entry->setTitle("New Title");
+    entry->endUpdate();
+
+    // The history item must carry the custom data present before the update
+    QCOMPARE(entry->historyItems().size(), 1);
+    const Entry* historyItem = entry->historyItems().constFirst();
+    QCOMPARE(historyItem->customData()->value("CustomKey"), QString("CustomValue"));
+
+    // Restoring from the history item restores the custom data
+    entry->customData()->remove("CustomKey");
+    QVERIFY(entry->customData()->isEmpty());
+
+    entry->copyDataFrom(historyItem);
+    QCOMPARE(entry->customData()->value("CustomKey"), QString("CustomValue"));
 }
 
 void TestEntry::testCopyDataFrom()
@@ -905,4 +929,28 @@ void TestEntry::testPreviousParentGroup()
     entry->setGroup(group2);
     QVERIFY(entry->previousParentGroupUuid() == group1->uuid());
     QVERIFY(entry->previousParentGroup() == group1);
+}
+
+void TestEntry::testContainsPlaceholder()
+{
+    // Dynamic placeholders
+    QVERIFY(!EntryPlaceholders::containsPlaceholder(""));
+    QVERIFY(!EntryPlaceholders::containsPlaceholder("testString{REF:nothing")); // Placeholder is not finished
+    QVERIFY(EntryPlaceholders::containsPlaceholder("testString{REF:P@T:Other Entry}something"));
+    QVERIFY(EntryPlaceholders::containsPlaceholder("{URL:USERNAME}yes"));
+    QVERIFY(EntryPlaceholders::containsPlaceholder("{URL:USERNAME}yes{REF:A@O:Attribute 1}"));
+    QVERIFY(!EntryPlaceholders::containsPlaceholder("{NOTAREALPLACEHOLDER:USERNAME}yes")); // Unknown placeholder
+    QVERIFY(EntryPlaceholders::containsPlaceholder("yes{URL:PORT}"));
+    QVERIFY(EntryPlaceholders::containsPlaceholder("yes{S:KPEX_PASSKEYS_USER_ID}no"));
+
+    // Static placeholders
+    QVERIFY(EntryPlaceholders::containsPlaceholder("{TITLE}"));
+    QVERIFY(!EntryPlaceholders::containsPlaceholder("{TITLE2}"));
+    QVERIFY(EntryPlaceholders::containsPlaceholder("{USERNAME}"));
+    QVERIFY(EntryPlaceholders::containsPlaceholder("{PASSWORD}"));
+    QVERIFY(EntryPlaceholders::containsPlaceholder("{URL}"));
+    QVERIFY(EntryPlaceholders::containsPlaceholder("{NOTES}"));
+    QVERIFY(EntryPlaceholders::containsPlaceholder("inthe{NOTES}middle"));
+    QVERIFY(EntryPlaceholders::containsPlaceholder("{TOTP}"));
+    QVERIFY(EntryPlaceholders::containsPlaceholder("test\\{TOTP\\}"));
 }

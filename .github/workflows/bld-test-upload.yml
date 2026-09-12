@@ -233,9 +233,17 @@ jobs:
         which python3
 
 
-    - name: 173.7 QT install default version is
+    - name: 173.7 QT install
       uses: jurplel/install-qt-action@v4
-      # leave default version intentionally
+      # Version pinned intentionally (do NOT fall back to the action default, 6.8.3).
+      # Qt <= 6.8.3 / <= 6.9.1 still carry "-framework AGL" in their Gui/OpenGL link
+      # interface. Apple removed AGL.framework from the macOS 26 (Tahoe) SDK used by
+      # the macos-latest runner, so linking keepassxc-cli fails with
+      #   ld: framework 'AGL' not found
+      # Qt 6.9.2+ dropped the AGL dependency. 6.8.4+ also fixes it but those are
+      # commercial-only LTS builds and are not downloadable by aqtinstall.
+      with:
+        version: '6.9.3'
 
     - name: 174. >>>>>>  MACOS Only PKGs
       if: ${{ startsWith( matrix.config.os , 'macos' ) }}

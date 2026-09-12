@@ -20,6 +20,7 @@
 #include "DatabaseOpenWidget.h"
 #include "DatabaseTabWidget.h"
 #include "DatabaseWidget.h"
+#include "GuiTools.h"
 
 #include <QFileInfo>
 #include <QLayout>
@@ -77,6 +78,9 @@ DatabaseOpenDialog::DatabaseOpenDialog(QWidget* parent)
 void DatabaseOpenDialog::showEvent(QShowEvent* event)
 {
     QDialog::showEvent(event);
+
+    GuiTools::centerWidgetOnActiveScreen(this);
+
     QTimer::singleShot(100, this, [this] {
         if (m_view->isOnQuickUnlockScreen() && !m_view->unlockingDatabase()) {
             m_view->triggerQuickUnlock();
