@@ -419,8 +419,8 @@ jobs:
       if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
       run: |
         Get-ChildItem Env: | Sort-Object Name
-        cd "${{ github.workspace }}\${{ steps.strings.outputs.build-sub-dir }}\src\autotype\test\${{ matrix.build_type }}"
-        ls
+        # cd "${{ github.workspace }}\${{ steps.strings.outputs.build-sub-dir }}\src\autotype\test\${{ matrix.build_type }}"
+        # ls
 
     - name: 731. PRINT Environment Variables on NON-Windows
       if: ${{ ! startsWith( matrix.config.os  , 'windows' ) }}
