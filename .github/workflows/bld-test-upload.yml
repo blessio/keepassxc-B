@@ -450,10 +450,16 @@ jobs:
       # use cmake install to prepare the installable version of the build so that it can be used to upload as artifacts
       shell: bash
       continue-on-error: true
+      # NOTE: github.workspace expands with BACKSLASHES on Windows (D:\a\repo\repo).
+      # This is a bash step, so an UNQUOTED value gets its backslashes eaten as escapes
+      # (\a -> a, \k -> k) and the path collapses to "D:akeepassxc-Bkeepassxc-B/build",
+      # which CMake then resolves drive-relative against the CWD and fails with
+      #   CMake Error: Not a file: .../build/akeepassxc-Bkeepassxc-B/build/cmake_install.cmake
+      # Keep the double quotes below.
       run: >
-        cmake --install  ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }}
+        cmake --install  "${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }}"
         --config ${{ matrix.build_type }}
-        --prefix ${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }}/_install  -v
+        --prefix "${{ github.workspace }}/${{ steps.strings.outputs.build-sub-dir }}/_install"  -v
 
     - name: 770. ++++++ WINDOWS ONLY // Upload build Executables
       if: ${{ startsWith( matrix.config.os  , 'windows' ) }}
