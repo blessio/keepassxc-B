@@ -29,6 +29,7 @@ set(core_SOURCES
         core/Entry.cpp
         core/EntryAttachments.cpp
         core/EntryAttributes.cpp
+        core/EntryPlaceholders.cpp
         core/EntrySearcher.cpp
         core/FileWatcher.cpp
         core/Group.cpp
@@ -48,7 +49,6 @@ set(core_SOURCES
         core/Totp.cpp
         core/Translator.cpp
         cli/Utils.cpp
-        cli/TextStream.cpp
         crypto/Crypto.cpp
         crypto/CryptoHash.cpp
         crypto/Random.cpp
@@ -230,8 +230,11 @@ endif()
 
 if(UNIX AND NOT APPLE)
     list(APPEND gui_SOURCES
+            gui/osutils/nixutils/DesktopPortal.cpp
             gui/osutils/nixutils/DeviceListenerLibUsb.cpp
+            gui/osutils/nixutils/GlobalShortcutsPortal.cpp
             gui/osutils/nixutils/NixUtils.cpp
+            gui/osutils/nixutils/RemoteDesktopPortal.cpp
             gui/osutils/nixutils/ScreenLockListenerDBus.cpp
     )
     if("${CMAKE_SYSTEM}" MATCHES "Linux")
@@ -256,6 +259,26 @@ if(UNIX AND NOT APPLE)
     qt6_add_dbus_interface(core_SOURCES
         quickunlock/dbus/org.freedesktop.PolicyKit1.Authority.xml
         polkit_dbus
+    )
+    qt6_add_dbus_interface(core_SOURCES
+        gui/osutils/nixutils/dbus/org.freedesktop.portal.Request.xml
+        xdp_request
+    )
+    qt6_add_dbus_interface(core_SOURCES
+        gui/osutils/nixutils/dbus/org.freedesktop.portal.Session.xml
+        xdp_session
+    )
+    qt6_add_dbus_interface(core_SOURCES
+        gui/osutils/nixutils/dbus/org.freedesktop.portal.GlobalShortcuts.xml
+        xdp_globalshortcuts
+    )
+    qt6_add_dbus_interface(core_SOURCES
+        gui/osutils/nixutils/dbus/org.freedesktop.portal.RemoteDesktop.xml
+        xdp_remotedesktop
+    )
+    qt6_add_dbus_interface(core_SOURCES
+        gui/osutils/nixutils/dbus/org.freedesktop.portal.Clipboard.xml
+        xdp_clipboard
     )
 endif()
 
@@ -320,8 +343,8 @@ if(KPXC_FEATURE_FDOSECRETS)
     set(fdosecrets_LIB fdosecrets)
 endif()
 
-configure_file(config-keepassx.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config-keepassx.h)
-configure_file(git-info.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/git-info.h)
+configure_file(config-keepassx.h.in ${CMAKE_CURRENT_BINARY_DIR}/config-keepassx.h)
+configure_file(git-info.h.in ${CMAKE_CURRENT_BINARY_DIR}/git-info.h)
 
 # SVG Widgets
 find_package(Qt6 REQUIRED COMPONENTS SvgWidgets)
@@ -402,7 +425,7 @@ elseif(APPLE AND WITH_APP_BUNDLE)
     set(MACOSX_BUNDLE_IDENTIFIER org.keepassxc.keepassxc)
     set(MACOSX_BUNDLE_ICON_NAME keepassxc)
     set(MACOSX_BUNDLE_APPLE_ENTITLEMENTS "${CMAKE_SOURCE_DIR}/share/macosx/keepassxc.entitlements")
-    configure_file("${CMAKE_SOURCE_DIR}/share/macosx/Info.plist.cmake" ${CMAKE_CURRENT_BINARY_DIR}/Info.plist)
+    configure_file("${CMAKE_SOURCE_DIR}/share/macosx/Info.plist.in" ${CMAKE_CURRENT_BINARY_DIR}/Info.plist)
     install(FILES "${CMAKE_SOURCE_DIR}/share/macosx/embedded.provisionprofile" DESTINATION ${BUNDLE_INSTALL_DIR})
     set(MACOSX_BUNDLE_RESOURCE_FILES
             "${CMAKE_SOURCE_DIR}/share/macosx/Assets.car"

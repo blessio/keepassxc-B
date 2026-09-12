@@ -18,7 +18,7 @@
 
 #include "AutoTypeMac.h"
 #include "core/Tools.h"
-#include "gui/osutils/macutils/MacUtils.h"
+#include "gui/osutils/OSUtils.h"
 #include "gui/MessageBox.h"
 
 #include <ApplicationServices/ApplicationServices.h>
@@ -28,6 +28,7 @@
 AutoTypePlatformMac::AutoTypePlatformMac()
 {
     MessageBox::initializeButtonDefs();
+    m_executor = new AutoTypeExecutorMac(this);
 }
 
 /**
@@ -124,9 +125,9 @@ QString AutoTypePlatformMac::activeWindowTitle()
     return title;
 }
 
-AutoTypeExecutor* AutoTypePlatformMac::createExecutor()
+AutoTypeExecutor& AutoTypePlatformMac::executor() const
 {
-    return new AutoTypeExecutorMac(this);
+    return *m_executor;
 }
 
 //

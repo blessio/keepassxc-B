@@ -84,7 +84,7 @@ void IconDownloader::setUrl(const QString& entryUrl)
     // Determine the second-level domain, if available
     QString secondLevelDomain;
     if (!hostIsIp) {
-        secondLevelDomain = urlTools()->getBaseDomainFromUrl(url.toString());
+        secondLevelDomain = UrlTools::getBaseDomainFromUrl(url.toString());
     }
 
     // Start with the "fallback" url (if enabled) to try to get the best favicon
@@ -172,7 +172,7 @@ void IconDownloader::fetchFinished()
     QString url = m_url;
 
     bool error = (m_reply->error() != QNetworkReply::NoError);
-    QUrl redirectTarget = urlTools()->getRedirectTarget(m_reply);
+    QUrl redirectTarget = UrlTools::getRedirectTarget(m_reply);
 
     m_reply->deleteLater();
     m_reply = nullptr;
@@ -186,7 +186,8 @@ void IconDownloader::fetchFinished()
                 if (redirectTarget.isRelative()) {
                     redirectTarget = m_fetchUrl.resolved(redirectTarget);
                 }
-                m_urlsToTry.prepend(redirectTarget);
+                fetchFavicon(redirectTarget);
+                return;
             }
         } else {
             // No redirect, and we theoretically have some icon data now.
