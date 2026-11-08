@@ -290,6 +290,10 @@
         <source>Restart KeePassXC to apply the Auto-Type desktop portals preference.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>This setting is managed by your organization.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ApplicationSettingsWidgetGeneral</name>
@@ -658,6 +662,10 @@
     </message>
     <message>
         <source>Experimental: Prefer desktop portals (Wayland implementation)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show autocomplete suggestions for username and additional attributes</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1843,15 +1851,15 @@ Are you sure you want to continue with this file?.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>&lt;a href=&quot;#&quot; style=&quot;text-decoration: underline&quot;&gt;I have a key file&lt;/a&gt;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Hardware keys found, but no slots are configured.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Press ESC again to close this database</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>I have a key file</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -5578,6 +5586,10 @@ If this reoccurs, then your database file may be corrupt.</source>
         <source>Invalid entry field type</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Incomplete entry: No UUID or group ID</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>KeeShare</name>
@@ -6740,15 +6752,11 @@ This version is not meant for production use.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Unable to read all IV bytes, wanted 16 but got %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Unable to init cipher for opdata01: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Unable to read all HMAC signature bytes</source>
+        <source>Plain text length out of range: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -6760,7 +6768,11 @@ This version is not meant for production use.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Expected %1 bytes of clear-text, found %2</source>
+        <source>Invalid OpData01 data length</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Invalid OpData01 ciphertext length</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -8165,6 +8177,14 @@ Do you want to overwrite it?</source>
     </message>
     <message>
         <source>Average password length</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Number of passkeys</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Entries with TOTP setup</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -10071,6 +10091,14 @@ This option is deprecated, use --set-key-file instead.</source>
     </message>
     <message>
         <source>Average password length is less than ten characters. Longer passwords provide more security.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Number of passkeys</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Entries with TOTP setup</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">

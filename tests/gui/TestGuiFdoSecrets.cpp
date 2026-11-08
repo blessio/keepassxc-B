@@ -56,7 +56,6 @@ int main(int argc, char* argv[])
     app.setQuitOnLastWindowClosed(false);
     app.setAttribute(Qt::AA_Use96Dpi, true);
     app.applyTheme();
-    QTEST_DISABLE_KEYPAD_NAVIGATION
     TestGuiFdoSecrets tc;
     QTEST_SET_MAIN_SOURCE_PATH
     return QTest::qExec(&tc, argc, argv);
@@ -139,7 +138,8 @@ void TestGuiFdoSecrets::initTestCase()
 {
     VERIFY(Crypto::init());
     // Create temporary config file
-    Config::createConfigFromFile(TemporaryFile::createTempConfigFile(), {});
+    const auto configFile = TemporaryFile::createTempConfigFile();
+    Config::createConfigFromFile(configFile, configFile);
     config()->set(Config::AutoSaveAfterEveryChange, false);
     config()->set(Config::AutoSaveOnExit, false);
     config()->set(Config::GUI_ShowTrayIcon, true);
@@ -808,6 +808,68 @@ void TestGuiFdoSecrets::testServiceUnlockItemsIncludeFutureEntries()
         auto anotherItem = getProxy<ItemProxy>(itemPaths.last());
         VERIFY(anotherItem);
         DBUS_COMPARE(anotherItem->locked(), false);
+    }
+}
+
+void TestGuiFdoSecrets::testServiceUnlockItemsConcurrentLock()
+{
+    FdoSecrets::settings()->setConfirmAccessItem(true);
+
+    auto service = enableService();
+    VERIFY(service);
+    auto coll = getDefaultCollection(service);
+    VERIFY(coll);
+    auto item = getFirstItem(coll);
+    VERIFY(item);
+
+    DBUS_COMPARE(item->locked(), true);
+
+    DBUS_GET2(unlocked, promptPath, service->Unlock({QDBusObjectPath(item->path())}));
+    // nothing is unlocked immediately without user's action
+    COMPARE(unlocked, {});
+
+    auto prompt = getProxy<PromptProxy>(promptPath);
+    VERIFY(prompt);
+    QSignalSpy spyPromptCompleted(prompt.data(), SIGNAL(Completed(bool, QDBusVariant)));
+    VERIFY(spyPromptCompleted.isValid());
+
+    // drive the prompt to show the access confirmation dialog, but do not answer it
+    DBUS_VERIFY(prompt->Prompt(""));
+    processEvents();
+
+    QPointer<AccessControlDialog> dlg;
+    for (auto w : QApplication::topLevelWidgets()) {
+        auto acd = qobject_cast<AccessControlDialog*>(w);
+        if (acd && acd->isVisible()) {
+            dlg = acd;
+            break;
+        }
+    }
+    VERIFY(dlg);
+
+    // while the dialog is open, the database locks, destroying the entries
+    // the dialog was asking about
+    lockDatabaseInBackend();
+
+    // the dialog should have withdrawn itself, as the entries it was asking
+    // about no longer exist
+    bool dialogWithdrawn = !dlg || !dlg->isVisible();
+
+    // canceling whatever remains of the dialog must not crash
+    if (dlg) {
+        dlg->reject();
+        processEvents();
+    }
+    VERIFY(dialogWithdrawn);
+
+    // the prompt completes as dismissed with nothing unlocked
+    VERIFY(waitForSignal(spyPromptCompleted, 1));
+    {
+        auto args = spyPromptCompleted.takeFirst();
+        COMPARE(args.count(), 2);
+        COMPARE(args.at(0).toBool(), true);
+        auto unlockedResult = getSignalVariantArgument<QList<QDBusObjectPath>>(args.at(1));
+        VERIFY(unlockedResult.isEmpty());
     }
 }
 

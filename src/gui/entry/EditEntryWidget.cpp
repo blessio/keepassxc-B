@@ -24,10 +24,14 @@
 #include "ui_EditEntryWidgetMain.h"
 #include "ui_EditEntryWidgetSSHAgent.h"
 
+#include <functional>
+
 #include <QColorDialog>
 #include <QDesktopServices>
+#include <QLineEdit>
 #include <QSortFilterProxyModel>
 #include <QStringListModel>
+#include <QStyledItemDelegate>
 
 #include "autotype/AutoType.h"
 #include "core/AutoTypeAssociations.h"
@@ -62,6 +66,43 @@
 #include "gui/entry/AutoTypeAssociationsModel.h"
 #include "gui/entry/EntryAttributesModel.h"
 #include "gui/entry/EntryHistoryModel.h"
+
+namespace
+{
+    // Item delegate to enable completer showing suggestions for the attribute key
+    class AttributeKeyDelegate : public QStyledItemDelegate
+    {
+        std::function<QStringList()> m_getSuggestion;
+
+    public:
+        explicit AttributeKeyDelegate(QObject* parent, std::function<QStringList()> suggFunc)
+            : QStyledItemDelegate(parent)
+            , m_getSuggestion(std::move(suggFunc))
+        {
+        }
+
+        QWidget*
+        createEditor(QWidget* parent, const QStyleOptionViewItem& option, const QModelIndex& index) const override
+        {
+            auto* editor = QStyledItemDelegate::createEditor(parent, option, index);
+            if (auto* lineEdit = qobject_cast<QLineEdit*>(editor)) {
+                if (config()->get(Config::AutocompleteSuggestions).toBool()) {
+                    auto* completer = new QCompleter(m_getSuggestion ? m_getSuggestion() : QStringList(), lineEdit);
+                    completer->setCaseSensitivity(Qt::CaseInsensitive);
+                    completer->setFilterMode(Qt::MatchContains);
+                    lineEdit->setCompleter(completer);
+
+                    // Display suggestions without requiring initial input
+                    QTimer::singleShot(0, lineEdit, [completer] {
+                        completer->setCompletionPrefix(QString());
+                        completer->complete();
+                    });
+                }
+            }
+            return editor;
+        }
+    };
+} // namespace
 
 EditEntryWidget::EditEntryWidget(QWidget* parent)
     : EditWidget(parent)
@@ -251,6 +292,22 @@ void EditEntryWidget::setupAdvanced()
 
     m_attributesModel->setEntryAttributes(m_entryAttributes);
     m_advancedUi->attributesView->setModel(m_attributesModel);
+
+    auto getAttributeKeySuggestions = [this]() -> QStringList {
+        if (!m_db) {
+            return {};
+        }
+        QStringList suggestions = m_db->customAttributeKeys(); // List of all attribute keys in the db
+        // Remove keys already present in current entry
+        for (const QString& key : m_entryAttributes->keys()) {
+            if (!EntryAttributes::isDefaultAttribute(key)) {
+                suggestions.removeAll(key);
+            }
+        }
+        return suggestions;
+    };
+    auto* attributeKeyDelegate = new AttributeKeyDelegate(m_advancedWidget, getAttributeKeySuggestions);
+    m_advancedUi->attributesView->setItemDelegate(attributeKeyDelegate);
 
     // clang-format off
     connect(m_advancedUi->addAttributeButton, SIGNAL(clicked()), SLOT(insertAttribute()));
@@ -516,24 +573,24 @@ void EditEntryWidget::setupEntryUpdate()
     connect(m_mainUi->urlEdit, SIGNAL(textChanged(QString)), this, SLOT(updateFaviconButtonEnable(QString)));
 #endif
     connect(m_mainUi->tagsList, SIGNAL(tagsEdited()), this, SLOT(setModified()));
-    connect(m_mainUi->expireCheck, SIGNAL(stateChanged(int)), this, SLOT(setModified()));
+    connect(m_mainUi->expireCheck, SIGNAL(toggled(bool)), this, SLOT(setModified()));
     connect(m_mainUi->expireDatePicker, SIGNAL(dateTimeChanged(QDateTime)), this, SLOT(setModified()));
     connect(m_mainUi->notesEdit, SIGNAL(textChanged()), this, SLOT(setModified()));
 
     // Advanced tab
     connect(m_advancedUi->attributesEdit, SIGNAL(textChanged()), this, SLOT(setModified()));
-    connect(m_advancedUi->protectAttributeButton, SIGNAL(stateChanged(int)), this, SLOT(setModified()));
-    connect(m_advancedUi->excludeReportsCheckBox, SIGNAL(stateChanged(int)), this, SLOT(setModified()));
-    connect(m_advancedUi->fgColorCheckBox, SIGNAL(stateChanged(int)), this, SLOT(setModified()));
-    connect(m_advancedUi->bgColorCheckBox, SIGNAL(stateChanged(int)), this, SLOT(setModified()));
+    connect(m_advancedUi->protectAttributeButton, SIGNAL(toggled(bool)), this, SLOT(setModified()));
+    connect(m_advancedUi->excludeReportsCheckBox, SIGNAL(toggled(bool)), this, SLOT(setModified()));
+    connect(m_advancedUi->fgColorCheckBox, SIGNAL(toggled(bool)), this, SLOT(setModified()));
+    connect(m_advancedUi->bgColorCheckBox, SIGNAL(toggled(bool)), this, SLOT(setModified()));
     connect(m_advancedUi->attachmentsWidget, SIGNAL(widgetUpdated()), this, SLOT(setModified()));
 
     // Icon tab
     connect(m_iconsWidget, SIGNAL(widgetUpdated()), this, SLOT(setModified()));
 
     // Auto-Type tab
-    connect(m_autoTypeUi->enableButton, SIGNAL(stateChanged(int)), this, SLOT(setModified()));
-    connect(m_autoTypeUi->customWindowSequenceButton, SIGNAL(stateChanged(int)), this, SLOT(setModified()));
+    connect(m_autoTypeUi->enableButton, SIGNAL(toggled(bool)), this, SLOT(setModified()));
+    connect(m_autoTypeUi->customWindowSequenceButton, SIGNAL(toggled(bool)), this, SLOT(setModified()));
     connect(m_autoTypeUi->inheritSequenceButton, SIGNAL(toggled(bool)), this, SLOT(setModified()));
     connect(m_autoTypeUi->customSequenceButton, SIGNAL(toggled(bool)), this, SLOT(setModified()));
     connect(m_autoTypeUi->windowSequenceEdit, SIGNAL(textChanged(QString)), this, SLOT(setModified()));
@@ -551,10 +608,10 @@ void EditEntryWidget::setupEntryUpdate()
         connect(m_sshAgentUi->attachmentComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(setModified()));
         connect(m_sshAgentUi->attachmentComboBox, SIGNAL(editTextChanged(QString)), this, SLOT(setModified()));
         connect(m_sshAgentUi->externalFileEdit, SIGNAL(textChanged(QString)), this, SLOT(setModified()));
-        connect(m_sshAgentUi->addKeyToAgentCheckBox, SIGNAL(stateChanged(int)), this, SLOT(setModified()));
-        connect(m_sshAgentUi->removeKeyFromAgentCheckBox, SIGNAL(stateChanged(int)), this, SLOT(setModified()));
-        connect(m_sshAgentUi->requireUserConfirmationCheckBox, SIGNAL(stateChanged(int)), this, SLOT(setModified()));
-        connect(m_sshAgentUi->lifetimeCheckBox, SIGNAL(stateChanged(int)), this, SLOT(setModified()));
+        connect(m_sshAgentUi->addKeyToAgentCheckBox, SIGNAL(toggled(bool)), this, SLOT(setModified()));
+        connect(m_sshAgentUi->removeKeyFromAgentCheckBox, SIGNAL(toggled(bool)), this, SLOT(setModified()));
+        connect(m_sshAgentUi->requireUserConfirmationCheckBox, SIGNAL(toggled(bool)), this, SLOT(setModified()));
+        connect(m_sshAgentUi->lifetimeCheckBox, SIGNAL(toggled(bool)), this, SLOT(setModified()));
         connect(m_sshAgentUi->lifetimeSpinBox, SIGNAL(valueChanged(int)), this, SLOT(setModified()));
     }
 #endif
@@ -1049,7 +1106,8 @@ void EditEntryWidget::setForms(Entry* entry, bool restore)
     m_mainUi->expirePresets->setEnabled(!m_history);
 
     QList<QString> commonUsernames = m_db->commonUsernames();
-    m_usernameCompleterModel->setStringList(commonUsernames);
+    m_usernameCompleterModel->setStringList(config()->get(Config::AutocompleteSuggestions).toBool() ? commonUsernames
+                                                                                                    : QList<QString>());
     QString usernameToRestore = m_mainUi->usernameComboBox->lineEdit()->text();
     m_mainUi->usernameComboBox->clear();
     m_mainUi->usernameComboBox->addItems(commonUsernames);

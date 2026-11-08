@@ -82,6 +82,8 @@ DatabaseOpenWidget::DatabaseOpenWidget(QWidget* parent)
     connect(m_ui->buttonBox, SIGNAL(accepted()), SLOT(openDatabase()));
     connect(m_ui->buttonBox, SIGNAL(rejected()), SLOT(reject()));
 
+    m_ui->addKeyFileLinkLabel->setText(QStringLiteral("<a href=\"#\" style=\"text-decoration: underline\">%1</a>")
+                                           .arg(tr("I have a key file").toHtmlEscaped()));
     connect(m_ui->addKeyFileLinkLabel, &QLabel::linkActivated, this, &DatabaseOpenWidget::browseKeyFile);
     connect(m_ui->keyFileLineEdit, &PasswordWidget::textChanged, this, [&](const QString& text) {
         bool state = !text.isEmpty();
@@ -460,8 +462,8 @@ QSharedPointer<CompositeKey> DatabaseOpenWidget::buildDatabaseKey()
             legacyWarning.setDefaultButton(QMessageBox::Ok);
             legacyWarning.setCheckBox(new QCheckBox(tr("Don't show this warning again")));
 
-            connect(legacyWarning.checkBox(), &QCheckBox::stateChanged, this, [](int state) {
-                config()->set(Config::Messages_NoLegacyKeyFileWarning, state == Qt::CheckState::Checked);
+            connect(legacyWarning.checkBox(), &QCheckBox::toggled, this, [](bool checked) {
+                config()->set(Config::Messages_NoLegacyKeyFileWarning, checked);
             });
 
             legacyWarning.exec();

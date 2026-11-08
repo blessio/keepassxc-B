@@ -49,7 +49,6 @@ int main(int argc, char* argv[])
     app.setQuitOnLastWindowClosed(false);
     app.setAttribute(Qt::AA_Use96Dpi, true);
     app.applyTheme();
-    QTEST_DISABLE_KEYPAD_NAVIGATION
     TestGuiBrowser tc;
     QTEST_SET_MAIN_SOURCE_PATH
     return QTest::qExec(&tc, argc, argv);
@@ -59,7 +58,8 @@ void TestGuiBrowser::initTestCase()
 {
     QVERIFY(Crypto::init());
     // Create temporary config file
-    Config::createConfigFromFile(TemporaryFile::createTempConfigFile(), {});
+    const auto configFile = TemporaryFile::createTempConfigFile();
+    Config::createConfigFromFile(configFile, configFile);
     // Disable autosave so we can test the modified file indicator
     config()->set(Config::AutoSaveAfterEveryChange, false);
     config()->set(Config::AutoSaveOnExit, false);

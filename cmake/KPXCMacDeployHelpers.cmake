@@ -8,6 +8,7 @@ function(kpxc_run_macdeployqt_at_install_time)
     set(NO_VALUE_OPTIONS)
     set(SINGLE_VALUE_OPTIONS
         APP_NAME
+        TLS_PLUGIN_DIR
     )
     set(MULTI_VALUE_OPTIONS
         EXTRA_BINARIES
@@ -36,7 +37,7 @@ function(kpxc_run_macdeployqt_at_install_time)
     endif()
 
     set(COMMAND_ARGS
-        ${MACDEPLOYQT_EXE}
+        ${DEPLOYQT_EXE}
         ${APP_BUNDLE_PATH}
 
         # Adjusts dependency rpaths of extra binaries
@@ -48,6 +49,11 @@ function(kpxc_run_macdeployqt_at_install_time)
 
     install(CODE
     "
+if(IS_DIRECTORY \"${ARG_TLS_PLUGIN_DIR}\")
+    file(COPY \"${ARG_TLS_PLUGIN_DIR}/\"
+        DESTINATION \"\${CMAKE_INSTALL_PREFIX}/${APP_BUNDLE_NAME}/Contents/PlugIns/tls\")
+endif()
+
 execute_process(
     COMMAND ${COMMAND_ARGS}
     ${COMMAND_ECHO}

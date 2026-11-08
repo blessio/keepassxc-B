@@ -1327,12 +1327,21 @@ void MainWindow::showEvent(QShowEvent* event)
     // Qt Hack - Prevent white flicker when showing window
     QTimer::singleShot(50, this, [=] { setProperty("windowOpacity", 1.0); });
 #endif
+}
 
-    // Restore geometry and window state only on the first showEvent to prevent issues with minimized tray startup
-    if (!m_windowInformationRestored) {
-        restoreWindowInformation();
+void MainWindow::setVisible(bool visible)
+{
+    // Restore before showing. Otherwise moving a window to another monitor can reset its
+    // size on Wayland. Other strange things can happen as well.
+    if (visible && !m_windowInformationRestored) {
         m_windowInformationRestored = true;
+        const bool minimized = isMinimized();
+        restoreWindowInformation();
+        if (minimized) {
+            setWindowState(windowState() | Qt::WindowMinimized);
+        }
     }
+    QMainWindow::setVisible(visible);
 }
 
 void MainWindow::hideEvent(QHideEvent* event)
@@ -1484,7 +1493,7 @@ void MainWindow::clearSSHAgent()
 
 void MainWindow::saveWindowInformation()
 {
-    if (isVisible()) {
+    if (m_windowInformationRestored && isVisible()) {
         config()->set(Config::GUI_MainWindowGeometry, saveGeometry());
         config()->set(Config::GUI_MainWindowState, saveState());
     }
@@ -2159,7 +2168,7 @@ void MainWindow::initActionCollection()
 
     // Prevent conflicts with global Mac shortcuts (force Control on all platforms)
     // Note: Qt::META means Ctrl on Mac.
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     ac->setDefaultShortcut(m_ui->actionEntryAddToAgent, Qt::META | Qt::Key_H);
     ac->setDefaultShortcut(m_ui->actionEntryRemoveFromAgent, Qt::META | Qt::SHIFT | Qt::Key_H);
 #endif
