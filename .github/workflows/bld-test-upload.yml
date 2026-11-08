@@ -15,7 +15,7 @@ on:
     - cron: 7 3 * * FRI
     # runs every Friday 3:07AM
   push:
-    branches: [ "dev*", devbleo*", "bleo*" ]
+    branches: [ "dev*", "devbleo*", "bleo*" ]
   pull_request:
     branches: [ "dev*", "devbleo*", "bleo*" ]
 
@@ -151,9 +151,9 @@ jobs:
         echo "********************* END SYSTEM VERSION ******************************" &&
         sudo apt update -y &&
         sudo apt install -y build-essential cmake g++ asciidoctor &&
-        sudo apt install -y libargon2-dev libminizip-dev libbotan-2-dev libqrencode-dev &&
+        sudo apt install -y libargon2-dev libminizip-dev $(apt-cache show libbotan-3-dev > /dev/null 2>&1 && echo libbotan-3-dev || echo libbotan-2-dev) libqrencode-dev &&
         sudo apt install -y libkeyutils-dev zlib1g-dev libreadline-dev libpcsclite-dev libusb-1.0-0-dev &&
-        sudo apt install -y libxi-dev libxtst-dev  libqt5x11extras5-dev
+        sudo apt install -y libxi-dev libxtst-dev
 
     - name: 172.-2  *****  MACOS-15 Restore cache Homebrew cellar on MacOS
       if:  ${{ startsWith( matrix.config.os , 'macos-15' ) }}
